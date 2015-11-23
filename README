@@ -1,0 +1,14 @@
+This repository contains scripts and data for validating the 
+Michigan Geospace model based on the Space Weather Modeling Framework (SWMF).
+
+The deltaB directory contains observations and SWMF model results 
+of the magnetic disturbances at 12 magnetometer stations 
+for the six SWPC challenge events that were run by CCMC. 
+See deltaB/README for more detail. 
+See A. Pulkkinen et al. 2013, Space Weather, 11, 369, doi:10.1002/swe.20056
+
+The Idl directory contains scripts to evaluate the results and calculate
+skill scores both for direct dB/dt and power law fit a(dB)^p. 
+See Idl/README for more detail.
+See G. Toth et al. 2014, J. Geophys. Res., 119, 310, doi:10.1002/2013JA019456
+

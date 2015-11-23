@@ -1,0 +1,45 @@
+# In IDL
+.r Idl/predict.pro
+
+# or maybe (but I did not see any difference in the results below)
+.r Idl/predict_v2.pro 
+
+# EXAMPLES OF USE
+
+# calculate POD, POF, HSS for dB/dt > 0.3nT/s threshold 
+# for all available models, for the high latitude stations, for event 2 only 
+
+IDL> predict,'dbdt',stations=['abk','pbq','ykc'],threshold=0.3,firstevent=2,lastevent=2
+Observed total dbdt: pod, pof, hss=  1.0000  0.0000  1.0000
+Observed total db  : pod, pof, hss=  0.8704  0.0556  0.8049
+SWMFccmc total dbdt: pod, pof, hss=  0.1667  0.0432  0.1613
+SWMFccmc total db  : pod, pof, hss=  0.4815  0.0556  0.4825
+SWMForig total dbdt: pod, pof, hss=  0.1667  0.0370  0.1707
+SWMForig total db  : pod, pof, hss=  0.4630  0.0432  0.4857
+
+# The dbdt rows show results when dB/dt is obtained from finite differencing.
+# The db   rows show results when dB/dt is approximated with a power law of dB.
+#
+# This will also generate 3 plots: 1 for the observations and 2 for the two models:
+dbdt_Observed.eps 
+dbdt_SWMFccmc.eps   
+dbdt_SWMForig.eps
+
+# The plots show the time variation of the observed (black) 
+# directly predicted (green) and power law predicted (red) dB/dt 
+# for each station. There is useful information ABOVE each plot, 
+# but it seems to be chopped off (it is visible with gv on an A4 size page).
+
+# The plots don't work when multiple events are analyzed (should generate
+# a multipage EPS output).
+
+# OTHER EXAMPLES:
+
+# generating dbdt_SWMFccmc_abk_dt20_0.7threshold.eps for a single station
+# last event etc.
+# the exponent=0 switch is off the power law fitting
+predict,'dbdt',stations=['abk'],threshold=0.7,firstevent=5,imodel=1,exponent=0
+
+# generating db_SWMFccmc_abk_dt20_150threshold.eps
+predict,'db',stations=['abk'],threshold=150,firstevent=5,imodel=2,exponent=0
+

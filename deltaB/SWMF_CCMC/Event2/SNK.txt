@@ -1,0 +1,9 @@
+# CCMC run: SWPC_SWMF_052811_2
+# CCMC model: BATSRUS
+# Shielding angle [deg.]:      -90.0000
+# North, East and vertical components of magnetic field
+# computed from magnetosphere currents
+# Station: snk
+# Position (GEO): lon=       280.800 lat=      56.6000
+Year Month Day Hour Min Sec GeomagLat GeomagLon B_NorthGeomag B_EastGeomag B_DownGeomag
+[year] [month] [day] [hour] [min] [s] [deg] [deg] [nT] [nT] [nT]

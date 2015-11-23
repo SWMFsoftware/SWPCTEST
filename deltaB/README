@@ -1,0 +1,50 @@
+# Downloading CCMC results
+wget -r ftp://hanna.ccmc.gsfc.nasa.gov:/pub/dBdt/out/deltaB/
+wget -r ftp://hanna.ccmc.gsfc.nasa.gov:/pub/dBdt/out/dBdt/
+
+# Fix deltaB/Event8_2011_Aug5_0900-Aug6_0900/Observations/Raw/frn_OBS_20110805.txt:
+# Add missing header lines from
+#     deltaB/Event7_2010_Apr5_0000-Apr6_0000/Observations/Raw/frn_OBS_20100405.txt
+
+# Moved all observations into the deltaB/Observations/Event* directories.
+
+# Moved 9a_SWMF directories into deltaB/SWMF_CCMC/Event* 
+# These are the original SWPC challenge results for SWMF 
+# with deltaB calculated by Lutz's IDL scripts
+
+# Renamed Event7 to Event5 and Event8 to Event6 so the numbering is continuous.
+
+# Renamed magnetometer files to be just 3 capital letters with .txt extension.
+
+List of events:
+
+Event1:  2003_Oct29_0600-Oct30_0600/
+Event2:  2006_Dec14-1200-Dec16_0000/
+Event3:  2001_Aug31_0000-Sept1_0000/
+Event4:  2005_Aug31_1000-Sept1_1200/
+Event5:  2010_Apr5_0000-Apr6_0000/
+Event6:  2011_Aug5_0900-Aug6_0900/
+
+List of stations ordered by magnetic latitude (in degs):
+
+1. Very high latitude: 
+HRN (73.9)
+IQA (74.0)
+
+2. High latitude: 
+ABK (66.1)
+MEA (61.6)
+YKC (68.9)
+PBQ/SNK (65.5, 66.1)
+
+3. Mid latitude: 
+NEW (54.9)
+OTT (55.6)
+WNG (54.1)
+
+4. Low latitude: 
+FRD (48.4)
+FRN (43.5)
+FUR (48.4)
+
+Observations have a 1-minute time resolution.
