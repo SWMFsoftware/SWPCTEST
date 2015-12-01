@@ -4,7 +4,10 @@ QUEDIR=.
 MACHINE='pfe'
 
 help:
-	@echo "Help information forthcoming."
+	@echo "         ======SWPC Auotmated Test Suite====="
+	@echo "This package builds and executes a set of validation"
+	@echo "simulations; see README for more information."
+	@echo ""
 
 swpctest:
 	@echo "Testing the SWMF"
@@ -24,12 +27,15 @@ swpctest_rundir:
 	for e in {${EVENTS}}; 		\
 	do make rundir; 		\
 	mv run ${QUEDIR}/run_event$$e; 	\
+	cp -r SWPCTEST/Inputs/event$$e/* ${QUEDIR}/run_event$$e; \
+	cp SWPCTEST/Inputs/magin_GEM.dat ${QUEDIR}/run_event$$e; \
+	cp SWPCTEST/Inputs/LAYOUT.in ${QUEDIR}/run_event$$e;     \
+	SWPCTEST/change_params.py $$e ${QUEDIR}/run_event$$e;    \
 	done
-
-	# Move params into rundir.  Check committed vs those in runfiles repo.
 
 swpctest_run:
 	@echo "Submitting simulation jobs to ques"
+	for e in {${EVENTS}};
 
 swpctest_check:
 	@echo "Checking results against data"
