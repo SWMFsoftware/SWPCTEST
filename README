@@ -7,6 +7,13 @@ for the six SWPC challenge events that were run by CCMC.
 See deltaB/README for more detail. 
 See A. Pulkkinen et al. 2013, Space Weather, 11, 369, doi:10.1002/swe.20056
 
+Event specific information, such as start and stop times, are contained in
+"event_list.txt".  Files common to each simulation can be found in the Inputs
+directory.  Event-specific input files, such as solar wind inputs and
+satellite trajectory files, are found in the Inputs/event[#] directories.
+Additional events can be added by adding new entries to event_list.txt and
+creating a corresponding Inputs/event[#] directory.
+
 The Idl directory contains scripts to evaluate the results and calculate
 skill scores both for direct dB/dt and power law fit a(dB)^p. 
 See Idl/README for more detail.

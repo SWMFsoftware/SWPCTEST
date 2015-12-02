@@ -4,40 +4,51 @@ QUEDIR=.
 MACHINE='pfe'
 
 help:
-	@echo "         ======SWPC Auotmated Test Suite====="
 	@echo "This package builds and executes a set of validation"
 	@echo "simulations; see README for more information."
 	@echo ""
+	@echo "Examples:"
+	@echo "make test                   (run all test events)"
+	@echo "make test EVENTS=2,         (run only test 2, note trailing comma)"
+	@echo "make test QUEDIR='~/user/'  (set directory from which to run)"
+	@echo "make test_check             (check results of runs)"
 
-swpctest:
+test:
 	@echo "Testing the SWMF"
-	make swpctest_compile
-	make swpctest_rundir
-	make swpctest_run
+	make test_compile
+	make test_rundir
+	make test_run
+	@echo "Tests started.  make test_check when complete."
 
-swpctest_compile:
+test_compile:
 	-@(cd ..; \
 	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	make SWMF PIDL PSPH; \
 	)
 
-swpctest_rundir:
+test_rundir:
 	@echo "Creating rundirs"
-	cd ..; 				\
-	for e in {${EVENTS}}; 		\
-	do make rundir; 		\
-	mv run ${QUEDIR}/run_event$$e; 	\
-	cp -r SWPCTEST/Inputs/event$$e/* ${QUEDIR}/run_event$$e; \
-	cp SWPCTEST/Inputs/magin_GEM.dat ${QUEDIR}/run_event$$e; \
-	cp SWPCTEST/Inputs/LAYOUT.in ${QUEDIR}/run_event$$e;     \
-	SWPCTEST/change_params.py $$e ${QUEDIR}/run_event$$e;    \
+	cd ..;							\
+	for e in {${EVENTS}}; 					\
+	do make rundir MACHINE=${MACHINE}; 			\
+	mv run ${QUEDIR}/run_event$$e; 				\
+	cp -r SWPCTEST/Inputs/event$$e/* ${QUEDIR}/run_event$$e;\
+	cp SWPCTEST/Inputs/magin_GEM.dat ${QUEDIR}/run_event$$e;\
+	cp SWPCTEST/Inputs/LAYOUT.in     ${QUEDIR}/run_event$$e;\
+	cp SWPCTEST/Inputs/job.long      ${QUEDIR}/run_event$$e;\
+	SWPCTEST/change_params.py $$e    ${QUEDIR}/run_event$$e;\
 	done
 
-swpctest_run:
+test_run:
 	@echo "Submitting simulation jobs to ques"
-	for e in {${EVENTS}};
+	cd ..; 							\
+	for e in {${EVENTS}}; 					\
+	do ${QUEDIR}/run_event$$e/qsub.pfe.pl 			\
+	${QUEDIR}/run_event$$e/job.long ev$$e;			\
+	screen -d -m ${QUEDIR}/run_event$$e/watch.pfe.pl ev$$e;	\
+	done
 
-swpctest_check:
+test_check:
 	@echo "Checking results against data"
 
 clean:

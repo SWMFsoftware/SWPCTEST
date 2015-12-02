@@ -1,0 +1,30 @@
+#!/bin/csh
+#PBS -S /bin/csh
+#PBS -N SWPC
+#PBS -q long
+#PBS -l select=6:ncpus=12:model=wes
+#PBS -l select=4:ncpus=16:model=san
+#PBS -l select=4:ncpus=20:model=ivy
+#PBS -l select=3:ncpus=24:model=has
+#PBS -l walltime=48:00:00
+#PBS -j oe
+
+# Specify group:
+#PBS -W group_list=s1359
+
+# cd into the run directory
+cd $PBS_O_WORKDIR
+
+# These settings were found useful for large runs 
+#setenv MPI_MSGS_PER_HOST 100000
+#setenv MPI_MSGS_PER_PROC 100000
+#setenv MPI_MSGS_MAX      100000
+
+# Run it.
+rm -f PARAM.in
+ln -s PARAM.in_SWPC_init PARAM.in
+mpiexec SWMF.exe > log.`date +%y%m%d`
+
+./Restart.pl
+
+exit
