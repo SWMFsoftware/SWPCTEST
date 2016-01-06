@@ -45,7 +45,7 @@ test_run:
 	for e in {${EVENTS}}; 					\
 	do ${QUEDIR}/run_event$$e/qsub.pfe.pl 			\
 	${QUEDIR}/run_event$$e/job.long ev$$e;			\
-	screen -d -m ${QUEDIR}/run_event$$e/watch.pfe.pl ev$$e;	\
+	screen -S event$$e -d -m ${QUEDIR}/run_event$$e/watch.pfe.pl ev$$e;\
 	done
 
 test_check:
@@ -53,7 +53,13 @@ test_check:
 
 clean:
 	@(cd ..;	pwd;	make clean)
+	for e in {${EVENTS}};          \
+	do screen -X -S event$$e quit; \
+	done
 
 distclean:
 	@echo "Cleaning all rundirectories."
 	rm -rf ../run_event* ${QUEDIR}/run_event* *~
+	for e in {${EVENTS}};          \
+	do screen -X -S event$$e quit; \
+	done
