@@ -41,11 +41,11 @@ test_rundir:
 
 test_run:
 	@echo "Submitting simulation jobs to ques"
-	cd ..; 							\
-	for e in {${EVENTS}}; 					\
-	do ${QUEDIR}/run_event$$e/qsub.pfe.pl 			\
-	${QUEDIR}/run_event$$e/job.long ev$$e;			\
-	screen -S event$$e -d -m ${QUEDIR}/run_event$$e/watch.pfe.pl ev$$e;\
+	cd ..; 						\
+	for e in {${EVENTS}};				\
+	do cd ${QUEDIR}/run_event$$e;			\
+	qsub.pfe.pl job.long ev$$e;		    	\
+	screen -S event$$e -d -m watch.pfe.pl ev$$e;	\
 	done
 
 test_check:
