@@ -48,7 +48,17 @@ test_run:
 	screen -S event$$e -d -m watch.pfe.pl ev$$e;	\
 	done
 
+test_postproc:
+	@echo "Post processing simulation results"
+	for e in {${EVENTS}};				\
+	do cd ${QUEDIR}/run_event$$e;			\
+	if [ ! -d "results_event$$e" ]; then		\
+	./Postproc.pl -c -param results_event$$e;	\
+	fi;						\
+	done
+
 test_check:
+	make test_postproc
 	@echo "Checking results against data"
 
 clean:
