@@ -191,7 +191,7 @@ pro predict, choice, $
 
   models     = ['Observations', 'SWMF_CCMC', 'Results' ]
   modelnames = ['Observed',     'SWMFccmc',  'SWMF_new']
- 
+
   if n_elements(imodel) gt 0 then begin
      imodelmin = imodel
      imodelmax = imodel

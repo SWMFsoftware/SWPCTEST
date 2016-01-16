@@ -75,17 +75,17 @@ check_calc:
 	export IDL_STARTUP=${TESTPATH}/../GM/BATSRUS/Idl/idlrc
 	export IDL_PATH='<IDL_DEFAULT>':${TESTPATH}/../GM/BATSRUS/Idl/
 	for e in {${EVENTS}};			\
-	do printf ".r Idl/predict.pro\n predict,'dbdt',stations=['abk','pbq','ykc'],threshold=0.3,firstevent=$$e,lastevent=$$e" | idl > results_test$$e.txt; \
+	do printf ".r Idl/predict.pro\n predict,'dbdt',stations=['abk','pbq','ykc'],threshold=0.3,firstevent=$$[$$e-1],lastevent=$$[$$e-1]" | idl > results_test$$e.txt; \
 	mv *.eps deltaB/Results/Event$$e/;	\
 	done
 
 clean:
 	@echo "Cleaning result files"
 	rm -f results*.txt
-	for e in {${EVENTS}};          		\
+	@for e in {${EVENTS}};          	\
 	do screen -X -S event$$e quit;		\
-	rm -f deltaB/Results/Event$$e/*.txt 	\
-	rm -f deltaB/Results/Event$$e/*.eps	\
+	rm -f deltaB/Results/Event$$e/*.txt; 	\
+	rm -f deltaB/Results/Event$$e/*.eps;	\
 	done
 
 distclean:
