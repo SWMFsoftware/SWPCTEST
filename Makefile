@@ -1,7 +1,9 @@
+SHELL=/bin/bash
 NP=64
 EVENTS=1,2,3,4,5,6
-QUEDIR=.
 MACHINE='pfe'
+TESTPATH=$(shell pwd)
+QUEDIR=$(TESTPATH)/..
 
 help:
 	@echo "This package builds and executes a set of validation"
@@ -11,14 +13,21 @@ help:
 	@echo "make test                   (run all test events)"
 	@echo "make test EVENTS=2,         (run only test 2, note trailing comma)"
 	@echo "make test QUEDIR='~/user/'  (set directory from which to run)"
-	@echo "make test_check             (check results of runs)"
+	@echo "make check                  (check results of runs)"
 
 test:
 	@echo "Testing the SWMF"
 	make test_compile
 	make test_rundir
 	make test_run
-	@echo "Tests started.  make test_check when complete."
+	@echo "Tests started.  make check when complete."
+
+check:
+	@echo "Checking results against observations"
+	make check_postproc
+	make check_calc
+
+
 
 test_compile:
 	-@(cd ..; \
@@ -48,28 +57,38 @@ test_run:
 	screen -S event$$e -d -m watch.pfe.pl ev$$e;	\
 	done
 
-test_postproc:
+
+check_postproc:
 	@echo "Post processing simulation results"
 	for e in {${EVENTS}};				\
 	do cd ${QUEDIR}/run_event$$e;			\
 	if [ ! -d "results_event$$e" ]; then		\
-	./Postproc.pl -c -param results_event$$e;	\
+	./Postproc.pl -c results;			\
+	cd ${TESTPATH};					\
+	./convert_mags.py -o=./deltaB/Results/Event$$e  \
+	${QUEDIR}/run_event$$e/results/GM;		\
 	fi;						\
 	done
 
-test_check:
-	make test_postproc
-	@echo "Checking results against data"
+check_calc:
+	@echo "Checking results against observations"
+	export IDL_STARTUP=${TESTPATH}/../GM/BATSRUS/Idl/idlrc
+	export IDL_PATH='<IDL_DEFAULT>':${TESTPATH}/../GM/BATSRUS/Idl/
+	for e in {${EVENTS}};			\
+	do printf ".r Idl/predict.pro\n predict,'dbdt',stations=['abk','pbq','ykc'],threshold=0.3,firstevent=$$e,lastevent=$$e" | idl > results_test$$e.txt; \
+	mv *.eps deltaB/Results/Event$$e/;	\
+	done
 
 clean:
-	@(cd ..;	pwd;	make clean)
-	for e in {${EVENTS}};          \
-	do screen -X -S event$$e quit; \
+	@echo "Cleaning result files"
+	rm -f results*.txt
+	for e in {${EVENTS}};          		\
+	do screen -X -S event$$e quit;		\
+	rm -f deltaB/Results/Event$$e/*.txt 	\
+	rm -f deltaB/Results/Event$$e/*.eps	\
 	done
 
 distclean:
-	@echo "Cleaning all rundirectories."
+	make clean
+	@echo "Cleaning all rundirectories"
 	rm -rf ../run_event* ${QUEDIR}/run_event* *~
-	for e in {${EVENTS}};          \
-	do screen -X -S event$$e quit; \
-	done

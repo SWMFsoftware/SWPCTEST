@@ -157,7 +157,6 @@ pro predict, choice, $
              dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof, dbdt_hss=dbdt_hss
 
                                 ; what to plot: choice = 'db', 'dbdt', 'corr'
-
                                 ; width of bins [minute] and [hour]
   if n_elements(deltat) lt 1 then deltat = 20.0
   dt = deltat/60.0
@@ -190,8 +189,8 @@ pro predict, choice, $
   if not keyword_set(stations) then stations = $
      ['abk', 'frd', 'frn', 'fur', 'hrn', 'iqa', 'mea', 'new', 'ott', 'pbq', 'wng', 'ykc']
 
-  models     = ['Observations', 'SWMF_CCMC']
-  modelnames = ['Observed', 'SWMFccmc']
+  models     = ['Observations', 'SWMF_CCMC', 'Results' ]
+  modelnames = ['Observed',     'SWMFccmc',  'SWMF_new']
  
   if n_elements(imodel) gt 0 then begin
      imodelmin = imodel
