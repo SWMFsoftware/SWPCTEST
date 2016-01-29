@@ -63,7 +63,7 @@ check_postproc:
 	for e in {${EVENTS}};				\
 	do cd ${QUEDIR}/run_event$$e;			\
 	if [ ! -d "results_event$$e" ]; then		\
-	./Postproc.pl -c results;			\
+	./PostProc.pl -c results;			\
 	cd ${TESTPATH};					\
 	./convert_mags.py -o=./deltaB/Results/Event$$e  \
 	${QUEDIR}/run_event$$e/results/GM;		\
@@ -72,8 +72,8 @@ check_postproc:
 
 check_calc:
 	@echo "Checking results against observations"
-	export IDL_STARTUP=${TESTPATH}/../GM/BATSRUS/Idl/idlrc
-	export IDL_PATH='<IDL_DEFAULT>':${TESTPATH}/../GM/BATSRUS/Idl/
+	export IDL_STARTUP=${TESTPATH}/../GM/BATSRUS/Idl/idlrc;		\
+	export IDL_PATH='<IDL_DEFAULT>':${TESTPATH}/../GM/BATSRUS/Idl/; \
 	for e in {${EVENTS}};			\
 	do printf ".r Idl/predict.pro\n predict,'dbdt',stations=['abk','pbq','ykc'],threshold=0.3,firstevent=$$[$$e-1],lastevent=$$[$$e-1]" | idl > results_test$$e.txt; \
 	mv *.eps deltaB/Results/Event$$e/;	\
