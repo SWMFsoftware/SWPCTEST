@@ -125,7 +125,7 @@ VAR step date		StringLogfile
 dt rho mx my mz p bx by bz pmin pmax dst dstflx
 3.0			StringRFlux
 
-#SAVEPLOT
+SAVEPLOT
 2                       nPlotFiles
 y=0 MHD idl             StringPlot
 2500                    DnSavePlot
@@ -183,7 +183,7 @@ XXXX                    F107Flux
 #BOUNDARY
 10.0			LatBoundary
 
-#SAVEPLOT
+SAVEPLOT
 1			nPlotFile
 min idl                 StringPlot
 100                     DnSavePlot
@@ -324,7 +324,7 @@ IMCOUPLINGSMOOTH
 #MINIMUMPRESSURE
 1e-5			pMinDim [nPa]
 
-#SAVEPLOT
+SAVEPLOT
 2                       nPlotFiles
 y=0 MHD idl             StringPlot
 -1                      DnSavePlot
@@ -361,7 +361,7 @@ T 			UseDecay
 
 #BEGIN_COMP IE ---------------------------------------------------------------
 
-#SAVEPLOT
+SAVEPLOT
 1			nPlotFile
 aur idl                 StringPlot
 -1                      DnSavePlot
