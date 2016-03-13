@@ -46,7 +46,7 @@ propagate1d_rundir:
 
 propagate1d_run:
 	for e in ${EVENTLIST}; do 			 			\
-		echo ${SWPCTESTDIR}/change_params.py $$e ${PROPDIR}; 		\
+		echo ${SWPCTESTDIR}/Scripts/change_params.py $$e ${PROPDIR}; 	\
 		cp Inputs/event$$e/L1.dat ${PROPDIR};				\
 		cd ${PROPDIR}; mpirun -np 4 ./BATSRUS.exe > runlog; 		\
 		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g' 	\
@@ -73,15 +73,15 @@ test_compile:
 
 test_rundir:
 	@echo "Creating rundirs"
-	cd ..;								\
-	for e in ${EVENTLIST}; do	 				\
-		make rundir MACHINE=${MACHINE}; 			\
-		mv run ${QUEDIR}/run_event$$e; 				\
-		cp -r SWPCTEST/Inputs/event$$e/* ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/magin_GEM.dat ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/LAYOUT.in     ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/job.long      ${QUEDIR}/run_event$$e;\
-		SWPCTEST/change_params.py $$e    ${QUEDIR}/run_event$$e;\
+	cd ..;					\
+	for e in ${EVENTLIST}; do	 	\
+		make rundir MACHINE=${MACHINE}; \
+		mv run ${QUEDIR}/run_event$$e; 	\
+		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}/run_event$$e;\
+		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}/run_event$$e;\
+		cp SWPCTEST/Inputs/LAYOUT.in          ${QUEDIR}/run_event$$e;\
+		cp SWPCTEST/Inputs/job.long           ${QUEDIR}/run_event$$e;\
+		SWPCTEST/Scripts/change_params.py $$e ${QUEDIR}/run_event$$e;\
 	done
 
 test_run:
@@ -101,7 +101,7 @@ check_postproc:
 		if [ ! -d "results_event$$e" ]; then			\
 			./PostProc.pl -c results;			\
 			cd ${TESTPATH};					\
-			./convert_mags.py -o=./deltaB/Results/Event$$e  \
+			./Scripts/convert_mags.py -o=./deltaB/Results/Event$$e  \
 			${QUEDIR}/run_event$$e/results/GM;		\
 		fi;							\
 	done
