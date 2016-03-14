@@ -29,7 +29,7 @@ help:
 	@echo "make check                    (check results of runs)"
 	@echo "make propagate1d EVENTS=2,3   (propagate ACE/DISCVR data to BATSRUS boundary)"
 
-GMDIR   = ../GM/BATSRUS
+GMDIR=${DIR}/GM/BATSRUS
 PROPDIR = ${GMDIR}/run_L1toBC
 
 propagate1d:
@@ -42,15 +42,16 @@ propagate1d_compile:
 	-@(cd ${GMDIR}; make test_L1toBC_compile;)
 
 propagate1d_rundir:
-	-@(cd ${GMDIR}; make test_L1toBC_rundir; mv run_test ${PROPDIR})
+	-@(cd ${GMDIR}; make test_L1toBC_rundir TESTDIR=${PROPDIR})
 
 propagate1d_run:
 	for e in ${EVENTLIST}; do 			 			\
-		echo ${SWPCTESTDIR}/Scripts/change_params.py $$e ${PROPDIR}; 	\
-		cp Inputs/event$$e/L1.dat ${PROPDIR};				\
-		cd ${PROPDIR}; mpirun -np 4 ./BATSRUS.exe > runlog; 		\
+		cp ${SWPCTESTDIR}/Inputs/event$$e/[Lw]*.dat ${PROPDIR};		\
+		cd ${PROPDIR}; 							\
+		${SWPCTESTDIR}/Scripts/change_param.pl; 			\
+		mpirun -np 4 ./BATSRUS.exe > runlog; 				\
 		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g' 	\
-			IO2/log*.log > ${INPUTDIR}/event$$e/IMF_propagated.dat; \
+			IO2/log*.log > ${INPUTDIR}/event$$e/IMF_mhd.dat; 	\
 	done
 
 test:
@@ -79,7 +80,7 @@ test_rundir:
 		mv run ${QUEDIR}/run_event$$e; 	\
 		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/LAYOUT.in          ${QUEDIR}/run_event$$e;\
+		cp SWPCTEST/Inputs/LAYOUT.in	      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/job.long           ${QUEDIR}/run_event$$e;\
 		SWPCTEST/Scripts/change_params.py $$e ${QUEDIR}/run_event$$e;\
 	done
