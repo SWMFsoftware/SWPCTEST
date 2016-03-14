@@ -11,7 +11,7 @@ die "Could not find IMF.dat or L1.dat\n" if not $file;
 
 print "Reading info from file=$file\n";
 
-# Read first line
+# Read first line after start
 $_ = `grep -A1 START $file | tail -1`;
 
 # Create a proper date from first 6 elements
@@ -30,6 +30,26 @@ $1\t\t\tiYear\n$2\t\t\tiMonth\n$3\t\t\tiDay\n$4\t\t\t\iHour\n$5\t\t\tiMinute\n$6
 my $end = $_;
 print "end=$end";
 
+# get the average X position of the Wind satellite
+$file = "wind.dat";
+my $xWind;
+if(-f $file){
+    print "Reading info from file=$file\n";
+    # Read first line after start
+    $_ = `grep -A1 START $file | tail -1`;
+    # extract the X coordinate
+    /(\d+\.\d+)/;
+    $xWind = $1;
+
+    # Read last line
+    $_ = `tail -1 $file`;
+    # extract the X coordinate
+    /(\d+\.\d+)/;
+    $xWind = 0.5*($xWind + $1);
+
+    print "xWind=$xWind\n";
+}
+
 my $i; my $a;
 
 @ARGV = glob("PARAM.in*");
@@ -47,6 +67,11 @@ while(<>){
 	chop;
 	$_ .= $end;
     }
+    # Set the extraction point
+    s/.*xTest$/$xWind\t\t\txTest/ if $xWind;
+
+    # For WIND comparison, remain in GSE coordinates
+    s/VAR date GSM/VAR date/ if $xWind;
     print;
 }
 
