@@ -4,21 +4,10 @@
 
 This script copies the SWPCTEST param files from the Inputs directory, changes
 the start and stop times based on 'event_list.txt', and moves them into the 
-specified run directory.
-
-USAGE:
-  change_params.py [options] [event number] [rundir]
-
-OPTIONS:
-  -h or -H:  
-      Print this help information.
-
-  -f=[event file name]:
-      Set the location of 'event_list.txt' that lists the details of each event.
-      The default action is to look in the PWD.
+run directory corresponding to the event number.
 
 EXAMPLE:
-  > change_params.py 3 /nobackupp8/username/run_event1
+  > change_params.py 3 /nobackupp8/username/run_event3
 
 '''
 
@@ -54,47 +43,34 @@ def parse_events(filename):
 
 ####### Script:
 import os
-from sys import argv
+from argparse import ArgumentParser
 
 # Default values:
-basepath   = os.path.realpath(__file__).replace('change_params.py', '')
-event_file = basepath+'/event_list.txt'
+basepath   = os.path.realpath(__file__).replace('change_params.py', '../')
 
-# Parse options from ARGV:
-for arg in argv[1:-2]:
-    if arg[:2].lower() == '-h':
-        print __doc__
-        exit()
-    elif arg[:2] == '-f':
-        event_file = arg[2:]
-    else:
-        raise ValueError('Unrecognized option: {}'.format(arg))
+# Configure arguments:
+parser = ArgumentParser(description=__doc__)
+parser.add_argument('event', type=int, help='The event number.')
+parser.add_argument('rundir', help='Path of the run directory.')
+                    
+parser.add_argument('-f', '--event_file', default=basepath+'/event_list.txt',
+                    help="Set location of 'event_file.txt' which contains the "+
+                    'details of each event.  Default is to search in SWPCTEST' +
+                    ' directory.')
 
-# Check number of arguments:
-if len(argv) < 3:
-    print(__doc__)
-    print('Incorrect number of arguments!')
-    exit()
-    
-# Parse target directory:
-outdir = argv[-1]
-if not os.path.exists(outdir):
-    raise ValueError('{} is not a valid directory'.format(outdir))
+# Handle arguments:
+args = parser.parse_args()
 
-# Parse event number:
-try:
-    iEvent = int(argv[-2])
-except ValueError:
-    print('Error converting {} to event number'.format(argv[-2]))
-    print __doc__
-    exit()
+# Check target directory:
+if not os.path.exists(args.rundir):
+    raise ValueError('{} is not a valid directory'.format(args.rundir))
 
 # Load event info:
-event = parse_events(event_file)[iEvent]
+event = parse_events(args.event_file)[args.event]
 
 ## INIT FILE ##
 old = open(basepath+'/Inputs/PARAM.in_SWPC_init', 'r')
-new = open(outdir+'/PARAM.in_SWPC_init', 'w')
+new = open(args.rundir+'/PARAM.in_SWPC_init', 'w')
 
 # Read file, replacing start and end times as well as F10.7:
 while True:
@@ -136,7 +112,7 @@ new.close()
 
 ## RESTART FILE ##
 old = open(basepath+'/Inputs/PARAM.in_SWPC_restart', 'r')
-new = open(outdir+'/PARAM.in_SWPC_restart', 'w')
+new = open(args.rundir+'/PARAM.in_SWPC_restart', 'w')
 
 # Read file, replacing start and end times as well as F10.7:
 while True:
