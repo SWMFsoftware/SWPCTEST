@@ -45,13 +45,13 @@ propagate1d_rundir:
 	-@(cd ${GMDIR}; make test_L1toBC_rundir TESTDIR=${PROPDIR})
 
 propagate1d_run:
-	for e in ${EVENTLIST}; do 			 			\
-		cp ${SWPCTESTDIR}/Inputs/event$$e/[Lw]*.dat ${PROPDIR};		\
-		cd ${PROPDIR}; 							\
-		${SWPCTESTDIR}/Scripts/change_param.pl; 			\
-		mpirun -np 4 ./BATSRUS.exe > runlog; 				\
-		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g' 	\
-			IO2/log*.log > ${INPUTDIR}/event$$e/IMF_mhd.dat; 	\
+	for e in ${EVENTLIST}; do 			 		    \
+		cp ${SWPCTESTDIR}/Inputs/event$$e/[Lw]*.dat ${PROPDIR};	    \
+		cd ${PROPDIR}; 						    \
+		${SWPCTESTDIR}/Scripts/change_param.pl; 		    \
+		mpirun -np 4 ./BATSRUS.exe > runlog; 			    \
+		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g'  \
+			IO2/log*.log > ${INPUTDIR}/event$$e/IMF_mhd.dat;    \
 	done
 
 test:
@@ -65,6 +65,7 @@ check:
 	@echo "Checking results against observations"
 	make check_postproc
 	make check_calc
+	make check_stash
 
 test_compile:
 	-@(cd ..; \
@@ -111,10 +112,12 @@ check_calc:
 	@echo "Checking results against observations"
 	export IDL_STARTUP=${TESTPATH}/../GM/BATSRUS/Idl/idlrc;		\
 	export IDL_PATH='<IDL_DEFAULT>':${TESTPATH}/../GM/BATSRUS/Idl/; \
-	for e in ${EVENTLIST}; do					\
-		printf ".r Idl/predict.pro\n predict,'dbdt',stations=['abk','pbq','ykc'],threshold=0.3,firstevent=$$[$$e-1],lastevent=$$[$$e-1]" | idl > results_test$$e.txt; \
-		mv *.eps deltaB/Results/Event$$e/;			\
-	done
+	printf ".r Idl/predict.pro\n calc_all_events\n" | idl > idl_log.txt
+	mv metric_table*.tex deltaB/Results/
+
+check_stash:
+	@echo "Saving results as tarball"
+	tar -czf results_$$(date +%Y%m%d_%H%M).tgz deltaB/Results
 
 clean:
 	@echo "Cleaning result files"
