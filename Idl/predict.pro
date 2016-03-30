@@ -723,7 +723,7 @@ pro show_hss_dt_table, stations, directs, indirects
 end
 ;==============================================================================
 
-pro calc_all_metric_table, stations, directs, indirects
+pro calc_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
   ; INPUTS:
   ; Stations is either 'hi' or 'lo' to set a group of stations.
   ; imodel is the model number: 0 for obs, 1 for SWMF_old, 2 for SWMF_new.
@@ -742,6 +742,8 @@ pro calc_all_metric_table, stations, directs, indirects
   ; Arrays to store results:
   directs   = fltarr(nmetric, nthresh)
   indirects = fltarr(nmetric, nthresh)
+  old_dirs  = fltarr(nmetric, nthresh)
+  old_indrs = fltarr(nmetric, nthresh)
 
   stencil = 1
   scale    = 292
@@ -756,17 +758,25 @@ pro calc_all_metric_table, stations, directs, indirects
      filename=string(stations, deltat, floor(threshold), $
                      floor(10*threshold-10*floor(threshold)), $
                      format='("metrics_",a2,"_dt",i2.2,"_thresh",i1.1,"p",i2.2,".txt")')
+     ; Results for new version of code:
      predict,'dbdt',stations=stat_list,threshold=threshold,scale=scale, $
-             exponent=exponent,deltat=deltat, stencil=stencil, $;out_file=filename,$
+             exponent=exponent,deltat=deltat, stencil=stencil, imodel=2,$
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
      directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
      indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
+     ; Results for old version of code:
+     predict,'dbdt',stations=stat_list,threshold=threshold,scale=scale, $
+             exponent=exponent,deltat=deltat, stencil=stencil, imodel=1,$
+             dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+     old_dirs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
+     old_indrs[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
   endfor
 
 end
 ;==============================================================================
-pro show_all_metric_table, stations, directs, indirects
+pro show_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
 
   filename = string(stations, format='("metric_table_",a2,".tex")')
   openw, lun, filename, /get_lun
@@ -799,8 +809,10 @@ pro show_all_metric_table, stations, directs, indirects
      line2 = line2 + ' indirect '
      
      for imetric = 0, nmetric-1 do begin
-        line1 = line1 + string(  directs[imetric,ithresh], format='("& ",f5.3," ")')
-        line2 = line2 + string(indirects[imetric,ithresh], format='("& ",f5.3," ")')
+        diff1 = directs[  imetric,ithresh] - old_dirs[ imetric, ithresh]
+        diff2 = indirects[imetric,ithresh] - old_indrs[imetric, ithresh]
+        line1 = line1 + string(  directs[imetric,ithresh], diff1, format='("& ",f5.3," (",f+6.3,") ")')
+        line2 = line2 + string(indirects[imetric,ithresh], diff2, format='("& ",f5.3," (",f+6.3,") ")')
      endfor
      line1 = line1 + '\\'
      line2 = line2 + '\\'
@@ -848,8 +860,8 @@ pro calc_all_events
   ; Create combined metrics for all events:
   for istat=0, 1 do begin
      stations=statlist[istat]
-     calc_all_metric_table, stations, directs, indirects
-     show_all_metric_table, stations, directs, indirects
+     calc_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
+     show_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
   endfor
 end
 ;==============================================================================
