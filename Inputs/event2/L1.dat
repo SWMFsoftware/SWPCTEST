@@ -1,6 +1,11 @@
 Obtained from http://ccmc.gsfc.nasa.gov/requests/GetInput/get_ace_L2.php
 Units: nT, km/s, amu/cc, K
 
+#SATELLITEXYZ
+227.5
+0.0
+0.0
+
 #COORDINATES
 GSM
 
