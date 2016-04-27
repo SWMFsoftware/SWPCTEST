@@ -22,6 +22,7 @@ my $start = $_;
 
 print "start=$start";
 
+# Read last line
 $_ = `tail -1 $file`;
 
 s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
@@ -29,6 +30,15 @@ $1\t\t\tiYear\n$2\t\t\tiMonth\n$3\t\t\tiDay\n$4\t\t\t\iHour\n$5\t\t\tiMinute\n$6
 
 my $end = $_;
 print "end=$end";
+
+my $xL1;
+if($file eq "L1.dat"){
+    # Read x coordinate of the L1
+    $_ = `grep -A1 SATELLITEXYZ $file | tail -1`;
+    $xL1 = $1 if /^\s*([\d\.]+)/;
+
+    print "xL1 = $xL1\n";
+}
 
 # get the average X position of the Wind satellite
 $file = "wind.dat";
@@ -67,6 +77,10 @@ while(<>){
 	chop;
 	$_ .= $end;
     }
+
+    # Set grid size according to L1 position
+    s/.*xMax$/$xL1\t\t\txMax/ if $xL1;
+	
     # Set the extraction point
     s/.*xTest$/$xWind\t\t\txTest/ if $xWind;
 
