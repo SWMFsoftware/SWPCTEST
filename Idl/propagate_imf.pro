@@ -2,11 +2,14 @@
 .r geopack
 
 ; Get the average position of wind from the IMF_mhd.dat file
-spawn,"perl -ne 'if(/:\s+(\S+)/){print $1;exit}' IMF_mhd.dat",xWind
-
+spawn,"perl -ne 'if(/:\s+(\S+)/){print $1;exit}' IMF_mhd.dat",xBC
 ; convert to scalar double precision real
-xWind=double(xWind(0))
-help, xwind
+xBC=double(xBC(0))
+help, xBC
+
+spawn,"perl -ne 'if($x){print; exit}; $x=1 if /#SATELLITEXYZ/;' L1.dat",xL1
+xL1=double(xL1(0))
+help, xL1
 
 ;;; we could read the actual wind X position too ;;;
 
@@ -32,7 +35,7 @@ gsm_gse, u, epoch
 ;;; wlog(*,10:12) = transpose(u)
 
 ; distance of xMax from xTest in PARAM.in
-xbc = 0*logtime + (235-xWind)*6378.0 
+xbc = 0*logtime + (xL1-xBC)*6378.0 
 
 ; Propagate solar wind by xbc
 correct_imf, wlog, xbc, logfilename, 'IMF_ballistic.dat'
