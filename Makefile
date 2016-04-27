@@ -58,7 +58,7 @@ propagate1d_run:
 	done
 
 propagate1d_plot:
-	for e in 2 3 4 5 6 7 8 9 10; do				\
+	for e in 2 3 4 5 6 7 8 9 10; do			\
 		cd ${INPUTDIR}/event$$e/;		\
 		idl ${SWPCTESTDIR}/Idl/compare_imf.pro; \
 	done
@@ -67,6 +67,16 @@ propagate1d_wind_plot:
 	for e in 7 8 9 10; do				 \
 		cd ${INPUTDIR}/event$$e/;		 \
 		idl ${SWPCTESTDIR}/Idl/compare_wind.pro; \
+	done
+
+ballistic:
+	for e in 2 3 4 5 6; do					\
+		cd ${INPUTDIR}/event$$e/;			\
+		idl ${SWPCTESTDIR}/Idl/ballistic.pro;		\
+	done
+	for e in 7 8 9 10; do					\
+		cd ${INPUTDIR}/event$$e/;			\
+		idl ${SWPCTESTDIR}/Idl/ballistic_wind.pro;	\
 	done
 
 test:
