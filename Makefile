@@ -28,6 +28,9 @@ help:
 	@echo "make test QUEDIR='~/user/'    (set directory from which to run)"
 	@echo "make check                    (check results of runs)"
 	@echo "make propagate1d EVENTS=2,3   (propagate ACE/DISCVR data to BATSRUS boundary)"
+	@echo
+	@echo "make propagate1d_plot         (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
+	@echo "make propagate1d_wind_plot    (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
 
 GMDIR=${DIR}/GM/BATSRUS
 PROPDIR = ${GMDIR}/run_L1toBC
@@ -52,6 +55,18 @@ propagate1d_run:
 		mpirun -np 4 ./BATSRUS.exe > runlog; 			    \
 		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g'  \
 			IO2/log*.log > ${INPUTDIR}/event$$e/IMF_mhd.dat;    \
+	done
+
+propagate1d_plot:
+	for e in 2 3 4 5 6 7 8 9 10; do				\
+		cd ${INPUTDIR}/event$$e/;		\
+		idl ${SWPCTESTDIR}/Idl/compare_imf.pro; \
+	done
+
+propagate1d_wind_plot:
+	for e in 7 8 9 10; do				 \
+		cd ${INPUTDIR}/event$$e/;		 \
+		idl ${SWPCTESTDIR}/Idl/compare_wind.pro; \
 	done
 
 test:
