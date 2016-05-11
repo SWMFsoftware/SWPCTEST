@@ -130,6 +130,9 @@ check_postproc:
 			cd ${TESTPATH};					\
 			./Scripts/convert_mags.py -o=./deltaB/Results/Event$$e  \
 			${QUEDIR}/run_event$$e/results/GM;		\
+			cp ${QUEDIR}/run_event$$e/results/GM/magnetometer* \
+			${QUEDIR}/run_event$$e/results/GM/*.log		\
+			./deltaB/Results/Event$$e;			\
 		fi;							\
 	done
 
