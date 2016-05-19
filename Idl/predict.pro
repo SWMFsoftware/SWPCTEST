@@ -146,29 +146,33 @@ end
 ; ============================================================================
 
 pro predict, choice, $
-             imodel=imodel, deltat=deltat, stencil=stencil, $
+             models=models, modelnames=modelnames, $
+             deltat=deltat, stencil=stencil, $
              threshold=threshold, $
              scale=scale, exponent=exponent, $
              coeff=coeff, power=power, $
-             stations=stations, $
+             stationlat=stationlat, stations=stations, $
              firstevent=firstevent, lastevent=lastevent, $
              showinfo=showinfo, $
              db_pod=db_pod, db_pof=db_pof, db_hss=db_hss, $
              dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof, dbdt_hss=dbdt_hss, $
-             out_file=out_file, append=append
+             out_file=out_file, append=append, verbose=verbose
 
                                 ; what to plot: choice = 'db', 'dbdt', 'corr'
                                 ; width of bins [minute] and [hour]
-                                ; stations can be list of stations or
-                                ; 'hi' or 'lo' for high or low
-                                ; latitude set of stations.
+                                ; stations can be lists of stations or
+                                ; 'veryhi', 'high', 'mid' or 'low' 
+                                ; for sets of stations.
   if n_elements(deltat) lt 1 then deltat = 20.0
   dt = deltat/60.0
 
-  ; Open our output file:
   if not keyword_set(out_file) then out_file=''
   if not keyword_set(append)   then append=0
-  if out_file then openw, lun, out_file, append=append, /get_lun
+  if not keyword_set(verbose)  then verbose=0
+
+  ; -1 is STDOUT
+  if out_file then openw, lun, out_file, append=append, /get_lun $
+  else lun = -1
   
 ; Width of stencil for time derivative
   if not keyword_set(stencil) then stencil = 1
@@ -190,29 +194,30 @@ pro predict, choice, $
 
   if n_elements(showinfo) lt 1 then showinfo=1
 
-  ; for low  lat: stations=['frd','frn','fur']
-  ; for mid  lat: stations=['new','ott','wng']
-  ; for high lat: stations=['abk','pbq','ykc']  or ['abk','mea','pbq','ykc']
-  ; veryhigh lat: stations=['hrn','iqa']
-
-  if not keyword_set(stations) then stations = $
-     ['abk', 'frd', 'frn', 'fur', 'hrn', 'iqa', 'mea', 'new', 'ott', 'pbq', 'wng', 'ykc']
-
-  if isa(stations, 'string') and not isa(stations, /array) then begin
-     if stations eq 'hi' then stations = ['abk', 'pbq', 'ykc'] $
-     else stations = ['wng','new','ott']
+  if keyword_set(stationlat) then begin
+     case stationlat of
+        'veryhigh': stations = ['hrn','iqa']
+        'high'    : stations = ['abk', 'pbq', 'ykc']
+        'mid'     : stations = ['wng','new','ott']
+        'low'     : stations = ['frd','frn','fur']
+        else: print,' invalid value for stationlat=',stationlat
+     endcase
   endif
 
-  models     = ['Observations', 'SWMF_CCMC', 'Results' ]
-  modelnames = ['Observed',     'SWMFccmc',  'SWMF_new']
+  if n_elements(stations) lt 1 then stations = $
+     ['abk', 'frd', 'frn', 'fur', 'hrn', 'iqa', 'mea', $
+      'new', 'ott', 'pbq', 'wng', 'ykc']
 
-  if n_elements(imodel) gt 0 then begin
-     imodelmin = imodel
-     imodelmax = imodel
-  endif else begin
-     imodelmin = 0
-     imodelmax = n_elements(models) - 1
-  endelse
+  if n_elements(models) eq 0 then begin
+     models     = ['Observations', 'SWMF_CCMC', 'Results']
+     modelnames = ['Observed',     'SWMFccmc',  'SWMF_new']
+  endif
+
+  if n_elements(modelnames) eq 0 then modelnames=models
+
+  nmodel = n_elements(models)
+
+  print,'nmodel, models=', nmodel, models
 
   events = ['Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6']
 
@@ -249,15 +254,15 @@ pro predict, choice, $
   endcase
 
   ; write header information to file:
-  if out_file then begin
-     printf, lun, 'Stations used = ', stations
-     printf, lun, 'Events used = '  , events[firstevent:lastevent]
-     printf, lun, 'Deltat, threshold = ', deltat, threshold
-  endif
+  printf, lun, 'Stations used = ', stations
+  printf, lun, 'Events used = '  , events[firstevent:lastevent]
+  printf, lun, 'Deltat, threshold = ', deltat, threshold
   
-  for imodel1 = imodelmin, imodelmax do begin
-     model     = models[imodel1]
-     modelname = modelnames[imodel1]
+  for imodel = 0, nmodel-1 do begin
+     model     = models[imodel]
+     modelname = modelnames[imodel]
+
+     if verbose then print,' imodel, modelname=', imodel, modelname
 
      plotfile  = choice + '_' + modelname + '.eps'
      set_device, plotfile, /land, eps=(firstevent eq lastevent)
@@ -270,6 +275,8 @@ pro predict, choice, $
 
         event = events[ievent]
         date  = dates[ievent]
+
+        if verbose then print,' imodel, event=', ievent, date
 
         for istation = 0, nstation-1 do begin
 
@@ -462,10 +469,9 @@ pro predict, choice, $
         dbdt_pof = f/(f+n)
         dbdt_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
 
-        if out_file then $
-           printf, lun, modelname,' total dbdt: pod, pof, hss=', $
-                   dbdt_pod, dbdt_pof, dbdt_hss, $
-                   format='(2a,3f8.4)'
+        printf, lun, modelname,' total dbdt: pod, pof, hss=', $
+                dbdt_pod, dbdt_pof, dbdt_hss, $
+                format='(2a,3f8.4)'
 
      endif
 
@@ -480,10 +486,9 @@ pro predict, choice, $
         db_pof = f/(f+n)
         db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
      
-        if out_file then $
-           printf, lun, modelname,' total db  : pod, pof, hss=', $
-                   db_pod, db_pof, db_hss, $
-                   format='(2a,3f8.4)'
+        printf, lun, modelname,' total db  : pod, pof, hss=', $
+                db_pod, db_pof, db_hss, $
+                format='(2a,3f8.4)'
      
      endif
 
@@ -723,14 +728,12 @@ pro show_hss_dt_table, stations, directs, indirects
 end
 ;==============================================================================
 
-pro calc_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
+pro calc_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
   ; INPUTS:
-  ; Stations is either 'hi' or 'lo' to set a group of stations.
+  ; stationlat='veryhigh', 'high', 'mid' or 'low' for a group of stations
   ; imodel is the model number: 0 for obs, 1 for SWMF_old, 2 for SWMF_new.
   ; OUTPUTS:
   ; "directs", a nDeltaT-by-nThreshhold
-  if stations eq 'hi' then stat_list = ['abk', 'pbq', 'ykc'] $
-  else stat_list = ['wng','new','ott']
 
   thresholds=[0.3, 0.7, 1.1, 1.5]
   deltat = 20.
@@ -745,7 +748,7 @@ pro calc_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
   old_dirs  = fltarr(nmetric, nthresh)
   old_indrs = fltarr(nmetric, nthresh)
 
-  stencil = 1
+  stencil  = 1
   scale    = 292
   exponent = 1.14
 
@@ -755,19 +758,21 @@ pro calc_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
 
   for ithresh = 0, nthresh-1 do begin
      threshold = thresholds[ithresh]
-     filename=string(stations, deltat, floor(threshold), $
+     filename=string(stationlat, deltat, floor(threshold), $
                      floor(10*threshold-10*floor(threshold)), $
-                     format='("metrics_",a2,"_dt",i2.2,"_thresh",i1.1,"p",i2.2,".txt")')
+                     format='("metrics_",a,"_dt",i2.2,"_thresh",i1.1,"p",i2.2,".txt")')
      ; Results for new version of code:
-     predict,'dbdt',stations=stat_list,threshold=threshold,scale=scale, $
-             exponent=exponent,deltat=deltat, stencil=stencil, imodel=2,$
+     predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
+             exponent=exponent,deltat=deltat, stencil=stencil, $
+             models=['Results'], $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
      directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
      indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
      ; Results for old version of code:
-     predict,'dbdt',stations=stat_list,threshold=threshold,scale=scale, $
-             exponent=exponent,deltat=deltat, stencil=stencil, imodel=1,$
+     predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
+             exponent=exponent,deltat=deltat, stencil=stencil, $
+             models=['SWMF_CCMC'], $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
      old_dirs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
@@ -776,15 +781,11 @@ pro calc_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
 
 end
 ;==============================================================================
-pro show_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
+pro save_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
 
-  filename = string(stations, format='("metric_table_",a2,".tex")')
+  filename = "metric_table_" + stationlat + ".tex"
   openw, lun, filename, /get_lun
   
-  ; Set stations using either 'hi' or 'lo'.
-  if stations eq 'hi' then stations = ['abk', 'pbq', 'ykc'] $
-  else stations = ['wng','new','ott']
-
   thresholds=[0.3, 0.7, 1.1, 1.5]
   deltat = 20.
   
@@ -793,7 +794,7 @@ pro show_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
   nmetric = s(1)
   nthresh = s(2)
 
-  printf, lun, 'stations=', stations
+  printf, lun, 'stationlat=', stationlat
   printf, lun, ''
   printf, lun, '$\Delta t_{window}=',deltat,'$'
   printf, lun, ''
@@ -831,37 +832,39 @@ end
 ;==============================================================================
 pro calc_all_events
   
-  ; Set stations using either 'hi' or 'lo'.
-  statlist = ['hi', 'lo']
-  thresholds=[0.3, 0.7, 1.1, 1.5]
-  deltat = 20.
-  stencil = 1
+  ; Set station groups and thresholds
+  stationlats = ['veryhi', 'high', 'mid', 'low']
+  thresholds  = [0.3, 0.7, 1.1, 1.5]
+
+  ; These are default values
+  deltat   = 20.
+  stencil  = 1
   scale    = 292
   exponent = 1.14
 
   ; Create full metrics for each event:
-  for istat=0, 1 do begin
-     stations = statlist[istat]
+  for ilat = 0, -1 do begin
+     stationlat = stationlats[ilat]
      for ievent=0, 5 do begin
         for ithresh = 0, n_elements(thresholds)-1 do begin
            threshold = thresholds[ithresh]
-           ;print, ievent+1, statlist[istat], ievent+1, deltat, threshold
-           filename=string(ievent+1, statlist[istat], ievent+1, deltat, $
-                           format='("deltaB/Results/Event",i1.1,"/metrics_",a2,"_event",i2.2,"_dt",i2.2,".txt")')
-           predict,'dbdt', stations=stations, threshold=threshold, scale=scale, $
-                   firstevent=ievent, lastevent=ievent, exponent=exponent, $
-                   deltat=deltat, stencil=stencil, out_file=filename, append=ithresh
-           ;print, ievent+1, statlist[istat], ievent+1, deltat, threshold
+           filename=string(ievent+1, stationlat, ievent+1, deltat, $
+                           format='("deltaB/Results/Event",i1.1, "/metrics_",a,"_event",i2.2,"_dt",i2.2,".txt")')
+           predict,'dbdt', stationlat=stationlat, threshold=threshold, $
+                   scale=scale, exponent=exponent, $
+                   firstevent=ievent, lastevent=ievent, $
+                   deltat=deltat, stencil=stencil, out_file=filename, $
+                   append=ithresh
            ;print, '-------------------------------------'
         endfor
      endfor
   endfor
 
   ; Create combined metrics for all events:
-  for istat=0, 1 do begin
-     stations=statlist[istat]
-     calc_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
-     show_all_metric_table, stations, directs, indirects, old_dirs, old_indrs
+  for ilat=0, 3 do begin
+     stationlat=stationlats[ilat]
+     calc_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
+     save_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
   endfor
 end
 ;==============================================================================
