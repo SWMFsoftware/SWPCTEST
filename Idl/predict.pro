@@ -147,66 +147,93 @@ end
 
 pro predict, choice, $
              models=models, modelnames=modelnames, $
+             stationlat=stationlat, stations=stations, $
+             firstevent=firstevent, lastevent=lastevent, $
              deltat=deltat, stencil=stencil, $
              threshold=threshold, $
              scale=scale, exponent=exponent, $
              coeff=coeff, power=power, $
-             stationlat=stationlat, stations=stations, $
-             firstevent=firstevent, lastevent=lastevent, $
-             showinfo=showinfo, $
              db_pod=db_pod, db_pof=db_pof, db_hss=db_hss, $
              dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof, dbdt_hss=dbdt_hss, $
-             out_file=out_file, append=append, verbose=verbose
+             out_file=out_file, append=append, $
+             showinfo=showinfo, verbose=verbose, $
+             showplot=showplot, saveplot=saveplot
 
-                                ; what to plot: choice = 'db', 'dbdt', 'corr'
-                                ; width of bins [minute] and [hour]
-                                ; stations can be lists of stations or
-                                ; 'veryhi', 'high', 'mid' or 'low' 
-                                ; for sets of stations.
+  ;; choice = 'db', 'dbdt', 'corr'
+  ;; models: array directories containing results
+  ;; modelnames: array of names for printing results (default=models)
+  ;; firstevent: first event to use (default is 1)
+  ;; lastevent:  last event to use (default is 6)
+  ;; stations: array of station names (default is all 12 stations)
+  ;; stationlat = 'all','veryhigh','high','mid' or 'low' (default='all')
+  ;; deltat: width of bins in minutes (default=20)
+  ;; stencil = 1 or 2: discretization for dB/dt (default=1, compact stencil)
+  ;; scale, exponent: indirect dBdt = scale*(dB)^exponent (default=292,1.14)
+  ;; coefff, power: artificial scaling of simulated db or dbdt reults:
+  ;;                result_sim' = coeff*result_sim^power (default=1,1)
+  ;; db_pod, db_pof, db_hss: array of probablity of true and false
+  ;;                         detections and Heidke Skill Scores for dB
+  ;; dbdt_pod, dbdt_pof, dbdt_hss: array of probablity of true and false
+  ;;                         detections and Heidke Skill Scores for dB/dt
+  ;; out_file: name of file to save results into (default is STDOUT)
+  ;; append:   append to the out_file (default is overwrite)
+  ;; verbose:  write verbose information to the screen (default is false)
+  ;; showinfo: write information onto the plots (default is true)
+  ;; showplot: plot results (default=saveplot)
+  ;; saveplot: save plots into files (default=false)
+
   if n_elements(deltat) lt 1 then deltat = 20.0
   dt = deltat/60.0
 
   if not keyword_set(out_file) then out_file=''
   if not keyword_set(append)   then append=0
   if not keyword_set(verbose)  then verbose=0
+  if not keyword_set(showplot) then showplot=0
+  if not keyword_set(saveplot) then saveplot=0
+  if saveplot then showplot=1
 
-  ; -1 is STDOUT
+  ;; lun = -1 is STDOUT
   if out_file then openw, lun, out_file, append=append, /get_lun $
   else lun = -1
   
-; Width of stencil for time derivative
+  ;; Width of stencil for time derivative
   if not keyword_set(stencil) then stencil = 1
 
-                                ; threshold for dBdt [nT/s] or dB [nT]
+  ;; threshold for dBdt [nT/s] or dB [nT]
   if not keyword_set(threshold) then begin
      if choice eq 'db' then threshold = 100.0 else threshold = 1.1
   endif
 
-                                ; ratio of dB [nT] to dB/dt [nT/s]
-  if not keyword_set(scale) then scale = 292.0
-
-                                ; exponent for scaled db
+  ;; scaling and exponent for indirect db calculation:
+  ;; dB/dt [nT/s] = scale*(dB[nT])^exponent
+  if n_elements(scale)    lt 1 then scale = 292.0
   if n_elements(exponent) lt 1 then exponent = 1.14
 
-  ; coefficient and power for dBdT (simulated)
+  ;; coefficient and power for artificial scaling of results
+  ;; result' = coeff*result^power
   if n_elements(coeff) lt 1 then coeff = 1.0
   if n_elements(power) lt 1 then power = 1.0
 
   if n_elements(showinfo) lt 1 then showinfo=1
 
+  allstations = $
+     ['frn', 'frd', 'fur', $
+      'wng', 'new', 'ott', $
+      'mea', 'pbq', 'abk', 'ykc', $
+      'hrn', 'iqa' ]
+
   if keyword_set(stationlat) then begin
      case stationlat of
+        'all'     : stations = allstations
         'veryhigh': stations = ['hrn','iqa']
-        'high'    : stations = ['abk', 'pbq', 'ykc']
+        'high'    : stations = ['abk', 'pbq', 'ykc', 'mea']
         'mid'     : stations = ['wng','new','ott']
         'low'     : stations = ['frd','frn','fur']
         else: print,' invalid value for stationlat=',stationlat
      endcase
   endif
 
-  if n_elements(stations) lt 1 then stations = $
-     ['abk', 'frd', 'frn', 'fur', 'hrn', 'iqa', 'mea', $
-      'new', 'ott', 'pbq', 'wng', 'ykc']
+  if n_elements(stations) lt 1 then stations = allstations
 
   if n_elements(models) eq 0 then begin
      models     = ['Observations', 'SWMF_CCMC', 'Results']
@@ -217,23 +244,21 @@ pro predict, choice, $
 
   nmodel = n_elements(models)
 
-  print,'nmodel, models=', nmodel, models
+  events = ['?', 'Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6']
 
-  events = ['Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6']
-
-  periods= ['2003_Oct29_0600-Oct30_0600', $
+  periods= ['?', $
+            '2003_Oct29_0600-Oct30_0600', $
             '2006_Dec14-1200-Dec16_0000', $
             '2001_Aug31_0000-Sep01_0000', $
             '2005_Aug31_1000-Sep01_1200', $
             '2010_Apr05_0000-Apr06_0000', $
             '2011_Aug05_0900-Aug06_0900' ]
 
-  dates = ['20031029', '20061214', '20010831', '20050831', '20100405', '20110805']
+  dates = ['?', '20031029', '20061214', '20010831', '20050831', '20100405', '20110805']
+  tmins = [-1.,  6.0,       12.0,        0.0,       10.0,        0.0,        9.0 ]
+  tmaxs = [-1.,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0 ]
 
-  tmins = [  6.0,       12.0,        0.0,       10.0,        0.0,        9.0 ]
-  tmaxs = [ 30.0,       48.0,       24.0,       36.0,       24.0,       33.0 ]
-
-  if n_elements(firstevent) eq 0 then firstevent = 0
+  if n_elements(firstevent) eq 0 then firstevent = 1
   if n_elements(lastevent)  eq 0 then lastevent  = n_elements(events)-1
 
   !p.charsize = 1.6
@@ -253,6 +278,8 @@ pro predict, choice, $
      else: !p.multi = [0,4,3]
   endcase
 
+  if verbose then print,'nstation=', nstation,' p.multi=', !p.multi
+
   ; write header information to file:
   printf, lun, 'Stations used = ', stations
   printf, lun, 'Events used = '  , events[firstevent:lastevent]
@@ -264,45 +291,67 @@ pro predict, choice, $
 
      if verbose then print,' imodel, modelname=', imodel, modelname
 
-     plotfile  = choice + '_' + modelname + '.eps'
-     set_device, plotfile, /land, eps=(firstevent eq lastevent)
-
-                                ; first index: hit, false, miss, nopred
+     ;; first index: hit, false, miss, nopred
      dbdt_score = fltarr(4,nstation)
      db_score   = fltarr(4,nstation)
 
      for ievent = firstevent, lastevent do begin
 
+        if verbose then print,' ievent, event=', ievent, ' ', events(ievent)
+
+        if saveplot then begin
+           plotfile  = choice + '_' + modelname + $
+                       '_event' + string(ievent, format='(i2.2)')
+
+           case choice of
+              'db': plotfile += '_'+string(fix(threshold),format='(i0,"nT")')
+              'dbdt': plotfile += '_'+string(threshold,format='(f3.1,"nTs")')
+           endcase
+           plotfile += '.eps'
+
+           set_device, plotfile, /land
+        endif
+
         event = events[ievent]
         date  = dates[ievent]
-
-        if verbose then print,' imodel, event=', ievent, date
 
         for istation = 0, nstation-1 do begin
 
            station = strupcase(stations[istation])
 
+           if verbose then print,' istation=', istation, ' ', station
+
            ; Station PBQ was replaced with SNK after 2007
            if date gt '2007' and station eq 'PBQ' then station = 'SNK'
 
            file_obs_db = 'deltaB/Observations/'+event+'/'+station+'.txt'
-
-           if not file_test(file_obs_db) then continue
+           if not file_test(file_obs_db) then begin
+              print,'For event=',event,' there is no observation for station=',station
+              continue
+           endif
 
            file_sim_db  = 'deltaB/'+model+'/'+event+'/'+station+'.txt'
+           if not file_test(file_sim_db) then begin
+              if station eq 'SNK' then file_sim_db  = 'deltaB/'+model+'/'+event+'/PBQ.txt'
+              if not file_test(file_sim_db) then begin
+                 print,'For event=',event,' there is no result from model=',model,' for station=',station
+                 continue
+              endif
+           endif
 
-           if not file_test(file_sim_db) then continue
+           if verbose then print,'reading observation and simulation data'
 
            ; Read db and calculate db/dt from observations and simulations
-           read_data, file_obs_db, date, t_db_obs, db_obs, t_dbdt_obs, dbdt_obs, stencil
-           read_data, file_sim_db, date, t_db_sim, db_sim, t_dbdt_sim, dbdt_sim, stencil
-
-           dbdt_sim = coeff*dbdt_sim^power
+           read_data, file_obs_db, date, t_db_obs, $
+                      db_obs, t_dbdt_obs, dbdt_obs, stencil
+           read_data, file_sim_db, date, t_db_sim, $
+                      db_sim, t_dbdt_sim, dbdt_sim, stencil
 
            ; Calculate contingency tables and create plots
            case choice of
               'db':begin
-
+                 ;; artificial scaling
+                 db_sim = coeff*db_sim^power
                  tmin = tmins(ievent) ;; min(t_db_sim) > min(t_db_obs)
                  tmax = tmaxs(ievent) ;; max(t_db_sim) < max(t_db_obs)
 
@@ -329,21 +378,28 @@ pro predict, choice, $
                  db_score[  *,istation] = db_score[*,istation] + $
                                           [hit_db, false_db, miss_db, no_db]
 
+                 
+                 if showplot then begin
+                    title = strupcase(station) + ': H,F,M,N=' + $
+                            string(hit_db, false_db, miss_db, no_db, $
+                                   format='(4i4)')
 
-                 title = 'station=' + strupcase(station) + ': H,F,M,N=' + $
-                         string(hit_db,false_db,miss_db,no_db, format='(4i4)')
+                    if verbose then print,'plotting into p.multi=',!p.multi
 
-                 plot, t_db_obs, max_curve2(t_db_obs, db_obs, dt), $
-                       xtitle = 'time [h]', ytitle='dB!DH!N', $
-                       title = title, xrange = [tmin, tmax], xstyle=1, $
-                       yrange = [0.,max([db_obs, db_sim])], thick = 3
+                    plot, t_db_obs, max_curve2(t_db_obs, db_obs, dt), $
+                          xtitle = 'time [h]', ytitle='dB!DH!N', $
+                          title = title, xrange = [tmin, tmax], xstyle=1, $
+                          yrange = [0.,max([db_obs, db_sim])], thick = 3
 
-                 oplot, [tmin, tmax], [threshold, threshold], linestyle=2
-
-                 oplot, t_db_sim, max_curve2(t_db_sim, db_sim, dt), $
-                        color = 150, thick = 3
+                    oplot, [tmin, tmax], [threshold, threshold], linestyle=2
+                    
+                    oplot, t_db_sim, max_curve2(t_db_sim, db_sim, dt), $
+                           color = 150, thick = 3
+                 endif
               end
               'dbdt':begin
+                 ;; artificial scaling
+                 dbdt_sim = coeff*dbdt_sim^power
 
                  tmin = tmins(ievent) ;; min(t_dbdt_sim) > min(t_dbdt_obs)
                  tmax = tmaxs(ievent) ;; max(t_dbdt_sim) < max(t_dbdt_obs)
@@ -385,25 +441,30 @@ pro predict, choice, $
                                           [hit_db, false_db, $
                                            miss_db, no_db]
                  
-                 title = 'station=' + strupcase(station) + ': H,F,M,N=' + $
+                 title = strupcase(station) + ': H,F,M,N=' + $
                          string(hit_dbdt,false_dbdt,miss_dbdt,no_dbdt, format='(4i4)')
 
-                 if exponent gt 0.0 then title = title + $
-                       '!C dB proxy: H,F,M,N='+ $
+                 if exponent gt 0.0 then title += $
+                       '!C proxy: H,F,M,N='+ $
                        string(hit_db,false_db,miss_db,no_db,format='(4i4)')
 
-                 plot, t_dbdt_obs, max_curve2(t_dbdt_obs, dbdt_obs, dt), $
-                       xtitle = 'time [h]', ytitle='dB/dt!DH!N', $
-                       title = title, xrange = [tmin, tmax], xstyle=1, thick=3
+                 if showplot then begin
+                    if verbose then print,'plotting into p.multi=',!p.multi
 
-                 oplot, t_dbdt_sim, max_curve2(t_dbdt_sim, dbdt_sim, dt), $
-                        color = 150, thick=3
+                    plot, t_dbdt_obs, max_curve2(t_dbdt_obs, dbdt_obs, dt), $
+                          xtitle = 'time [h]', ytitle='dB/dt!DH!N', $
+                          title = title, xrange = [tmin, tmax], xstyle=1, $
+                          thick=3
 
-                 oplot, [tmin, tmax], [threshold, threshold], linestyle=2
+                    oplot, t_dbdt_sim, max_curve2(t_dbdt_sim, dbdt_sim, dt), $
+                           color = 150, thick=3
+
+                    oplot, [tmin, tmax], [threshold, threshold], linestyle=2
                  
-                 if exponent gt 0 then $
-                    oplot, t_db_sim, max_curve2(t_db_sim, proxy_sim, dt), $
-                           color = 250, thick = 3
+                    if exponent gt 0 then $
+                       oplot, t_db_sim, max_curve2(t_db_sim, proxy_sim, dt), $
+                              color = 250, thick = 3
+                 endif
               end
               'corr':begin
 
@@ -425,37 +486,40 @@ pro predict, choice, $
 
                  r = correlate(a,b)
 
-                 plot, t_dbdt_obs, a, $
-                       xtitle = 'time [h]', ytitle='dB/dt!DH!N', $
-                       title = station+', corr='+string(r,format='(f5.2)')
+                 if showplot then begin
+                    plot, t_dbdt_obs, a, $
+                          xtitle = 'time [h]', ytitle='dB/dt!DH!N', $
+                          title = station+', corr='+string(r,format='(f5.2)')
                  
-                 oplot, t_dbdt_obs, b, color = 250
-                 
+                    oplot, t_dbdt_obs, b, color = 250
+                 endif
               end
            endcase
-        endfor
+        endfor                  ; istation
 
         if showinfo then begin
-           info = 'Model='+modelname + ', event=' + date + ', deltat=' + string(fix(deltat),format='(i0,"min")')
-           if choice eq 'db' then info = info $
+           info = 'Model=' + modelname + $
+                  ', event' + string(ievent, format='(i2.2)') + '=' + date + $
+                  ', deltat=' + string(fix(deltat),format='(i0,"min")')
+           if choice eq 'db' then info += $
               + ', threshold=' + string(fix(threshold),format='(i0,"nT")')
            if choice eq 'dbdt' then begin
-              info = info $
+              info += $
                  + ', threshold=' + string(threshold,format='(f3.1,"nT/s")')
 
-              if exponent gt 0 then info = info $
-                 + ', scale=' + string(scale) +', exponent=' + string(exponent)
-              if coeff ne 1.0 then info = info $
+              if exponent gt 0 then info += $
+                 + ', proxy(red)=' + string(scale,exponent,format='(f5.1,"*dB!U",f5.2,"!N")')
+              if coeff ne 1.0 then info += $
                  + ', coeff=' + string(coeff) +', power=' + string(power)
            endif
-           xyouts,0.0,1.02,/norm,charsize=1, info
+           xyouts,0.0,1.03,/norm,charsize=1, info
         endif
 
-        !p.multi(0) = 0
+        if saveplot then close_device, /pdf
 
-     endfor
+     endfor                     ; imodel
 
-     close_device
+     !p.multi(0) = 0
 
      ; Calculate various scores
      if choice eq 'dbdt' then begin
@@ -521,24 +585,23 @@ pro predict, choice, $
      print,'correlate(log db_all>10, log dbdt_all>0.1)=', $
            correlate(alog(db_all), alog(dbdt_all))
 
-  
      print,'parameter fit and 1 sigma errors=', param, sigma
 
+     if showplot then begin
+        if saveplot then set_device, 'corr_'+strjoin(stations)+'.eps', /eps
 
-     set_device, 'corr_'+strjoin(stations)+'.eps', /eps
+        plot_oo, db_all, dbdt_all, psym=1, $
+                 xtitle='dB!DH!N [nT]', ytitle='dB/dt!DH!N [nT/s]'
 
-     plot_oo, db_all, dbdt_all, psym=1, $
-              xtitle='dB!DH!N [nT]', ytitle='dB/dt!DH!N [nT/s]'
+        oplot, db_all, dbdt_fit, color=250, thick=3
 
-     oplot, db_all, dbdt_fit, color=250, thick=3
+        oplot, [10,10000], 2/60.*[10,10000], thick=2, color=150
 
-     oplot, [10,10000], 2/60.*[10,10000], thick=2, color=150
-
-     if exponent gt 0 then $
-        oplot, [1.,10000.], ([1.,10000.]/scale)^exponent, color=100
-
-     close_device
-
+        if exponent gt 0 then $
+           oplot, [1.,10000.], ([1.,10000.]/scale)^exponent, color=100
+        
+        if saveplot then close_device, /pdf
+     endif
   endif
 
 end
@@ -616,12 +679,12 @@ pro optimize, thresholds=thresholds1, stations=stations1, imodel=imodel1, $
   if keyword_set(firstevent1) then $
      firstevent = firstevent1 $
   else $
-     firstevent = 0
+     firstevent = 1
 
   if keyword_set(lastevent1) then $
      lastevent = lastevent1 $
   else $
-     lastevent = 5
+     lastevent = 6
 
   ; what shall we optimize for: db or dbdt
   if keyword_set(opt1) then $
@@ -728,12 +791,23 @@ pro show_hss_dt_table, stations, directs, indirects
 end
 ;==============================================================================
 
-pro calc_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
-  ; INPUTS:
-  ; stationlat='veryhigh', 'high', 'mid' or 'low' for a group of stations
-  ; imodel is the model number: 0 for obs, 1 for SWMF_old, 2 for SWMF_new.
-  ; OUTPUTS:
-  ; "directs", a nDeltaT-by-nThreshhold
+pro calc_all_metric_table, $
+   stationlat, directs, indirects, directs2, indirects2, $
+   models=models, firstevent=firstevent, lastevent=lastevent
+
+;; Compare two model outputs for the stationlat station group.
+;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low' for a group 
+;; of stations.
+;; The results of the first model are put into the directs and
+;; indirects arrays corresponding to 
+;; the direct and indirect dB/dt prediction scores, respectively.
+;; The results of the second model are put into directs2 and indirects2.
+;; The 2nd and 3rd element of the optional models string array 
+;; specifies the two directories containing the model results. 
+;; If it is not given, the defaults are used.
+  
+  if n_elements(models) ne 3 then $
+     models=['Observations', 'Results', 'SWMF_CCMC']
 
   thresholds=[0.3, 0.7, 1.1, 1.5]
   deltat = 20.
@@ -743,10 +817,10 @@ pro calc_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
   nmetric = 3 ; POD, POFD, HSS
 
   ; Arrays to store results:
-  directs   = fltarr(nmetric, nthresh)
-  indirects = fltarr(nmetric, nthresh)
-  old_dirs  = fltarr(nmetric, nthresh)
-  old_indrs = fltarr(nmetric, nthresh)
+  directs    = fltarr(nmetric, nthresh)
+  indirects  = fltarr(nmetric, nthresh)
+  directs2   = fltarr(nmetric, nthresh)
+  indirects2 = fltarr(nmetric, nthresh)
 
   stencil  = 1
   scale    = 292
@@ -761,27 +835,40 @@ pro calc_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
      filename=string(stationlat, deltat, floor(threshold), $
                      floor(10*threshold-10*floor(threshold)), $
                      format='("metrics_",a,"_dt",i2.2,"_thresh",i1.1,"p",i2.2,".txt")')
-     ; Results for new version of code:
+     ; Results for model 1:
      predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
-             models=['Results'], $
+             models=models[1], $
+             firstevent=firstevent, lastevent=lastevent, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+
      directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
      indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
-     ; Results for old version of code:
+
+     ; Results for model 2:
      predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
-             models=['SWMF_CCMC'], $
+             models=models[2], $
+             firstevent=firstevent, lastevent=lastevent, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
-     old_dirs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
-     old_indrs[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
+
+     directs2[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
+     indirects2[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
   endfor
 
 end
 ;==============================================================================
-pro save_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
+pro save_all_metric_table, $
+   stationlat, directs, indirects, directs2, indirects2, $
+   models=models, firstevent=firstevent, lastevent=lastevent
+
+  if n_elements(models) ne 3 then $
+     models=['Observations', 'Results', 'SWMF_CCMC']
+
+  if n_elements(firstevent) lt 1 then firstevent=1
+  if n_elements(lastevent)  lt 1 then lastevent =6
 
   filename = "metric_table_" + stationlat + ".tex"
   openw, lun, filename, /get_lun
@@ -794,6 +881,10 @@ pro save_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
   nmetric = s(1)
   nthresh = s(2)
 
+  printf, lun, 'models=', models[1],' and ',models[2]
+  printf, lun, ''
+  printf, lun, 'events =', firstevent,' ... ', lastevent
+  printf, lun, ''
   printf, lun, 'stationlat=', stationlat
   printf, lun, ''
   printf, lun, '$\Delta t_{window}=',deltat,'$'
@@ -806,17 +897,21 @@ pro save_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
   for ithresh = 0, nthresh-1 do begin
      line1 = string(thresholds(ithresh),format='(f3.1,"\,[nT/s]&")')
      line2 = line1
-     line1 = line1 + ' direct   '
-     line2 = line2 + ' indirect '
+     line1 += ' direct   '
+     line2 += ' indirect '
      
      for imetric = 0, nmetric-1 do begin
-        diff1 = directs[  imetric,ithresh] - old_dirs[ imetric, ithresh]
-        diff2 = indirects[imetric,ithresh] - old_indrs[imetric, ithresh]
-        line1 = line1 + string(  directs[imetric,ithresh], diff1, format='("& ",f5.3," (",f+6.3,") ")')
-        line2 = line2 + string(indirects[imetric,ithresh], diff2, format='("& ",f5.3," (",f+6.3,") ")')
+        line1 += string( $
+                directs[imetric,ithresh], $
+                directs[imetric,ithresh] - directs2[ imetric, ithresh], $
+                format='("& ",f5.3," (",f+6.3,") ")')
+        line2 += string( $
+                indirects[imetric,ithresh], $
+                indirects[imetric,ithresh] - indirects2[imetric, ithresh], $
+                format='("& ",f5.3," (",f+6.3,") ")')
      endfor
-     line1 = line1 + '\\'
-     line2 = line2 + '\\'
+     line1 += '\\'
+     line2 += '\\'
      printf, lun, line1
      printf, lun, line2
      printf, lun, '\hline'
@@ -830,10 +925,14 @@ pro save_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
   
 end
 ;==============================================================================
-pro calc_all_events
+pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent
   
+  ; Use all six events by default
+  if n_elements(firstevent) lt 1 then firstevent=1
+  if n_elements(lastevent)  lt 1 then lastevent =6
+
   ; Set station groups and thresholds
-  stationlats = ['veryhi', 'high', 'mid', 'low']
+  stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
   thresholds  = [0.3, 0.7, 1.1, 1.5]
 
   ; These are default values
@@ -843,28 +942,38 @@ pro calc_all_events
   exponent = 1.14
 
   ; Create full metrics for each event:
-  for ilat = 0, -1 do begin
+  for ilat = 0, n_elements(stationlats)-1 do begin
      stationlat = stationlats[ilat]
-     for ievent=0, 5 do begin
+     for ievent = firstevent, lastevent do begin
         for ithresh = 0, n_elements(thresholds)-1 do begin
            threshold = thresholds[ithresh]
-           filename=string(ievent+1, stationlat, ievent+1, deltat, $
-                           format='("deltaB/Results/Event",i1.1, "/metrics_",a,"_event",i2.2,"_dt",i2.2,".txt")')
-           predict,'dbdt', stationlat=stationlat, threshold=threshold, $
+           filename=string(stationlat, ievent, $
+                           format='("metrics_lat_",a3,"_event",i2.2,".txt")')
+           predict,'dbdt', $
+                   models=models, $
+                   stationlat=stationlat, threshold=threshold, $
                    scale=scale, exponent=exponent, $
                    firstevent=ievent, lastevent=ievent, $
                    deltat=deltat, stencil=stencil, out_file=filename, $
-                   append=ithresh
-           ;print, '-------------------------------------'
+                   append=ithresh, saveplot=(stationlat eq 'all')
+
         endfor
      endfor
   endfor
 
   ; Create combined metrics for all events:
-  for ilat=0, 3 do begin
+  for ilat=0, n_elements(stationlats)-1 do begin
      stationlat=stationlats[ilat]
-     calc_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
-     save_all_metric_table, stationlat, directs, indirects, old_dirs, old_indrs
+     calc_all_metric_table, stationlat, $
+                            directs,  indirects, $
+                            directs2, indirects2, $
+                            models=models, $
+                            firstevent=firstevent, lastevent=lastevent
+     save_all_metric_table, stationlat, $
+                            directs,  indirects, $
+                            directs2, indirects2, $
+                            models=models, $
+                            firstevent=firstevent, lastevent=lastevent
   endfor
 end
 ;==============================================================================
