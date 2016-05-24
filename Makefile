@@ -16,7 +16,8 @@ NP=64
 
 MACHINE='pfe'
 TESTPATH=$(shell pwd)
-QUEDIR=$(TESTPATH)/..
+QUEDIR=$(TESTPATH)
+IMF=IMF.dat
 
 help:
 	@echo "This package builds and executes a set of validation"
@@ -25,7 +26,8 @@ help:
 	@echo "Examples:"
 	@echo "make test                     (run all test events)"
 	@echo "make test EVENTS=2,4          (run events 2 and 4 only)"
-	@echo "make test QUEDIR='~/user/'    (set directory from which to run)"
+	@echo "make test QUEDIR=/nobackupp8/ME/run (set absolute path for job directory)"
+	@echo "make test IMF=IMF_mhd.dat     (use a different IMF file)"
 	@echo "make test_compile	     (compile SWMF)"
 	@echo "make test_rundir		     (create rundirs for all EVENTS)"
 	@echo "make test_run	 	     (submit runs to que)"
@@ -108,15 +110,17 @@ test_compile:
 
 test_rundir:
 	@echo "Creating rundirs"
-	cd ..;					\
 	for e in ${EVENTLIST}; do	 	\
+		cd $(DIR);			\
 		make rundir MACHINE=${MACHINE}; \
 		mv run ${QUEDIR}/run_event$$e; 	\
 		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/LAYOUT.in	      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/job.long           ${QUEDIR}/run_event$$e;\
-		SWPCTEST/Scripts/change_params.py $$e ${QUEDIR}/run_event$$e;\
+		cp Param/SWPC/PARAM.in*	      	      ${QUEDIR}/run_event$$e;\
+		cd ${QUEDIR}/run_event$$e; \
+		  ${SWPCTESTDIR}/Scripts/change_param.pl -noplot -imf=${IMF};\
 	done
 
 test_run:
