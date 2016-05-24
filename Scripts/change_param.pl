@@ -1,18 +1,22 @@
 #!/usr/bin/perl -s
 &print_help if $h or $help;
 
+my $NoPlot = $noplot;
+my $IMF    = $imf or "L1.dat";
+
 # Allow in-place editing of the PARAM.in files
 $^I = "";
 
 use strict;
 
-my $file = glob("L1.dat") or glob("IMF.dat");
-die "Could not find IMF.dat or L1.dat\n" if not $file;
+die "Could not find IMF file $IMF\n" if not -e $IMF;
 
-print "Reading info from file=$file\n";
+print "Reading info from IMF file=$IMF\n";
 
-# Read first line after start
-$_ = `grep -A1 START $file | tail -1`;
+# Read first line after start or the 3rd line
+$_ = `grep -A1 START $IMF | tail -1`;
+
+$_ = `head -3 $IMF | tail -1` if not $_;
 
 # Create a proper date from first 6 elements
 s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
@@ -23,7 +27,7 @@ my $start = $_;
 print "start=$start";
 
 # Read last line
-$_ = `tail -1 $file`;
+$_ = `tail -1 $IMF`;
 
 s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
 $1\t\t\tiYear\n$2\t\t\tiMonth\n$3\t\t\tiDay\n$4\t\t\t\iHour\n$5\t\t\tiMinute\n$6\t\t\tiSecond/;
@@ -32,16 +36,16 @@ my $end = $_;
 print "end=$end";
 
 my $xL1;
-if($file eq "L1.dat"){
+if($IMF eq "L1.dat"){
     # Read x coordinate of the L1
-    $_ = `grep -A1 SATELLITEXYZ $file | tail -1`;
+    $_ = `grep -A1 SATELLITEXYZ $IMF | tail -1`;
     $xL1 = $1 if /^\s*([\d\.]+)/;
 
     print "xL1 = $xL1\n";
 }
 
 # get the average X position of the Wind satellite
-$file = "wind.dat";
+my $file = "wind.dat";
 my $xWind;
 if(-f $file){
     print "Reading info from file=$file\n";
@@ -78,6 +82,12 @@ while(<>){
 	$_ .= $end;
     }
 
+    # Switch off saving large plots
+    s/^\#(SAVEPLOT|MAGNETOMETERGRID)\b/$1/ if $NoPlot;
+
+    # Change the name of the IMF file
+    s/^IMF.dat/$IMF/;
+
     # Set grid size according to L1 position
     s/.*xMax$/$xL1\t\t\txMax/ if $xL1;
 	
@@ -98,7 +108,10 @@ Change the #STARTTIME and #ENDTIME commands in the PARAM.in*
 files in the run directory based on the first and last time
 shown in the IMF.dat or L1.dat file.
 
-Usage: ./change_param.pl
+Usage: ./change_param.pl [-noplot] [-imf=IMFFILE]
+
+-noplot      - do not save 2D plots (including magnetogram grids)
+-imf=IMFFILE - use IMFFILE instead of the default L1.dat file
 ";
     exit 0;
 }
