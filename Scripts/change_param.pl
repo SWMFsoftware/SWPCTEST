@@ -11,6 +11,9 @@ use strict;
 
 die "Could not find IMF file $IMF\n" if not -e $IMF;
 
+# make sure that SATELLITES.in file exists (may be empty)
+`touch SATELLITES.in`;
+
 print "Reading info from IMF file=$IMF\n";
 
 # Read first line after start or the 3rd line
