@@ -29,10 +29,6 @@ cd $PBS_O_WORKDIR
 #setenv MPI_MSGS_MAX      100000
 
 # Run it.
-rm -f PARAM.in
-ln -s PARAM.in_SWPC_init PARAM.in
-mpiexec SWMF.exe > log.`date +%y%m%d`
-
-./Restart.pl
+mpiexec SWMF.exe > runlog.`date +%y%m%d`
 
 exit
