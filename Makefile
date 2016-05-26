@@ -2,10 +2,18 @@ SHELL=/bin/bash
 
 include ../Makefile.def
 
-SWPCTESTDIR = ${DIR}/SWPCTEST
-INPUTDIR    = ${SWPCTESTDIR}/Inputs
+#MYDIR=$(shell pwd) # alternative and clever method
+MYDIR 	    = ${DIR}/SWPCTEST
+MYINPUTDIR  = ${MYDIR}/Inputs
+MYSCRIPTDIR = ${MYDIR}/Scripts
+GMDIR       = ${DIR}/GM/BATSRUS
+QUEDIR      = $(MYDIR)/run_test
+RESDIR	    = Results
 
-# Comma separated list of even indexes
+# Assume running on Pleiades (needed for testing on other machines)
+MACHINE='pfe'
+
+# Comma separated list of event indexes
 EVENTS=1,2,3,4,5,6
 
 # Space separated list (replace comma with space)
@@ -14,9 +22,8 @@ EVENTLIST = `echo ${EVENTS} | tr , ' '`
 # Number of processors to run on
 NP=64
 
-MACHINE='pfe'
-TESTPATH=$(shell pwd)
-QUEDIR=$(TESTPATH)
+# Default IMF file to be used. 
+# Other options: IMF_mhd.dat, IMF_ballistic.dat)
 IMF=IMF.dat
 
 help:
@@ -24,26 +31,25 @@ help:
 	@echo "simulations; see README for more information."
 	@echo ""
 	@echo "Examples:"
-	@echo "make test                     (run all test events)"
-	@echo "make test EVENTS=2,4          (run events 2 and 4 only)"
-	@echo "make test QUEDIR=/nobackupp8/ME/run (set absolute path for job directory)"
-	@echo "make test IMF=IMF_mhd.dat     (use a different IMF file)"
-	@echo "make test_compile             (compile SWMF)"
-	@echo "make test_rundir              (create rundirs for all EVENTS)"
-	@echo "make test_run                 (submit runs to que)"
+	@echo "make test                      (run all test events in run_test directory)"
+	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
+	@echo "make test QUEDIR=`pwd`/run     (set absolute path for run directory)"
+	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
+	@echo "make test_compile              (compile SWMF)"
+	@echo "make test_rundir               (create rundirs for all EVENTS)"
+	@echo "make test_run                  (submit runs to que)"
 	@echo ""
-	@echo "make check                    (check results of runs)"
-	@echo "make check_postproc           (collect results from simulations)"
-	@echo "make check_calc               (calculate metrics from results)"
-	@echo "make check_stash	             (zip results and metrics)"
+	@echo "make check          RESDIR=New (process results ftom ./run_test into deltaB/New)"
+	@echo "make check_postproc RESDIR=New (collect results from ./run_test)"
+	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
+	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
 	@echo ""
-	@echo "make ballistic                (ballistic propagation for events 2..10)"
-	@echo "make propagate1d EVENTS=2,3   (propagate ACE/DISCVR data to BATSRUS boundary)"
+	@echo "make ballistic                 (ballistic propagation for events 2..10)"
+	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
 	@echo
-	@echo "make propagate1d_plot         (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
-	@echo "make propagate1d_wind_plot    (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
+	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
+	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
 
-GMDIR=${DIR}/GM/BATSRUS
 PROPDIR = ${GMDIR}/run_L1toBC
 
 propagate1d:
@@ -60,34 +66,34 @@ propagate1d_rundir:
 
 propagate1d_run:
 	for e in ${EVENTLIST}; do 			 		    \
-		cp ${SWPCTESTDIR}/Inputs/event$$e/[Lw]*.dat ${PROPDIR};	    \
+		cp ${MYINPUTDIR}/event$$e/[Lw]*.dat ${PROPDIR};	    	    \
 		cd ${PROPDIR}; 						    \
-		${SWPCTESTDIR}/Scripts/change_param.pl; 		    \
+		${MYSCRIPTDIR}/change_param.pl; 		    \
 		mpirun -np 4 ./BATSRUS.exe > runlog; 			    \
 		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g'  \
-			IO2/log*.log > ${INPUTDIR}/event$$e/IMF_mhd.dat;    \
+			IO2/log*.log > ${MYINPUTDIR}/event$$e/IMF_mhd.dat;    \
 	done
 
 propagate1d_plot:
 	for e in 2 3 4 5 6 7 8 9 10; do			\
-		cd ${INPUTDIR}/event$$e/;		\
-		idl ${SWPCTESTDIR}/Idl/compare_imf.pro; \
+		cd ${MYINPUTDIR}/event$$e/;		\
+		idl ${MYDIR}/Idl/compare_imf.pro; \
 	done
 
 propagate1d_wind_plot:
 	for e in 7 8 9 10; do				 \
-		cd ${INPUTDIR}/event$$e/;		 \
-		idl ${SWPCTESTDIR}/Idl/compare_wind.pro; \
+		cd ${MYINPUTDIR}/event$$e/;		 \
+		idl ${MYDIR}/Idl/compare_wind.pro; \
 	done
 
 ballistic:
 	for e in 2 3 4 5 6; do					\
-		cd ${INPUTDIR}/event$$e/;			\
-		idl ${SWPCTESTDIR}/Idl/ballistic.pro;		\
+		cd ${MYINPUTDIR}/event$$e/;			\
+		idl ${MYDIR}/Idl/ballistic.pro;		\
 	done
 	for e in 7 8 9 10; do					\
-		cd ${INPUTDIR}/event$$e/;			\
-		idl ${SWPCTESTDIR}/Idl/ballistic_wind.pro;	\
+		cd ${MYINPUTDIR}/event$$e/;			\
+		idl ${MYDIR}/Idl/ballistic_wind.pro;	\
 	done
 
 test:
@@ -101,7 +107,7 @@ check:
 	@echo "Checking results against observations"
 	make check_postproc
 	make check_calc
-	make check_stash
+	make check_tar
 
 test_compile:
 	-@(cd ..; \
@@ -111,21 +117,20 @@ test_compile:
 
 test_rundir:
 	@echo "Creating rundirs"
-	for e in ${EVENTLIST}; do	 	\
-		cd $(DIR);			\
-		make rundir MACHINE=${MACHINE}; \
-		mv run ${QUEDIR}/run_event$$e; 	\
+	for e in ${EVENTLIST}; do	 				     \
+		cd $(DIR);						     \
+		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}/run_event$$e;\
 		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/LAYOUT.in	      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/job.long           ${QUEDIR}/run_event$$e;\
-		cp Param/SWPC/PARAM.in*	      	      ${QUEDIR}/run_event$$e;\
-		cd ${QUEDIR}/run_event$$e; \
-		  ${SWPCTESTDIR}/Scripts/change_param.pl -noplot -imf=${IMF};\
+		cp Param/SWPC/PARAM.in_SWPC_init      ${QUEDIR}/run_event$$e/PARAM.in;\
+		cd ${QUEDIR}/run_event$$e;				     \
+		  	${MYSCRIPTDIR}/change_param.pl -noplot -imf=${IMF};\
 	done
 
 test_run:
-	@echo "Submitting simulation jobs to ques"
+	@echo "Submitting jobs"
 	cd ..; 							\
 	for e in ${EVENTLIST}; do				\
 		cd ${QUEDIR}/run_event$$e;			\
@@ -133,32 +138,28 @@ test_run:
 		screen -S event$$e -d -m watch.pfe.pl ev$$e;	\
 	done
 
-
 check_postproc:
 	@echo "Post processing simulation results"
 	for e in ${EVENTLIST}; do					\
 		cd ${QUEDIR}/run_event$$e;				\
-		if [ ! -d "results_event$$e" ]; then			\
-			./PostProc.pl -c results;			\
-			cd ${TESTPATH};					\
-			./Scripts/convert_mags.py -o=./deltaB/Results/Event$$e  \
-			${QUEDIR}/run_event$$e/results/GM;		\
-			cp ${QUEDIR}/run_event$$e/results/GM/magnetometer* \
-			${QUEDIR}/run_event$$e/results/GM/*.log		\
-			./deltaB/Results/Event$$e;			\
-		fi;							\
+		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;	\
+		mkdir -p ${MYDIR}/deltaB/${RESDIR}/Event$$e;		\
+		cp PARAM.in *log.* RESULTS/GM/* 			\
+			${MYDIR}/deltaB/${RESDIR}/Event$$e/;		\
+		cd ${MYDIR}/deltaB/${RESDIR}/Event$$e/;			\
+		${MYSCRIPTDIR}/convert_mags.py;				\
 	done
 
 check_calc:
 	@echo "Checking results against observations"
-	export IDL_STARTUP=${TESTPATH}/../GM/BATSRUS/Idl/idlrc;		\
-	export IDL_PATH='<IDL_DEFAULT>':${TESTPATH}/../GM/BATSRUS/Idl/; \
-	printf ".r Idl/predict.pro\n calc_all_events\n" | idl > idl_log.txt
-	mv metric_table*.tex deltaB/Results/
+	export IDL_STARTUP=idlrc;					\
+	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
+	printf ".r Idl/predict.pro\n calc_all_events\n" | idl > idl_log.txt;
+	mv metric*.tex dbdt* deltaB/${RESDIR}/
 
-check_stash:
+check_tar:
 	@echo "Saving results as tarball"
-	tar -czf results_$$(date +%Y%m%d_%H%M).tgz deltaB/Results
+	tar -czf ${RESDIR}_$$(date +%Y%m%d_%H%M).tgz deltaB/${RESDIR}
 
 clean:
 	@echo "Cleaning result files"
