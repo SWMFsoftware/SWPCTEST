@@ -2,7 +2,6 @@ SHELL=/bin/bash
 
 include ../Makefile.def
 
-#MYDIR=$(shell pwd) # alternative and clever method
 MYDIR 	    = ${DIR}/SWPCTEST
 MYINPUTDIR  = ${MYDIR}/Inputs
 MYSCRIPTDIR = ${MYDIR}/Scripts
@@ -17,7 +16,11 @@ MACHINE='pfe'
 EVENTS=1,2,3,4,5,6
 
 # Space separated list (replace comma with space)
-EVENTLIST = `echo ${EVENTS} | tr , ' '`
+EVENTLIST  = $(shell echo ${EVENTS} | tr , ' ')
+
+# First and last events (used as arguments of some IDL scripts)
+FIRSTEVENT = $(shell echo ${EVENTS} | head -c 1)
+LASTEVENT  = $(shell echo ${EVENTS} | tail -c 2)
 
 # Number of processors to run on
 NP=64
@@ -154,8 +157,8 @@ check_calc:
 	@echo "Checking results against observations"
 	export IDL_STARTUP=idlrc;					\
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
-	printf ".r Idl/predict.pro\n calc_all_events\n" | idl > idl_log.txt;
-	mv metric*.tex dbdt* deltaB/${RESDIR}/
+	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	mv metrics*.txt dbdt* idl_log.txt deltaB/${RESDIR}/
 
 check_tar:
 	@echo "Saving results as tarball"
