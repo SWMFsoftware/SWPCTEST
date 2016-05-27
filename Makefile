@@ -8,6 +8,7 @@ MYSCRIPTDIR = ${MYDIR}/Scripts
 GMDIR       = ${DIR}/GM/BATSRUS
 QUEDIR      = $(MYDIR)/run_test
 RESDIR	    = Results
+RES2DIR	    = SWMF_CCMC
 
 # Assume running on Pleiades (needed for testing on other machines)
 MACHINE='pfe'
@@ -46,6 +47,7 @@ help:
 	@echo "make check_postproc RESDIR=New (collect results from ./run_test)"
 	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
 	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
+	@echo "make check_compare RESDIR=New RES2DIR=Old (compare two runs)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
@@ -159,6 +161,14 @@ check_calc:
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
 	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
 	mv metrics*.txt dbdt* idl_log.txt deltaB/${RESDIR}/
+
+check_compare:
+	@echo "Compare ${RESDIR} and ${RES2DIR}"
+	export IDL_STARTUP=idlrc;					\
+	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
+	printf ".r Idl/predict.pro\n save_comparison_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	mkdir -p COMPARE_${RESDIR}_vs_${RES2DIR}
+	mv metric_table*.tex idl_log.txt COMPARE_${RESDIR}_vs_${RES2DIR}/
 
 check_tar:
 	@echo "Saving results as tarball"
