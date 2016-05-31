@@ -6,44 +6,36 @@ by CCMC and by the SWPC validation suite.  A new file is made for each
 magnetometer.
 
 Issues: need to incorporate station lat/lon into output.
-
-Usage: convert_mags.py [options] magnetometer_file
-       ...where "magnetometer_file" can be a the path to an SWMF/BATS-R-US
-       magnetometer output file OR a directory containing a magnetometer file.
-
-Options:
-   -h or -help:
-     Print this help information.
-
-   -o=[output path]
-     Set the path to save the resulting output files.  Default is PWD.
-
 '''
 
-import os
+# Ensure that we are using a version of python >= 2.7.
 import sys
+if sys.version_info < (2,7):
+    print('ERROR: Python version must be >= 2.7')
+    print('Current version: '+sys.version)
+    exit()
+        
+
+import os
 import datetime as dt
-from glob import glob
+from glob     import glob
+from argparse import ArgumentParser
 
 # Default values:
-outdir = '.'
 magfile = None
 
-# Parse argument list.
-for arg in sys.argv[1:-1]:
-    # Print help:
-    if arg.lower()[:2] == '-h':
-        print __doc__
-        exit()
-    # Set outdir:
-    elif arg[:3]=='-o=':
-        outdir = arg[3:]
-    else:
-        print(__doc__)
-        print('Unrecognized argument: {}'.format(arg))
+parser = ArgumentParser(description=__doc__)
 
-# Set the magnetometer file:
-magfile = magfile=sys.argv[-1]
+parser.add_argument('-m', '--magfile', type=str, default='./',
+                    help='A path to a single magnetometer output file or '
+                    +' directory containing an output file.  Defaults to PWD.')
+parser.add_argument('-o', '--outdir', type=str, default='./', help='Path to '
+                    +'location to place output files.  Defaults to PWD.')
+
+# Parse arguments and stash magfile into convenience variable:
+args   = parser.parse_args()
+magfile= args.magfile
+
 # If a directory is given, search for the mag file:
 if os.path.isdir(magfile):
     found_files = glob(magfile+'/magnetometer*')
@@ -51,12 +43,7 @@ if os.path.isdir(magfile):
         raise(ValueError('No magnetometer file found in {}.'.format(magfile)))
     magfile = found_files[0]
 
-# Check magfile argument:
-if not magfile:
-    print __doc__
-    print('Magnetometer file argument missing!')
-    exit()
-        
+# Open magnetometer file for reading:
 infile = open(magfile, 'r')
 
 # Read header to get list of variables and stations.
@@ -70,7 +57,7 @@ infile.close()
 # Create new files, write headers.
 files = []
 for i,s in enumerate(stats):
-    f = open(outdir+'/{}.txt'.format(s), 'w')
+    f = open(args.outdir+'/{}.txt'.format(s), 'w')
     f.write('# SWMF run: SWMF_SWPC\n')
     f.write('#SWMF run finished on {}\n'.format(dt.datetime.now().isoformat()))
     f.write('# North, East and vertical components of magnetic field\n')

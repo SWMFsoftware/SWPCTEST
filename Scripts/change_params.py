@@ -14,6 +14,13 @@ EXAMPLE:
   > change_params.py 3 /nobackupp8/username/run_event3
 
 '''
+import sys
+
+# Ensure that we are using a version of python >= 2.7.
+if sys.version_info < (2,7):
+    print('ERROR: Python version must be >= 2.7')
+    print('Current version: '+sys.version)
+    exit()
 
 ####### Defined functions:
 def parse_events(filename):
@@ -96,12 +103,12 @@ def edit_param(old_file, new_file, event_info, plot=False):
             else:
                 t = event_info['end']
             new.write(line)
-            new.write(re.sub('\d{4}', '{:04d}'.format(t.year),   old.readline()))
-            new.write(re.sub('\d{2}', '{:02d}'.format(t.month),  old.readline()))
-            new.write(re.sub('\d{2}', '{:02d}'.format(t.day),    old.readline()))
-            new.write(re.sub('\d{2}', '{:02d}'.format(t.hour),   old.readline()))
-            new.write(re.sub('\d{2}', '{:02d}'.format(t.minute), old.readline()))
-            new.write(re.sub('\d{2}', '{:02d}'.format(t.second), old.readline()))
+            new.write(re.sub('\d{4}','{:04d}'.format(t.year),   old.readline()))
+            new.write(re.sub('\d{2}','{:02d}'.format(t.month),  old.readline()))
+            new.write(re.sub('\d{2}','{:02d}'.format(t.day),    old.readline()))
+            new.write(re.sub('\d{2}','{:02d}'.format(t.hour),   old.readline()))
+            new.write(re.sub('\d{2}','{:02d}'.format(t.minute), old.readline()))
+            new.write(re.sub('\d{2}','{:02d}'.format(t.second), old.readline()))
 
         # Change F10.7 setting:
         elif '#IONOSPHERE' in line:
