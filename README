@@ -1,6 +1,9 @@
 This repository contains scripts and data for validating the 
 Michigan Geospace model based on the Space Weather Modeling Framework (SWMF).
 
+The SWPCTEST directory must be placed within an installed SWMF source code
+directory and have access to SWMF's Makefile.def file.
+
 The deltaB directory contains observations and SWMF model results 
 of the magnetic disturbances at 12 magnetometer stations 
 for the six SWPC challenge events that were run by CCMC. 
@@ -19,3 +22,42 @@ skill scores both for direct dB/dt and power law fit a(dB)^p.
 See Idl/README for more detail.
 See G. Toth et al. 2014, J. Geophys. Res., 119, 310, doi:10.1002/2013JA019456
 
+REQUIREMENTS:
+SWPCTEST is designed to run on NASA's Pleiades machines.  The following
+system modules must be loaded via "module load <package>" syntax:
+python/2.7.6 (or newer)
+idl/8.1 (or newer)
+
+USAGE:
+To execute the test, install the SWMF in the usual manner.  Then, enter the
+SWPCTEST directory and type 
+
+make help
+
+to see the available options. To run the code for all 6 events type
+
+make test
+
+To run a subset of events, type
+
+make test EVENTS=2,3,5
+
+This will configure and compile the SWMF, create separate run directories and
+copy input files for each event, and submit the simulations to the run queue.
+Note that as of now, the suite is set up to execute on the NASA Pleiades super
+computer.  At this point, the user must wait for the simulations to finish.
+Upon completion, the user should return to the SWPCTEST directory and type 
+
+make check  
+
+This will then collect the simulation results into the deltaB/Results directory
+for each event.  Metrics are then calculated and saved.  In each results
+directory (deltaB/Results/Event*), a text file is generated with probability of
+detection (POD), probability of false detection (POF), and Heidke Skill Score
+(HSS) for high and mid latitude magnetometer groups for a variety of dB/dt
+thresholds.  These same numbers are calculated for the results obtained for the
+SWPC selection study led by CCMC.  This allows for a comparison of the current
+version of the code with the version originally submitted to SWPC.  A summary
+table that contains the metrics for all events and stations together is written
+to the results directory.  Finally, the results and metrics are archived in
+compressed tar file.

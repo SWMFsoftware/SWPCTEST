@@ -21,7 +21,7 @@ EVENTLIST  = $(shell echo ${EVENTS} | tr , ' ')
 
 # First and last events (used as arguments of some IDL scripts)
 FIRSTEVENT = $(shell echo ${EVENTS} | head -c 1)
-LASTEVENT  = $(shell echo ${EVENTS} | tail -c 2)
+LASTEVENT  = $(shell echo ${EVENTS} | tail -c2)
 
 # Number of processors to run on
 NP=64
