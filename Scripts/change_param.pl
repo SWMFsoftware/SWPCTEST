@@ -16,7 +16,7 @@ die "Could not find IMF file $IMF\n" if not -e $IMF;
 
 print "Reading info from IMF file=$IMF\n";
 
-# Read first line after start or the 3rd line
+# Read first line after START or the 3rd line if there is no START
 $_ = `grep -A1 START $IMF | tail -1`;
 
 $_ = `head -3 $IMF | tail -1` if not $_;
@@ -26,8 +26,17 @@ s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
 $1\t\t\tiYear\n$2\t\t\tiMonth\n$3\t\t\tiDay\n$4\t\t\t\iHour\n$5\t\t\tiMinute\n$6\t\t\tiSecond/;
 
 my $start = $_;
-
 print "start=$start";
+
+# Create the year-month-day string to get the F10.7 value
+my $startday = "$1-$2-$3";
+print "startday = $startday\n";
+
+# Get the F10.7 value from the Param/f10.7 file
+$_ = `grep $startday Param/f107.txt`;
+/\s+(\d+\.\d+)\s+/;
+my $f107 = $1;
+print "F10.7 = $f107\n";
 
 # Read last line
 $_ = `tail -1 $IMF`;
@@ -84,6 +93,8 @@ while(<>){
 	chop;
 	$_ .= $end;
     }
+    # Set F10.7 flux in the line containinf "F107Flux"
+    s/.*\s(F107Flux)/$f107\t\t\t$1/i;
 
     # Switch off saving large plots and restart files
     s/^\#(SAVEPLOT|MAGNETOMETERGRID|SAVERESTART)\b/$1/ 
