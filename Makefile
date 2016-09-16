@@ -123,6 +123,7 @@ test_compile:
 test_rundir:
 	@echo "Creating rundirs"
 	for e in ${EVENTLIST}; do	 				     \
+		rm -rf ${QUEDIR}/run_event$$e;				     \
 		cd $(DIR);						     \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}/run_event$$e;\
 		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}/run_event$$e;\
