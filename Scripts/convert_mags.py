@@ -69,7 +69,7 @@ for i,s in enumerate(stats):
     f.write(' [s] [deg] [deg] [nT] [nT] [nT]\n')
 
     # Loop through lines related to this magnetometer:
-    for l in rawlines[i::12]:
+    for l in rawlines[i::len(stats)]:
         # Parse line and turn into floating-point values.
         parts = l.split()
         parts = [float(p) for p in parts]
