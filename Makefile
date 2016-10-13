@@ -37,17 +37,19 @@ help:
 	@echo "Examples:"
 	@echo "make test                      (run all test events in run_test directory)"
 	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
-	@echo "make test QUEDIR=`pwd`/run     (set absolute path for run directory)"
+	@echo "make test QUEDIR=/nobackup/${USER}/run_swpctest (set absolute path for run directory)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
 	@echo "make test_compile              (compile SWMF)"
 	@echo "make test_rundir               (create rundirs for all EVENTS)"
 	@echo "make test_run                  (submit runs to que)"
 	@echo ""
-	@echo "make check          RESDIR=New (process results ftom ./run_test into deltaB/New)"
+	@echo "make check                     (process results from ./run_test into deltaB/Results)"
+	@echo "make check          RESDIR=New (process results from ./run_test into deltaB/New)"
 	@echo "make check_postproc RESDIR=New (collect results from ./run_test)"
 	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
 	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
-	@echo "make check_compare RESDIR=New RES2DIR=Old (compare two runs)"
+	@echo ""
+	@echo "make check_compare RESDIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
@@ -163,6 +165,10 @@ check_calc:
 	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
 	mv metrics*.txt dbdt* idl_log.txt deltaB/${RESDIR}/
 
+check_tar:
+	@echo "Saving results as tarball"
+	tar -czf ${RESDIR}_$$(date +%Y%m%d_%H%M).tgz deltaB/${RESDIR}
+
 check_compare:
 	@echo "Compare ${RESDIR} and ${RES2DIR}"
 	export IDL_STARTUP=idlrc;					\
@@ -170,10 +176,6 @@ check_compare:
 	printf ".r Idl/predict.pro\n save_comparison_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
 	mkdir -p COMPARE_${RESDIR}_vs_${RES2DIR}
 	mv metric_table*.tex idl_log.txt COMPARE_${RESDIR}_vs_${RES2DIR}/
-
-check_tar:
-	@echo "Saving results as tarball"
-	tar -czf ${RESDIR}_$$(date +%Y%m%d_%H%M).tgz deltaB/${RESDIR}
 
 clean:
 	@echo "Cleaning result files"
