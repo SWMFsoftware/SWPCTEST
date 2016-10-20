@@ -76,7 +76,7 @@ propagate1d_run:
 		cp ${MYINPUTDIR}/event$$e/[Lw]*.dat ${PROPDIR};	    	    \
 		cd ${PROPDIR}; 						    \
 		${MYSCRIPTDIR}/change_param.pl; 		    \
-		mpirun -np 4 ./BATSRUS.exe > runlog; 			    \
+		${PARALLEL} ${NPFLAG} 4 ./BATSRUS.exe > runlog; 			    \
 		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g'  \
 			IO2/log*.log > ${MYINPUTDIR}/event$$e/IMF_mhd.dat;    \
 	done
