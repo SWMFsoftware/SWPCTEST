@@ -122,6 +122,9 @@ test_compile:
 	make SWMF PIDL PSPH; \
 	)
 
+# Default PARAM.in file for the test
+PARAMINIT = PARAM.in_SWPC_init
+
 test_rundir:
 	@echo "Creating rundirs"
 	for e in ${EVENTLIST}; do	 				     \
@@ -132,7 +135,7 @@ test_rundir:
 		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/LAYOUT.in	      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/job.long           ${QUEDIR}/run_event$$e;\
-		cp Param/SWPC/PARAM.in_SWPC_init      ${QUEDIR}/run_event$$e/PARAM.in;\
+		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}/run_event$$e/PARAM.in;\
 		cd ${QUEDIR}/run_event$$e;				     \
 		  	${MYSCRIPTDIR}/change_param.pl -noplot -imf=${IMF};\
 	done
@@ -145,6 +148,24 @@ test_run:
 		./qsub.pfe.pl job.long ev$$e;		    	\
 		screen -S event$$e -d -m watch.pfe.pl ev$$e;	\
 	done
+
+test_order5:
+	@echo "Testing the SWMF with high order scheme"
+	make test_order5_compile
+	make test_order5_rundir
+	make test_order5_run
+	@echo "Test_order5 started.  make check when complete."
+
+test_order5_compile:
+	-@(cd ..; \
+	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:ng=3; \
+	make SWMF PIDL PSPH; \
+	)
+
+test_order5_rundir:
+	make test_rundir PARAMINIT=PARAM.in_order5_init
+
+test_order5_run: test_run
 
 check_postproc:
 	@echo "Post processing simulation results"
