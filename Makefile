@@ -146,7 +146,6 @@ test_run:
 	for e in ${EVENTLIST}; do				\
 		cd ${QUEDIR}/run_event$$e;			\
 		./qsub.pfe.pl job.long ev$$e;		    	\
-		screen -S event$$e -d -m watch.pfe.pl ev$$e;	\
 	done
 
 test_order5:
@@ -202,7 +201,6 @@ clean:
 	@echo "Cleaning result files"
 	rm -f results*.txt
 	@for e in ${EVENTLIST}; do         		\
-		screen -X -S event$$e quit;		\
 		rm -f deltaB/Results/Event$$e/*.txt; 	\
 		rm -f deltaB/Results/Event$$e/*.eps;	\
 	done
