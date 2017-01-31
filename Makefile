@@ -51,11 +51,16 @@ help:
 	@echo ""
 	@echo "make check_compare RESDIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
+	@echo "test_order5                    (5th order scheme)"
+	@echo "test_rbe                       (run with RB/RBE model)"
+	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
 	@echo
 	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
 	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
+
+##############################################################################
 
 PROPDIR = ${GMDIR}/run_L1toBC
 
@@ -103,6 +108,8 @@ ballistic:
 		idl ${MYDIR}/Idl/ballistic_wind.pro;	\
 	done
 
+##############################################################################
+
 test:
 	@echo "Testing the SWMF"
 	make test_compile
@@ -124,6 +131,7 @@ test_compile:
 
 # Default PARAM.in file for the test
 PARAMINIT = PARAM.in_SWPC_init
+LAYOUT    = LAYOUT.in
 
 test_rundir:
 	@echo "Creating rundirs"
@@ -133,8 +141,8 @@ test_rundir:
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}/run_event$$e;\
 		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/LAYOUT.in	      ${QUEDIR}/run_event$$e;\
 		cp SWPCTEST/Inputs/job.long           ${QUEDIR}/run_event$$e;\
+		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}/run_event$$e/LAYOUT.in;\
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}/run_event$$e/PARAM.in;\
 		cd ${QUEDIR}/run_event$$e;				     \
 		  	${MYSCRIPTDIR}/change_param.pl -noplot -imf=${IMF};\
@@ -147,6 +155,8 @@ test_run:
 		cd ${QUEDIR}/run_event$$e;			\
 		./qsub.pfe.pl job.long ev$$e;		    	\
 	done
+
+##############################################################################
 
 test_order5:
 	@echo "Testing the SWMF with high order scheme"
@@ -165,6 +175,28 @@ test_order5_rundir:
 	make test_rundir PARAMINIT=PARAM.in_order5_init
 
 test_order5_run: test_run
+
+##############################################################################
+
+test_rbe:
+	@echo "Testing the SWMF with RBE component"
+	make test_rbe_compile
+	make test_rbe_rundir
+	make test_rbe_run
+	@echo "Test_rbe started.  make check when complete."
+
+test_rbe_compile:
+	-@(cd ..; \
+	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:ng=3; \
+	make SWMF PIDL PSPH; \
+	)
+
+test_rbe_rundir:
+	make test_rundir PARAMINIT=PARAM.in_rbe_init LAYOUT=LAYOUT.in_rbe
+
+test_rbe_run: test_run
+
+##############################################################################
 
 check_postproc:
 	@echo "Post processing simulation results"
