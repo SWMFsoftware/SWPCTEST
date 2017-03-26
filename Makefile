@@ -204,7 +204,7 @@ check_postproc:
 		cd ${QUEDIR}/run_event$$e;				\
 		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;	\
 		mkdir -p ${MYDIR}/deltaB/${RESDIR}/Event$$e;		\
-		cp PARAM.in *log.* RESULTS/GM/* 			\
+		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log 	\
 			${MYDIR}/deltaB/${RESDIR}/Event$$e/;		\
 		cd ${MYDIR}/deltaB/${RESDIR}/Event$$e/;			\
 		${MYSCRIPTDIR}/convert_mags.py;				\
