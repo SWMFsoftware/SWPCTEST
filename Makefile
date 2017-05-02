@@ -59,7 +59,7 @@ help:
 	@echo
 	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
 	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
-
+	@echo "make clean RESDIR=Results      (Clear results in RESDIR directory)"
 ##############################################################################
 
 PROPDIR = ${GMDIR}/run_L1toBC
@@ -232,9 +232,16 @@ check_compare:
 clean:
 	@echo "Cleaning result files"
 	rm -f results*.txt
+	rm -f deltaB/${RESDIR}/*.txt
+	rm -f deltaB/${RESDIR}/*.pdf
+	rm -f deltaB/${RESDIR}/*.eps
 	@for e in ${EVENTLIST}; do         		\
-		rm -f deltaB/Results/Event$$e/*.txt; 	\
-		rm -f deltaB/Results/Event$$e/*.eps;	\
+		rm -f deltaB/${RESDIR}/Event$$e/*.txt; 	\
+		rm -f deltaB/${RESDIR}/Event$$e/*.eps;	\
+		rm -f deltaB/${RESDIR}/Event$$e/*.log;	\
+		rm -f deltaB/${RESDIR}/Event$$e/*.mag;	\
+		rm -f deltaB/${RESDIR}/Event$$e/runlog*;	\
+		rm -f deltaB/${RESDIR}/Event$$e/PARAM.in;	\
 	done
 
 distclean:
