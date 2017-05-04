@@ -10,6 +10,9 @@ QUEDIR      = $(MYDIR)/run_test
 RESDIR	    = Results
 RES2DIR	    = SWMF_CCMC
 
+# Toggle saving all outputs to file (defaults is to not save plots.)
+PLOT='-noplot'
+
 # Assume running on Pleiades (needed for testing on other machines)
 MACHINE='pfe'
 
@@ -38,6 +41,7 @@ help:
 	@echo "make test                      (run all test events in run_test directory)"
 	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
 	@echo "make test QUEDIR=/nobackup/${USER}/run_swpctest (set absolute path for run directory)"
+	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
 	@echo "make test_compile              (compile SWMF)"
 	@echo "make test_rundir               (create rundirs for all EVENTS)"
@@ -145,7 +149,7 @@ test_rundir:
 		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}/run_event$$e/LAYOUT.in;\
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}/run_event$$e/PARAM.in;\
 		cd ${QUEDIR}/run_event$$e;				     \
-		  	${MYSCRIPTDIR}/change_param.pl -noplot -imf=${IMF};\
+		  	${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF};\
 	done
 
 test_run:
