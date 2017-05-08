@@ -219,7 +219,10 @@ check_calc:
 	export IDL_STARTUP=idlrc;					\
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
 	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	mv metrics*.txt dbdt* idl_log.txt deltaB/${RESDIR}/
+	export IDL_STARTUP=idlrc;					\
+	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
+	printf ".r Idl/predict.pro\n calc_all_db_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	mv metrics*.txt dbdt* db_* idl_log.txt deltaB/${RESDIR}/
 
 check_tar:
 	@echo "Saving results as tarball"
@@ -230,6 +233,9 @@ check_compare:
 	export IDL_STARTUP=idlrc;					\
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
 	printf ".r Idl/predict.pro\n save_comparison_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	export IDL_STARTUP=idlrc;					\
+	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
+	printf ".r Idl/predict.pro\n save_deltab_comp_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
 	mkdir -p COMPARE_${RESDIR}_vs_${RES2DIR}
 	mv metric_table*.tex idl_log.txt COMPARE_${RESDIR}_vs_${RES2DIR}/
 

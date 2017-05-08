@@ -970,3 +970,179 @@ pro save_comparison_tables, $
   endfor
 end
 ;==============================================================================
+
+pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lastevent
+
+;; Calculate scores for the models listed in the 'models' string
+;; array for all station groups (low, mid, high, veryhigh, all).
+;; Save scores into separate files for each station group and 
+;; each event from firstevent to lastevent (default is 1 to 6).
+;; Create plots of dB/dt per model and per event for the station group 'all'.
+
+  ; Use all six events by default
+  if n_elements(firstevent) lt 1 then firstevent=1
+  if n_elements(lastevent)  lt 1 then lastevent =6
+
+  ; Compare deltaB/Results with deltaB/SWMF_CCMC by default
+  if n_elements(models) lt 1 then models=['Results', 'SWMF_CCMC']
+
+  ; Set station groups and thresholds
+  stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
+  thresholds  = [101.6, 213.6, 317.5, 416.7]
+
+  ; These are default values
+  deltat   = 20.
+  stencil  = 1
+  scale    = 292
+  exponent = 1.14
+
+  ; Create full metrics for each event:
+  for ilat = 0, n_elements(stationlats)-1 do begin
+     stationlat = stationlats[ilat]
+     for ievent = firstevent, lastevent do begin
+        for ithresh = 0, n_elements(thresholds)-1 do begin
+           threshold = thresholds[ithresh]
+           filename=string(stationlat, ievent, $
+                           format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
+           predict,'db', $
+                   models=models, $
+                   stationlat=stationlat, threshold=threshold, $
+                   scale=scale, exponent=exponent, $
+                   firstevent=ievent, lastevent=ievent, $
+                   deltat=deltat, stencil=stencil, out_file=filename, $
+                   append=ithresh, saveplot=(stationlat eq 'all')
+
+        endfor
+     endfor
+  endfor
+end
+;==============================================================================
+
+pro save_deltab_comp_table, $
+   stationlat, model1, model2, firstevent=firstevent, lastevent=lastevent
+
+;; Compare deltaB/model1 and deltaB/model2 outputs 
+;; for the stationlat station group:
+;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low'. Default is all.
+;; If model1 is not given 'Results' is assumed. 
+;; If model2 is not given 'SWMF_CCMC' are used.
+;; Events starting from firstevent to lastevent are used. Defaults are 1 to 6.
+
+  if n_elements(stationlat) lt 1 then stationlat='all'
+  if n_elements(model1)     lt 1 then model1 = 'Results'
+  if n_elements(model2)     lt 1 then model2 = 'SWMF_CCMC'
+  if n_elements(firstevent) lt 1 then firstevent = 1
+  if n_elements(lastevent)  lt 1 then lastevent  = 6
+
+  thresholds=[101.6, 213.6, 317.5, 416.7]
+  deltat = 20.
+
+  ; Size of results arrays:
+  nthresh = n_elements(thresholds)
+  nmetric = 3 ; POD, POFD, HSS
+
+  ; Arrays to store results:
+  directs    = fltarr(nmetric, nthresh)
+  indirects  = fltarr(nmetric, nthresh)
+  directs2   = fltarr(nmetric, nthresh)
+  indirects2 = fltarr(nmetric, nthresh)
+
+  stencil  = 1
+  scale    = 292
+  exponent = 1.14
+
+;;  stencil = 2
+;;  scale    = 379
+;;  exponent = 1.14
+
+  for ithresh = 0, nthresh-1 do begin
+     threshold = thresholds[ithresh]
+     filename=string(stationlat, deltat, floor(threshold), $
+                     floor(10*threshold-10*floor(threshold)), $
+                     format='("metrics_",a,"_dt",i2.2,"_thresh",i1.1,"p",i2.2,".txt")')
+     ; Results for model 1:
+     predict,'db',stationlat=stationlat,threshold=threshold,scale=scale, $
+             exponent=exponent,deltat=deltat, stencil=stencil, $
+             models=[model1], $
+             firstevent=firstevent, lastevent=lastevent, $
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+
+     directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
+
+     ; Results for model 2:
+     predict,'db',stationlat=stationlat,threshold=threshold,scale=scale, $
+             exponent=exponent,deltat=deltat, stencil=stencil, $
+             models=[model2], $
+             firstevent=firstevent, lastevent=lastevent, $
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+
+     directs2[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
+  endfor
+
+  ; print out comparison
+  filename = "metric_table_db_" + stationlat + ".tex"
+  openw, lun, filename, /get_lun
+
+  printf, lun, 'models=', model1,' and (',model1,' - ',model2,')'
+  printf, lun, 'events =', firstevent,' ... ', lastevent
+  printf, lun, 'stationlat=', stationlat
+  printf, lun, '$\Delta t_{window}=',deltat,'$'
+  printf, lun, ''
+  printf, lun, '\begin{table}[ht]'
+  printf, lun, '\centering'
+  printf, lun, '\begin{tabular}{l|c c c}'
+  printf, lun, 'Threshold&POD&POFD&HSS\\'
+  printf, lun, '\hline'
+  for ithresh = 0, nthresh-1 do begin
+     line1 = string(thresholds(ithresh),format='(f6.1,"\,[nT]")')
+     line2 = line1
+     ;line1 += ' direct   '
+     ;line2 += ' indirect '
+     
+     for imetric = 0, nmetric-1 do begin
+        line1 += string( $
+                directs[imetric,ithresh], $
+                directs[imetric,ithresh] - directs2[ imetric, ithresh], $
+                format='("& ",f5.3," (",f+6.3,") ")')
+        ;line2 += string( $
+        ;        indirects[imetric,ithresh], $
+        ;        indirects[imetric,ithresh] - indirects2[imetric, ithresh], $
+        ;        format='("& ",f5.3," (",f+6.3,") ")')
+     endfor
+     line1 += '\\'
+     line2 += '\\'
+     printf, lun, line1
+     ;printf, lun, line2
+     printf, lun, '\hline'
+  endfor
+
+  printf, lun, '\end{tabular}'
+  printf, lun, '\caption{Performance metrics for the SWMF.}'
+  printf, lun, '\end{table}'
+  
+  free_lun, lun
+  
+end
+
+;==============================================================================
+
+pro save_deltab_comp_tables, $
+   model1, model2, firstevent=firstevent, lastevent=lastevent
+  
+  ;; Create comparison tables between results stored in
+  ;; deltaB/model1 and deltaB/model2. Defaults are 'Results' and 'SWMF_CCMC'.
+  ;; Combine scores for all events from firstevents to lastevent
+  ;; (default is 1 to 6).
+  ;; Create a separate table for the various station groups:
+  ;; low, mid, high, veryhigh, all.
+
+  ; Set station groups
+  stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
+
+  ; Create combined metrics for all events:
+  for ilat=0, n_elements(stationlats)-1 do begin
+     save_deltab_comp_table, stationlats[ilat], $
+                             model1, model2, $
+                             firstevent=firstevent, lastevent=lastevent
+  endfor
+end
