@@ -55,8 +55,9 @@ help:
 	@echo ""
 	@echo "make check_compare RESDIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
-	@echo "test_order5                    (5th order scheme)"
+	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
 	@echo "test_rbe                       (run with RB/RBE model)"
+	@echo "test_multiion                  (run with multiion GM/BATSRUS model)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
@@ -172,7 +173,7 @@ test_order5:
 test_order5_compile:
 	-@(cd ..; \
 	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:ng=3; \
-	make SWMF PIDL PSPH; \
+	make SWMF PIDL; \
 	)
 
 test_order5_rundir:
@@ -191,14 +192,34 @@ test_rbe:
 
 test_rbe_compile:
 	-@(cd ..; \
-	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:ng=3; \
-	make SWMF PIDL PSPH; \
+	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
+	make SWMF PIDL; \
 	)
 
 test_rbe_rundir:
 	make test_rundir PARAMINIT=PARAM.in_rbe_init LAYOUT=LAYOUT.in_rbe
 
 test_rbe_run: test_run
+
+##############################################################################
+
+test_multiion:
+	@echo "Testing the SWMF with multiion BATSRUS"
+	make test_multiion_compile
+	make test_multiion_rundir
+	make test_multiion_run
+	@echo "Test_multiion started.  make check when complete."
+
+test_multiion_compile:
+	-@(cd ..; \
+	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:e=MultiIon; \
+	make SWMF PIDL; \
+	)
+
+test_multiion_rundir:
+	make test_rundir PARAMINIT=PARAM.in_multiion_init
+
+test_multiion_run: test_multiion
 
 ##############################################################################
 
