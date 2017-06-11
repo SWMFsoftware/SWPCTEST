@@ -212,14 +212,14 @@ test_multiion:
 
 test_multiion_compile:
 	-@(cd ..; \
-	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:e=MhdIons; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:e=MhdIons; \
 	make SWMF PIDL; \
 	)
 
 test_multiion_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multiion_init
 
-test_multiion_run: test_multiion
+test_multiion_run: test_run
 
 ##############################################################################
 
