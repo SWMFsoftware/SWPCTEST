@@ -212,7 +212,7 @@ test_multiion:
 
 test_multiion_compile:
 	-@(cd ..; \
-	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:e=MultiIon; \
+	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:e=MhdIons; \
 	make SWMF PIDL; \
 	)
 
