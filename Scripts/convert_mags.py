@@ -31,24 +31,34 @@ parser.add_argument('-m', '--magfile', type=str, default='./',
                     +' directory containing an output file.  Defaults to PWD.')
 parser.add_argument('-o', '--outdir', type=str, default='./', help='Path to '
                     +'location to place output files.  Defaults to PWD.')
-
+parser.add_argument('-d', '--debug', action='store_true',
+                    help='Turn on debug info.')
 # Parse arguments and stash magfile into convenience variable:
 args   = parser.parse_args()
 magfile= args.magfile
 
 # If a directory is given, search for the mag file:
 if os.path.isdir(magfile):
-    found_files = glob(magfile+'/magnetometer*')
+    found_files = glob(magfile+'/magnetometer*.mag')
     if not found_files:
         raise(ValueError('No magnetometer file found in {}.'.format(magfile)))
     magfile = found_files[0]
 
+if args.debug:
+    print('Working on file {}'.format(magfile))
+    
 # Open magnetometer file for reading:
 infile = open(magfile, 'r')
 
 # Read header to get list of variables and stations.
 stats    = infile.readline().split(':')[-1].split()
 varnames = infile.readline().split()
+
+if args.debug:
+    print('{} Stations found:'.format(len(stats)))
+    for i, s in enumerate(stats):
+        print('\t#{:04d}=={:}'.format(i+1,s))
+          
 
 # Slurp rest of file.
 rawlines = infile.readlines()
@@ -57,6 +67,8 @@ infile.close()
 # Create new files, write headers.
 files = []
 for i,s in enumerate(stats):
+    if args.debug:
+        print('Working on station {}...'.format(s))
     f = open(args.outdir+'/{}.txt'.format(s), 'w')
     f.write('# SWMF run: SWMF_SWPC\n')
     f.write('#SWMF run finished on {}\n'.format(dt.datetime.now().isoformat()))
