@@ -130,7 +130,7 @@ check:
 
 test_compile:
 	-@(cd ..; \
-	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd; \
 	make SWMF PIDL PSPH; \
 	)
 
@@ -172,7 +172,7 @@ test_order5:
 
 test_order5_compile:
 	-@(cd ..; \
-	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:ng=3; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd,ng=3; \
 	make SWMF PIDL; \
 	)
 
@@ -192,7 +192,7 @@ test_rbe:
 
 test_rbe_compile:
 	-@(cd ..; \
-	./Config.pl -v=GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
 	make SWMF PIDL; \
 	)
 
@@ -212,7 +212,7 @@ test_multiion:
 
 test_multiion_compile:
 	-@(cd ..; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:e=MhdIons; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdIons; \
 	make SWMF PIDL; \
 	)
 
