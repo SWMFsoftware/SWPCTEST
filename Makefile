@@ -58,6 +58,7 @@ help:
 	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
 	@echo "test_rbe                       (run with RB/RBE model)"
 	@echo "test_multiion                  (run with multiion GM/BATSRUS model)"
+	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
@@ -212,7 +213,7 @@ test_multiion:
 
 test_multiion_compile:
 	-@(cd ..; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdIons; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MultiIon; \
 	make SWMF PIDL; \
 	)
 
@@ -220,6 +221,26 @@ test_multiion_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multiion_init
 
 test_multiion_run: test_run
+
+##############################################################################
+
+test_multispecies:
+	@echo "Testing the SWMF with multispecies BATSRUS"
+	make test_multispecies_compile
+	make test_multispecies_rundir
+	make test_multispecies_run
+	@echo "Test_multispecies started.  make check when complete."
+
+test_multispecies_compile:
+	-@(cd ..; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdSwIons; \
+	make SWMF PIDL; \
+	)
+
+test_multispecies_rundir:
+	make test_rundir PARAMINIT=PARAM.in_multispecies_init
+
+test_multispecies_run: test_run
 
 ##############################################################################
 
