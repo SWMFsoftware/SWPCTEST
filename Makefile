@@ -233,7 +233,7 @@ test_multispecies:
 
 test_multispecies_compile:
 	-@(cd ..; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdSwIons; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdHpOp; \
 	make SWMF PIDL; \
 	)
 
