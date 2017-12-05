@@ -23,8 +23,8 @@ EVENTS=1,2,3,4,5,6
 EVENTLIST  = $(shell echo ${EVENTS} | tr , ' ')
 
 # First and last events (used as arguments of some IDL scripts)
-FIRSTEVENT = $(shell echo ${EVENTS} | perl -p -e 's/,.*//')
-LASTEVENT  = $(shell echo ${EVENTS} | perl -p -e 's/.*,//')
+FIRSTEVENT = $(shell echo ${EVENTS} | sed 's/,.*//')
+LASTEVENT  = $(shell echo ${EVENTS} | sed 's/.*,//')
 
 # Number of processors to run on
 NP=64
