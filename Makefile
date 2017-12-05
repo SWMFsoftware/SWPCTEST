@@ -23,8 +23,8 @@ EVENTS=1,2,3,4,5,6
 EVENTLIST  = $(shell echo ${EVENTS} | tr , ' ')
 
 # First and last events (used as arguments of some IDL scripts)
-FIRSTEVENT = $(shell echo ${EVENTS} | head -c 1)
-LASTEVENT  = $(shell echo ${EVENTS} | tail -c2)
+FIRSTEVENT = $(shell echo ${EVENTS} | perl -p -e 's/,.*//')
+LASTEVENT  = $(shell echo ${EVENTS} | perl -p -e 's/.*,//')
 
 # Number of processors to run on
 NP=64
@@ -66,6 +66,11 @@ help:
 	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
 	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
 	@echo "make clean RESDIR=Results      (Clear results in RESDIR directory)"
+##############################################################################
+# Some short tests:
+test_event:
+	@echo "First and last targets are: ${FIRSTEVENT} and ${LASTEVENT}"
+
 ##############################################################################
 
 PROPDIR = ${GMDIR}/run_L1toBC
