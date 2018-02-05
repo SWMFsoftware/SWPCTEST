@@ -127,8 +127,8 @@ FileId = open('IMF_mhd.dat','w')
 FileId.write('Propagated from L1 to (X,Y,Z):   32  0  0')
 FileId.close()
 
-os.system("idl Idl/ballistic.pro")
-os.system("rm -f L1.dat IMF_mhd.dat")
-os.system("mv IMF_ballistic.dat IMF.dat")
+#os.system("idl Idl/ballistic.pro")
+#os.system("rm -f L1.dat IMF_mhd.dat")
+#os.system("mv IMF_ballistic.dat IMF.dat")
 exit()
 
