@@ -4,29 +4,33 @@ import os
 import urllib2
 #-------------
 os.system("rm -f L1.dat IMF*.dat")
-
-#Open Magnitometer file ############
+'''
+Open Magnitometer file 
+'''
 MagFileId = urllib2.urlopen(
     "http://services.swpc.noaa.gov/products/solar-wind/mag-2-hour.json")
 Mag = MagFileId.read()
 Mag = Mag[2:len(Mag)-2]
 MagSplit = Mag.split('],[')
 nLength = len(MagSplit)
-
-#Open Plasma file      #############
+'''
+Open Plasma file
+'''
 PlasmaFileId = urllib2.urlopen(
     "http://services.swpc.noaa.gov/products/solar-wind/plasma-2-hour.json")
 Plasma = PlasmaFileId.read()
 Plasma = Plasma[2:len(Plasma)-2]
 PlasmaSplit = Plasma.split('],[')
 nPlasma = len(PlasmaSplit)
-
-#Check if both instruments are OK #
+'''
+Check if both instruments are OK 
+'''
 if(nPlasma<>nLength):
     print "Length of Mag file=",nLength," differs from that for plasma=",nPlasma
     exit()
-
-#Read file of satellite locations##
+'''
+Read file of satellite locations
+'''
 PosFileId = urllib2.urlopen(
     "http://services.swpc.noaa.gov/products/solar-wind/ephemerides.json")
 Pos = PosFileId.read()
@@ -53,8 +57,9 @@ FileId.write('GSM'+'\n\n')
 FileId.write(
 'year  mo  dy  hr  mn  sc msc Bx By Bz Ux Uy Uz rho T'+'\n')
 FileId.write('#START'+'\n')
-
-#Start Date and time for MAG file###
+'''
+Start Date and time for MAG file
+'''
 b = MagSplit[1]
 b = b[1:len(b)-1]
 bsplit = b.split('","')
@@ -68,8 +73,9 @@ DateTimeMag = datetime.combine(
     date(int(DateSplit[0]),int(DateSplit[1]),int(DateSplit[2])),
     time(int(TimeSplit[0]),int(TimeSplit[1])))
 print "Magentic   data file starts at ",DateTimeMag
-
-#Date and time for solar wind file ##
+'''
+Date and time for solar wind file
+'''
 Wind = PlasmaSplit[1]
 Wind = Wind[1:len(Wind)-1]
 WindSplit = Wind.split('","')
@@ -83,7 +89,6 @@ DateTimeWind = datetime.combine(
     date(int(DateSplit[0]),int(DateSplit[1]),int(DateSplit[2])),
     time(int(TimeSplit[0]),int(TimeSplit[1])))
 print "Solar wind data file starts at ",DateTimeWind
-
 ############Offset may be needed???  
 if(DateTimeWind > DateTimeMag):
     iOffsetWind = -1
@@ -97,8 +102,9 @@ else:
     iOffsetWind =  0
     iOffsetMag  =  0
     lStart = 1
-
-############Merge files ###########
+'''
+Merge files 
+'''
 for l in range(lStart, nLength):
     b = MagSplit[l + iOffsetMag]
     b = b[1:len(b)-1]
@@ -121,14 +127,22 @@ for l in range(lStart, nLength):
         WindSplit[2]+' 0.0 0.0 '+WindSplit[1]+' '+WindSplit[3]+'\n')
 
 FileId.close()
-
-#File with location of XMax boundary
+'''
+File with location of XMax boundary
+'''
 FileId = open('IMF_mhd.dat','w')
 FileId.write('Propagated from L1 to (X,Y,Z):   32  0  0')
 FileId.close()
-
-#os.system("idl Idl/ballistic.pro")
-#os.system("rm -f L1.dat IMF_mhd.dat")
-#os.system("mv IMF_ballistic.dat IMF.dat")
+BallisticProName   = os.path.realpath(__file__).replace(
+    'DSCOVR.py', '../Idl/ballistic.pro')
+os.system("idl "+BallisticProName)
+os.system("rm -f L1.dat IMF_mhd.dat")
+os.system("mv IMF_ballistic.dat IMF.dat")
+SolIndexesFileId = urllib2.urlopen(
+    "http://services.swpc.noaa.gov/text/daily-solar-indices.txt")
+for line in SolIndexesFileId.readlines():
+    saveline = line
+F107 = saveline.split()
+print 'F10.7 day-averaged flux = '+F107[3]
 exit()
 
