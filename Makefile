@@ -59,6 +59,7 @@ help:
 	@echo "test_rbe                       (run with RB/RBE model)"
 	@echo "test_multiion                  (run with multiion GM/BATSRUS model)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
+	@echo "test_cimi		      (run with anisotropic MHD and IM/CIMI)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
@@ -246,6 +247,26 @@ test_multispecies_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multispecies_init
 
 test_multispecies_run: test_run
+
+##############################################################################
+
+test_cimi:
+	@echo "Testing the SWMF with anisotropic BATSRUS + IM/CIMI"
+	make test_cimi_compile
+	make test_cimi_rundir
+	make test_cimi_run
+	@echo "Test_cimi started.  make check when complete."
+
+test_cimi_compile:
+	-@(cd ..; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO; \
+	make SWMF PIDL; \
+	)
+
+test_cimi_rundir:
+	make test_rundir PARAMINIT=PARAM.in_cimi_init LAYOUT=LAYOUT.in_cimi
+
+test_cimi_run: test_run
 
 ##############################################################################
 
