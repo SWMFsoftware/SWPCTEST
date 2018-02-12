@@ -9,6 +9,7 @@ GMDIR       = ${DIR}/GM/BATSRUS
 QUEDIR      = $(MYDIR)/run_test
 RESDIR	    = Results
 RES2DIR	    = SWMF_CCMC
+RTDIR	    = ${MYDIR}/run_realtime
 
 # Toggle saving all outputs to file (defaults is to not save plots.)
 PLOT='-noplot'
@@ -306,6 +307,18 @@ check_compare:
 	printf ".r Idl/predict.pro\n save_deltab_comp_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
 	mkdir -p COMPARE_${RESDIR}_vs_${RES2DIR}
 	mv metric_table*.tex idl_log.txt COMPARE_${RESDIR}_vs_${RES2DIR}/
+
+
+
+realtime_start_rundir:
+	cd ${DIR}; \
+	make rundir MACHINE=${MACHINE} RUNDIR=${RTDIR}; \
+	cp SWPCTEST/Inputs/job.long   ${RTDIR}; \
+	cp SWPCTEST/Inputs/${LAYOUT}  ${RTDIR}/LAYOUT.in; \
+	cp Param/SWPC/${PARAMINIT}    ${RTDIR}/PARAM.in
+	cd ${RTDIR}; rm -rf Param; mkdir Param; cd Param; \
+	ln -s ${DIR}/Param/SWPC .; cd ../; ${MYSCRIPTDIR}/DSCOVR.py; \
+	${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF}
 
 clean:
 	@echo "Cleaning result files"
