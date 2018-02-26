@@ -94,7 +94,7 @@ while(<>){
 	$_ .= $end;
     }
     # Set F10.7 flux in the line containinf "F107Flux"
-    s/.*\s(F107Flux)/$f107\t\t\t$1/i;
+    s/.*\s(F107)/$f107\t\t\t$1/i;
 
     # Switch off saving large plots and restart files
     s/^\#((?:SAVEPLOT)|(?:MAGNETOMETERGRID)|(?:SAVERESTART))\b/$1/ 
