@@ -2,7 +2,6 @@
 from datetime import datetime, date, time, timedelta
 import os
 import urllib2
-import magnetometer
 ##############
 def DSCOVR():
     '''
@@ -38,6 +37,7 @@ def DSCOVR():
     Pos = Pos[2:len(Pos)-2]
     PosSplit = Pos.split('],[')
     LastPos =  PosSplit[len(PosSplit)-1]
+    print LastPos
     LastPos = LastPos[1:len(LastPos)-1]
     LastPosSplit =  LastPos.split('","')
     '''
@@ -48,12 +48,13 @@ def DSCOVR():
     FileId.write('Units: nT, km/s, amu/cc, K'+'\n\n')
 
     FileId.write('#SATELLITEXYZ'+'\n')
-    Coord = float(LastPosSplit[7])/6378
+    Coord = float(LastPosSplit[1])/6378
     FileId.write("%-6.1f \n"%Coord)
-    Coord = float(LastPosSplit[8])/6378
-    FileId.write("%-6.1f \n"%Coord)
-    Coord = float(LastPosSplit[9])/6378
-    FileId.write("%-6.1f \n"%Coord)
+    FileId.write("0.0 \n0.0 \n")
+    #Coord = float(LastPosSplit[2])/6378
+    #FileId.write("%-6.1f \n"%Coord)
+    #Coord = float(LastPosSplit[3])/6378
+    #FileId.write("%-6.1f \n"%Coord)
     FileId.write('\n'+'#COORDINATES'+'\n')
     FileId.write('GSM'+'\n\n')
     FileId.write(
@@ -148,14 +149,14 @@ def DSCOVR():
     '''
     Save F10.7 flux
     '''
-    FileId = open('Param/f107.txt','w')
-    FileId.write(
-        '#yyyy-MM-dd HH:mm value qualifier description\n')
-    FileId.write(
-        DateSplit[0]+'-'+DateSplit[1]+'-'+DateSplit[2]+' '+
+    if os.path.isfile('Param/f107.txt'):
+        FileId = open('Param/f107.txt','w')
+        FileId.write(
+            '#yyyy-MM-dd HH:mm value qualifier description\n')
+        FileId.write(
+            DateSplit[0]+'-'+DateSplit[1]+'-'+DateSplit[2]+' '+
             TimeSplit[0]+':'+TimeSplit[1]+'  '+F107[3]+'.0  ""  ""')  
-    FileId.close
+        FileId.close
 if __name__ == '__main__':
-    magnetometer.realtime()
     DSCOVR()
     exit()
