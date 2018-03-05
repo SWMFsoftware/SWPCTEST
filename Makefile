@@ -318,6 +318,7 @@ realtime_start_rundir:
 	cp Param/SWPC/${PARAMINIT}    ${RTDIR}/PARAM.in
 	cd ${RTDIR}; rm -rf Param; mkdir Param; cd Param; \
 	ln -s ${DIR}/Param/SWPC .; cd ../; ${MYSCRIPTDIR}/DSCOVR.py; \
+	${MYSCRIPTDIR}/magnetometer.py; \
 	${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF}
 
 clean:
