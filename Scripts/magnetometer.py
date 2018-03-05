@@ -14,11 +14,26 @@ AmeRealTime='BOU BRW BSL CMO DED FRD FRN GUA HON NEW SHU SIT SJG TUC'
 AllAme=AmeRealTime#+' HAD+KAK HER'
 Error  = '99999'
 Stations = []
-
 IgrfName  = os.path.realpath(__file__).replace(
-        'magnetometer.py', '../../bin/IGRF.exe')
+    'magnetometer.py', '../../bin/IGRF.exe')
 Min2Rad = math.pi/10800  #\pi/180/60
 import subprocess
+def magin():
+    """
+    Make magnetometer file with all station names and coordinates
+    """ 
+    os.system('rm -f magin_GEM.dat')
+    iFileAll = open('magin_GEM.dat','w')
+    iFileAll.write('#COORD\n')
+    iFileAll.write('GEO\n\n')
+    iFileAll.write(
+        'List of '+str(len(Stations))+' stations plus DST\n')
+    iFileAll.write('#START\n')
+    iFileAll.write('DST 360.0 360.0\n')
+    for MetaData in Stations:
+        iFileAll.write(
+            MetaData[0]+' '+MetaData[1]+' '+MetaData[2]+'\n')
+    iFileAll.close()
 def http_download(Station,URL,DateTimeStart):
     import urllib2
     print 'Download '+URL
@@ -84,7 +99,7 @@ def http_download(Station,URL,DateTimeStart):
                     ' # Declination base = '
                     +DeclinationBase[0:len(DeclinationBase)-1]+'.'+
                     DeclinationBase[len(DeclinationBase)-1] +
-                    ' arc minutes                      |\n')
+                    ' arc minutes                              |\n')
             elif 'DATE' in line:
                 iFileAux.close()
                 iFileAux = open('data.aux','r')
@@ -118,11 +133,11 @@ def http_download(Station,URL,DateTimeStart):
                     WriteMagFile.write(IgrfLine)
                 IgrfFile.close()
                 LineSplit = line.split()
-                LineWrite = LineSplit[0]+'   '+LineSplit[1]
-                LineWrite = LineWrite+'   '+LineSplit[3]
-                LineWrite = LineWrite+'   '+LineSplit[4]
-                LineWrite = LineWrite+'   '+LineSplit[5]
-                LineWrite=LineWrite+'                                     '
+                LineWrite = LineSplit[0]+'     '+LineSplit[1]
+                LineWrite = LineWrite+'     '+Station+'H'
+                LineWrite = LineWrite+'     '+Station+'E'
+                LineWrite = LineWrite+'     '+Station+'Z'
+                LineWrite=LineWrite+'                             '
                 LineWrite = LineWrite+'|\n'
                 WriteMagFile.write(LineWrite)
             elif 'http' in line:
@@ -167,18 +182,18 @@ def http_download(Station,URL,DateTimeStart):
                         """
                         H = H - H0
                         Z = Z - Z0
-                    LineWrite = LineWrite+'{0:.2f}'.format(H)
-                    LineWrite = LineWrite+' '+'{0:.2f}'.format(E)+' '
-                    LineWrite = LineWrite+'{0:.2f}'.format(Z)+'\n'   
+                    LineWrite = LineWrite+'{0:-8.2f}'.format(H)
+                    LineWrite = LineWrite+' '+'{0:-8.2f}'.format(E)+' '
+                    LineWrite = LineWrite+'{0:-8.2f}'.format(Z)+'\n'   
                 else:
                     """
                     HEZ components, subtract IGRF H,Z field
                     """
                     H = float(LineSplit[3]) - H0
                     Z = float(LineSplit[5]) - Z0
-                    LineWrite = LineWrite+'{0:.2f}'.format(H)
+                    LineWrite = LineWrite+'{0:-8.2f}'.format(H)
                     LineWrite = LineWrite+' '+LineSplit[4]+' '
-                    LineWrite = LineWrite+'{0:.2f}'.format(Z)+'\n' 
+                    LineWrite = LineWrite+'{0:-8.2f}'.format(Z)+'\n' 
             WriteMagFile.write(LineWrite) #Good data line is written
     """
     No more lines
@@ -226,6 +241,8 @@ def realtime(nDays):
     DateTimeStart = datetime.combine(
         DateEnd,time(0,0,0)) - timedelta(days=nDays-1)
     download(RusRealTime,AmeRealTime,DateTimeStart,DateTimeEnd)
+    os.system('rm -f *.aux')
+    magin()
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
@@ -334,21 +351,7 @@ if __name__ == '__main__':
             os.system('tail -1 '+WriteMagFileName)
         os.system('rm -f *.aux')
         ftp.close()
+        magin()
     else:
         realtime(nDays)
-    """
-    Make magnetometer file with all station names and coordinates
-    """ 
-    os.system('rm -f MAGNETOMETER.in')
-    iFileAll = open('MAGNETOMETER.in','w')
-    iFileAll.write('#COORD\n')
-    iFileAll.write('GEO\n\n')
-    iFileAll.write(
-        'List of '+str(len(Stations))+' stations plus DST\n')
-    iFileAll.write('#START\n')
-    iFileAll.write('DST 360.0 360.0\n')
-    for MetaData in Stations:
-        iFileAll.write(
-            MetaData[0]+' '+MetaData[1]+' '+MetaData[2]+'\n')
-    iFileAll.close()
 
