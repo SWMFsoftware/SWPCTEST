@@ -44,6 +44,7 @@ help:
 	@echo "make test QUEDIR=/nobackup/${USER}/run_swpctest (set absolute path for run directory)"
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
+	@echo "make test PARAMINIT=PARAM.in   (use PARAM.in for the PARAM file)" 
 	@echo "make test_compile              (compile SWMF)"
 	@echo "make test_rundir               (create rundirs for all EVENTS)"
 	@echo "make test_run                  (submit runs to que)"
