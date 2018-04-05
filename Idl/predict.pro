@@ -792,21 +792,21 @@ end
 
 ;==============================================================================
 pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent
-
-;; Calculate scores for the models listed in the 'models' string
-;; array for all station groups (low, mid, high, veryhigh, all).
+  
+;; Calculate scores for the models listed in the 'models' string array
+;; for all station groups (low, mid, high, veryhigh, all).
 ;; Save scores into separate files for each station group and 
 ;; each event from firstevent to lastevent (default is 1 to 6).
 ;; Create plots of dB/dt per model and per event for the station group 'all'.
 
-  ; Use all six events by default
+  ;; Use all six events by default
   if n_elements(firstevent) lt 1 then firstevent=1
   if n_elements(lastevent)  lt 1 then lastevent =6
 
-  ; Compare deltaB/Results with deltaB/SWMF_CCMC by default
+  ;; Compare deltaB/Results with deltaB/SWMF_CCMC by default
   if n_elements(models) lt 1 then models=['Results', 'SWMF_CCMC']
 
-  ; Set station groups and thresholds
+  ;; Set station groups and thresholds
   stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
   thresholds  = [0.3, 0.7, 1.1, 1.5]
 
@@ -1145,4 +1145,51 @@ pro save_deltab_comp_tables, $
                              model1, model2, $
                              firstevent=firstevent, lastevent=lastevent
   endfor
+end
+
+;==============================================================================
+pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
+
+;; Calculate Dst (symH) error in nT
+;; for the models listed in the 'models' string array
+;; and save results into dst_error.txt
+
+  common getlog_param
+  common log_data
+  
+  ;; Default directory
+  if n_elements(models) lt 1 then models=['Results']
+  nmodel = n_elements(models)
+  
+  ;; Use all six events by default
+  if n_elements(firstevent) lt 1 then firstevent=1
+  if n_elements(lastevent)  lt 1 then lastevent =6
+
+  ;; the CCMC limits
+  tmins = [-1.,  6.0,       12.0,        0.0,       10.0,        0.0,        9.0 ]
+  tmaxs = [-1.,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0 ]
+  
+  errors = fltarr(nmodel)
+  unit = 1
+  openw, unit, 'dst_error.txt'
+  printf, unit, 'L1 norm of Dst error in nT'
+  printf, unit, 'event ', models
+  for ievent = firstevent, lastevent do begin
+     ;; read in measured values
+     eventnumber = strtrim(string(ievent),2)
+     logfilename="Dst/event_"+eventnumber+".txt"
+     read_log_data
+     wlog0 = wlog
+     logtime0 = logtime
+     wlognames0 = wlognames
+     for imodel = 0, nmodel-1 do begin
+        logfilename='deltaB/'+models[imodel]+'/Event'+eventnumber+'/log*.log'
+        read_log_data
+        if wlognames[19] eq 'dst' then wlognames[19] = 'dst_sm'
+        interpol_log,wlog0,wlog,dst0,dst,'dst_sm',wlognames0,wlognames,logtime0
+        errors[imodel] = total(abs(dst0-dst)) / n_elements(dst)
+     endfor
+     printf, unit, ievent, errors, format='(i2,10f8.2)'
+  endfor
+  close,unit
 end
