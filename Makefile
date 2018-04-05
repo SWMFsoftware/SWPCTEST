@@ -55,6 +55,7 @@ help:
 	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
 	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
 	@echo ""
+	@echo "make check_dst     RESDIR=New EVENTS=2,4 (calculate Dst error only for events 2..3)"
 	@echo "make check_compare RESDIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
 	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
@@ -286,13 +287,17 @@ check_postproc:
 
 check_calc:
 	@echo "Checking results against observations"
-	export IDL_STARTUP=idlrc;					\
-	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
-	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	export IDL_STARTUP=idlrc;					\
-	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
-	printf ".r Idl/predict.pro\n calc_all_db_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	mv metrics*.txt dbdt* db_* idl_log.txt deltaB/${RESDIR}/
+	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc; \
+	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
+	printf ".r Idl/predict.pro\n calc_all_db_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
+	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	mv metrics*.txt dbdt* db_* dst_error.txt idl_log.txt deltaB/${RESDIR}/
+
+check_dst:
+	@echo "Checking Dst against observations"
+	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;\
+	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	mv dst_error.txt deltaB/${RESDIR}/
 
 check_tar:
 	@echo "Saving results as tarball"
@@ -300,16 +305,12 @@ check_tar:
 
 check_compare:
 	@echo "Compare ${RESDIR} and ${RES2DIR}"
-	export IDL_STARTUP=idlrc;					\
-	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
-	printf ".r Idl/predict.pro\n save_comparison_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	export IDL_STARTUP=idlrc;					\
-	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>';			\
-	printf ".r Idl/predict.pro\n save_deltab_comp_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	export IDL_STARTUP=idlrc; export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; \
+	printf ".r Idl/predict.pro\n save_comparison_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
+	printf ".r Idl/predict.pro\n save_deltab_comp_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;\
+	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}','${RES2DIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
 	mkdir -p COMPARE_${RESDIR}_vs_${RES2DIR}
-	mv metric_table*.tex idl_log.txt COMPARE_${RESDIR}_vs_${RES2DIR}/
-
-
+	mv metric_table*.tex dst_error.txt idl_log.txt COMPARE_${RESDIR}_vs_${RES2DIR}/
 
 realtime_start_rundir:
 	cd ${DIR}; \
