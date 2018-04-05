@@ -1,0 +1,8 @@
+L1 norm of Dst error in nT
+event  IGRFDIPOLE
+ 1   74.77
+ 2   29.21
+ 3    7.72
+ 4   11.52
+ 5   14.53
+ 6   13.59
