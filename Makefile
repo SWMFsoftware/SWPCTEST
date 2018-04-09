@@ -262,7 +262,7 @@ test_cimi:
 
 test_cimi_compile:
 	-@(cd ..; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO,GridExpanded; \
 	make SWMF PIDL; \
 	)
 
