@@ -1183,7 +1183,11 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
      logtime0 = logtime
      wlognames0 = wlognames
      for imodel = 0, nmodel-1 do begin
-        logfilename='deltaB/'+models[imodel]+'/Event'+eventnumber+'/log*.log'
+        model = models[imodel]
+        if model eq 'run_test' then $
+           logfilename='run_test/run_event'+eventnumber+'/GM/IO2/log*.log' $
+        else $
+           logfilename='deltaB/'+models[imodel]+'/Event'+eventnumber+'/log*.log'
         read_log_data
         if wlognames[19] eq 'dst' then wlognames[19] = 'dst_sm'
         interpol_log,wlog0,wlog,dst0,dst,'dst_sm',wlognames0,wlognames,logtime0
