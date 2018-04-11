@@ -55,7 +55,7 @@ help:
 	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
 	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
 	@echo ""
-	@echo "make check_dst     RESDIR=New EVENTS=2,4 (calculate Dst error only for events 2..3)"
+	@echo "make check_dst     RESDIR=New EVENTS=2,4 (calculate Dst error only for events 2..4)"
 	@echo "make check_compare RESDIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
 	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
