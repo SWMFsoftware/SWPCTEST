@@ -16,8 +16,8 @@
 # Send email if something happens
 #PBS -m abe
 
-# Specify group:
-#PBS -W group_list=s1359
+# Specify group (uses default group if not specified):
+#### PBS -W group_list=s1359
 
 # cd into the run directory
 cd $PBS_O_WORKDIR
