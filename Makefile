@@ -141,7 +141,7 @@ check:
 test_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd; \
-	make SWMF PIDL PSPH; \
+	make SWMF PIDL; \
 	)
 
 # Default PARAM.in file for the test
