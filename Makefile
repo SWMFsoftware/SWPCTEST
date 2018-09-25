@@ -234,6 +234,23 @@ test_multiion_run: test_run
 
 ##############################################################################
 
+test_multiion_v2:
+	@echo "Testing the SWMF with multiion v2 BATSRUS"
+	make test_multiion_v2_compile
+	make test_multiion_v2_rundir
+	make test_multiion_v2_run
+	@echo "Test_multiion v2 started.  make check when complete."
+
+test_multiion_v2_compile:
+	make test_multiion_compile
+
+test_multiion_v2_rundir:
+	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init
+
+test_multiion_v2_run: test_run
+
+##############################################################################
+
 test_multispecies:
 	@echo "Testing the SWMF with multispecies BATSRUS"
 	make test_multispecies_compile
@@ -255,7 +272,7 @@ test_multispecies_run: test_run
 ##############################################################################
 
 test_multispecies_v2:
-	@echo "Testing the SWMF with multispecies BATSRUS"
+	@echo "Testing the SWMF with multispecies v2 BATSRUS"
 	make test_multispecies_v2_compile
 	make test_multispecies_v2_rundir
 	make test_multispecies_v2_run
