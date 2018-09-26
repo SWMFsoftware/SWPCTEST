@@ -61,8 +61,9 @@ help:
 	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
 	@echo "test_rbe                       (run with RB/RBE model)"
 	@echo "test_multiion                  (run with multiion GM/BATSRUS model)"
+	@echo "test_multiion_v2               (run with multiion GM/BATSRUS v2 model)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
-	@echo "test_multispecies_v2           (run with multispecies GM/BATSRUS model)"
+	@echo "test_multispecies_v2           (run with multispecies GM/BATSRUS v2 model)"
 	@echo "test_cimi		      (run with anisotropic MHD and IM/CIMI)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
@@ -246,8 +247,18 @@ test_multiion_v2_compile:
 
 test_multiion_v2_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init
+	for e in ${EVENTLIST}; do	 			    \
+		cp Inputs/job_more.long      ${QUEDIR}/run_event$$e;\
+	done
 
-test_multiion_v2_run: test_run
+
+test_multiion_v2_run:
+	@echo "Submitting jobs"
+	cd ..; 							\
+	for e in ${EVENTLIST}; do				\
+		cd ${QUEDIR}/run_event$$e;			\
+		./qsub.pfe.pl job_more.long ev$$e;	    	\
+	done
 
 ##############################################################################
 
