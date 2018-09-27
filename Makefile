@@ -142,13 +142,13 @@ check:
 
 test_compile:
 	-@(cd ..; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
 	make SWMF PIDL; \
 	)
 
-# Default PARAM.in file for the test
-PARAMINIT = PARAM.in_SWPC_init
-LAYOUT    = LAYOUT.in
+# Default PARAM.in and LAYOUT.in files for the tests
+PARAMINIT = PARAM.in_SWPC_v2_init
+LAYOUT    = LAYOUT.in_rbe
 
 test_rundir:
 	@echo "Creating rundirs"
@@ -189,7 +189,7 @@ test_order5_compile:
 	)
 
 test_order5_rundir:
-	make test_rundir PARAMINIT=PARAM.in_order5_init
+	make test_rundir PARAMINIT=PARAM.in_order5_init LAYOUT=LAYOUT.in
 
 test_order5_run: test_run
 
@@ -229,7 +229,7 @@ test_multiion_compile:
 	)
 
 test_multiion_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multiion_init
+	make test_rundir PARAMINIT=PARAM.in_multiion_init LAYOUT=LAYOUT.in
 
 test_multiion_run: test_run
 
@@ -246,7 +246,7 @@ test_multiion_v2_compile:
 	make test_multiion_compile
 
 test_multiion_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init
+	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init LAYOUT=LAYOUT.in
 	for e in ${EVENTLIST}; do	 			    \
 		cp Inputs/job_more.long      ${QUEDIR}/run_event$$e;\
 	done
@@ -276,7 +276,7 @@ test_multispecies_compile:
 	)
 
 test_multispecies_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multispecies_init
+	make test_rundir PARAMINIT=PARAM.in_multispecies_init LAYOUT=LAYOUT.in
 
 test_multispecies_run: test_run
 
@@ -293,7 +293,7 @@ test_multispecies_v2_compile:
 	make test_multispecies_compile
 
 test_multispecies_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multispecies_v2_init
+	make test_rundir PARAMINIT=PARAM.in_multispecies_v2_init LAYOUT=LAYOUT.in
 
 test_multispecies_v2_run: test_run
 
