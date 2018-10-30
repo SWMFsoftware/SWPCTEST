@@ -329,10 +329,10 @@ test_cimi_v2:
 
 test_cimi_v2_compile: test_cimi_compile
 
-test_cimi_rundir:
+test_cimi_v2_rundir:
 	make test_rundir PARAMINIT=PARAM.in_cimi_v2_init LAYOUT=LAYOUT.in_cimi
 
-test_cimi_run: test_run
+test_cimi_v2_run: test_run
 
 ##############################################################################
 
