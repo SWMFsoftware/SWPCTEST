@@ -1178,11 +1178,14 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
   openw, unit, 'dst_error.txt'
   printf, unit, 'L1 norm of Dst error in nT'
   printf, unit, 'event ', models
+
+  colors=[255,50,250,150,200,100,25,220,125]
+
   for ievent = firstevent, lastevent do begin
      ;; read in measured values
      eventnumber = strtrim(string(ievent),2)
      logfilename="Dst/event_"+eventnumber+".txt"
-     logfilenameplot = ''
+     logfilenameplot = logfilename
      legends = ['Observation']
      read_log_data
      wlog0 = wlog
@@ -1197,24 +1200,23 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
            logfilename='deltaB/'+models[imodel]+'/Event'+eventnumber+'/log*.log'
            legends    =	[legends, models[imodel]]
         endelse
-        logfilenameplot = logfilenameplot + ' ' + logfilename
+        logfilenameplot += ' ' + logfilename
         read_log_data
         if wlognames[19] eq 'dst' then wlognames[19] = 'dst_sm'
         interpol_log,wlog0,wlog,dst0,dst,'dst_sm',wlognames0,wlognames,logtime0
         errors[imodel] = total(abs(dst0-dst)) / n_elements(dst)
      endfor
-     logfilename = 'Dst/event_'+eventnumber+'.txt ' + logfilenameplot
+     logfilename = logfilenameplot
      read_log_data
-     set_device, 'dst_plot_event'+eventnumber+'.eps'
+     set_device, 'dst_plot_event'+eventnumber+'.eps', /land
      logfunc='dst_sm'
-     colors=[255,50,250,150,200,100,25,220,125]
+     legendpos = [-0.05,0.02,0.05,0.23]
      xtitle   = 'Hours from ' + dates[ievent-1]
      ytitles  = ['Dst [nT]']
-     legendpos = [-0.05,0.02,0.05,0.23]
      plot_log_data
      close_device, /pdf
-     colors=[255,100,250,150,200,50,25,220,125] ; reset colors
      printf, unit, ievent, errors, format='(i2,10f8.2)'
   endfor
+  colors=[255,100,250,150,200,50,25,220,125] ; reset colors
   close,unit
 end
