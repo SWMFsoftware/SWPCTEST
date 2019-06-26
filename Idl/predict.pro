@@ -1156,6 +1156,7 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
 
   common getlog_param
   common log_data
+  common plotlog_param
   
   ;; Default directory
   if n_elements(models) lt 1 then models=['Results']
@@ -1168,7 +1169,10 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
   ;; the CCMC limits
   tmins = [-1.,  6.0,       12.0,        0.0,       10.0,        0.0,        9.0 ]
   tmaxs = [-1.,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0 ]
-  
+
+  dates = ['Oct 29 2003', 'Dec 14 2006', 'Aug 31 2001', $
+           'Aug 31 2005', 'Apr 5 2010', 'Aug 5 2011']
+
   errors = fltarr(nmodel)
   unit = 1
   openw, unit, 'dst_error.txt'
@@ -1178,21 +1182,38 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
      ;; read in measured values
      eventnumber = strtrim(string(ievent),2)
      logfilename="Dst/event_"+eventnumber+".txt"
+     logfilenameplot = ''
+     legends = ['Observation']
      read_log_data
      wlog0 = wlog
      logtime0 = logtime
      wlognames0 = wlognames
      for imodel = 0, nmodel-1 do begin
         model = models[imodel]
-        if model eq 'run_test' then $
-           logfilename='run_test/run_event'+eventnumber+'/GM/IO2/log*.log' $
-        else $
+        if model eq 'run_test' then begin
+           logfilename='run_test/run_event'+eventnumber+'/GM/IO2/log*.log'
+           legends    = [legends, 'Simulation']
+        endif else begin
            logfilename='deltaB/'+models[imodel]+'/Event'+eventnumber+'/log*.log'
+           legends    =	[legends, models[imodel]]
+        endelse
+        logfilenameplot = logfilenameplot + ' ' + logfilename
         read_log_data
         if wlognames[19] eq 'dst' then wlognames[19] = 'dst_sm'
         interpol_log,wlog0,wlog,dst0,dst,'dst_sm',wlognames0,wlognames,logtime0
         errors[imodel] = total(abs(dst0-dst)) / n_elements(dst)
      endfor
+     logfilename = 'Dst/event_'+eventnumber+'.txt ' + logfilenameplot
+     read_log_data
+     set_device, 'dst_plot_event'+eventnumber+'.eps'
+     logfunc='dst_sm'
+     colors=[255,50,250,150,200,100,25,220,125]
+     xtitle   = 'Hours from ' + dates[ievent-1]
+     ytitles  = ['Dst [nT]']
+     legendpos = [-0.05,0.02,0.05,0.23]
+     plot_log_data
+     close_device, /pdf
+     colors=[255,100,250,150,200,50,25,220,125] ; reset colors
      printf, unit, ievent, errors, format='(i2,10f8.2)'
   endfor
   close,unit
