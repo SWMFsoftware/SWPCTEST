@@ -354,7 +354,7 @@ check_calc:
 	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
 	printf ".r Idl/predict.pro\n calc_all_db_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
 	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	mv metrics*.txt dbdt* db_* dst_error.txt idl_log.txt deltaB/${RESDIR}/
+	mv metrics*.txt dbdt* db_* dst_error.txt idl_log.txt dst_plot_event* deltaB/${RESDIR}/
 
 check_dst:
 	@echo "Checking Dst against observations"
@@ -373,7 +373,7 @@ check_compare:
 	printf ".r Idl/predict.pro\n save_deltab_comp_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;\
 	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}','${RES2DIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
 	mkdir -p COMPARE_${RESDIR}_vs_${RES2DIR}
-	mv metric_table*.tex dst_error.txt idl_log.txt COMPARE_${RESDIR}_vs_${RES2DIR}/
+	mv metric_table*.tex dst_error.txt idl_log.txt dst_plot_event* COMPARE_${RESDIR}_vs_${RES2DIR}/
 
 realtime_start_rundir:
 	cd ${DIR}; \
