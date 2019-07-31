@@ -1200,8 +1200,8 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
            logfilename='deltaB/'+models[imodel]+'/Event'+eventnumber+'/log*.log'
            legends    =	[legends, models[imodel]]
         endelse
-        logfilenameplot += ' ' + logfilename
         read_log_data
+        logfilenameplot += ' ' + logfilenames
         if wlognames[19] eq 'dst' then wlognames[19] = 'dst_sm'
         interpol_log,wlog0,wlog,dst0,dst,'dst_sm',wlognames0,wlognames,logtime0
         errors[imodel] = total(abs(dst0-dst)) / n_elements(dst)
