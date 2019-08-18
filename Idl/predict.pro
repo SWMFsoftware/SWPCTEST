@@ -1148,6 +1148,168 @@ pro save_deltab_comp_tables, $
 end
 
 ;==============================================================================
+
+pro save_tables, model=model, firstevent=firstevent, lastevent=lastevent
+  
+  ;; Create tables containing db/dt and db skill scores.
+  ;; Defaults are 'Results'
+  ;; Combine scores for all events from firstevents to lastevent
+  ;; (default is 1 to 6).
+  ;; Create a separate table for the various station groups:
+  ;; low, mid, high, veryhigh, all.
+
+  ; Set station groups
+  stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
+
+  ; Create combined metrics for all events:
+  for ilat=0, n_elements(stationlats)-1 do begin
+     save_table, stationlats[ilat], model, $
+                 firstevent=firstevent, lastevent=lastevent
+  endfor
+end
+
+;==============================================================================
+
+pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent
+
+;; Create tables containing db/dt and db skill scores.
+;; for the stationlat station group:
+;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low'. Default is all.
+;; If model1 is not given 'Results' is assumed. 
+;; Events starting from firstevent to lastevent are used. Defaults are 1 to 6.
+
+  if n_elements(stationlat) lt 1 then stationlat='all'
+  if n_elements(model)      lt 1 then model = 'Results'
+  if n_elements(firstevent) lt 1 then firstevent = 1
+  if n_elements(lastevent)  lt 1 then lastevent  = 6
+
+  thresholds=[101.6, 213.6, 317.5, 416.7]
+  deltat = 20.
+
+  ; Size of results arrays:
+  nthresh = n_elements(thresholds)
+  nmetric = 3 ; POD, POFD, HSS
+
+  ; Arrays to store results:
+  directs    = fltarr(nmetric, nthresh)
+  indirects  = fltarr(nmetric, nthresh)
+  
+  stencil  = 1
+  scale    = 292
+  exponent = 1.14
+
+  for ithresh = 0, nthresh-1 do begin
+     threshold = thresholds[ithresh]
+
+     ; Results for model:
+     predict,'db',stationlat=stationlat,threshold=threshold,scale=scale, $
+             exponent=exponent,deltat=deltat, stencil=stencil, $
+             models=[model], $
+             firstevent=firstevent, lastevent=lastevent, $
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+
+     directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
+  endfor
+
+  ; print out the db skill score tables.
+  filename = "metric_table_db_" + stationlat + ".tex"
+  openw, lun, filename, /get_lun
+
+  printf, lun, 'models=', model
+  printf, lun, 'events =', firstevent,' ... ', lastevent
+  printf, lun, 'stationlat=', stationlat
+  printf, lun, '$\Delta t_{window}=',deltat,'$'
+  printf, lun, ''
+  printf, lun, '\begin{table}[ht]'
+  printf, lun, '\centering'
+  printf, lun, '\begin{tabular}{l|c c c}'
+  printf, lun, 'Threshold&POD&POFD&HSS\\'
+  printf, lun, '\hline'
+  for ithresh = 0, nthresh-1 do begin
+     line1 = string(thresholds(ithresh),format='(f6.1,"\,[nT]")')
+     line2 = line1
+     line1 += ' direct   '
+     line2 += ' indirect '
+     
+     for imetric = 0, nmetric-1 do begin
+        line1 += string( $
+                directs[imetric,ithresh], $
+                format='("& ",f5.3, " ")')
+     endfor
+     line1 += '\\'
+     printf, lun, line1
+     printf, lun, '\hline'
+  endfor
+
+  printf, lun, '\end{tabular}'
+  printf, lun, '\caption{Performance metrics for the SWMF.}'
+  printf, lun, '\end{table}'
+  
+  free_lun, lun
+
+  ; for db/dt skill scores
+  thresholds=[0.3, 0.7, 1.1, 1.5]
+  deltat = 20.
+
+  for ithresh = 0, nthresh-1 do begin
+     threshold = thresholds[ithresh]
+
+     ; Results for model:
+     predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
+             exponent=exponent,deltat=deltat, stencil=stencil, $
+             models=[model], $
+             firstevent=firstevent, lastevent=lastevent, $
+             dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+
+     directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
+     indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
+  endfor
+
+  ; print out db/dt skill scores tables.
+  filename = "metric_table_" + stationlat + ".tex"
+  openw, lun, filename, /get_lun
+
+  printf, lun, 'model  =', model
+  printf, lun, 'events =', firstevent,' ... ', lastevent
+  printf, lun, 'stationlat=', stationlat
+  printf, lun, '$\Delta t_{window}=',deltat,'$'
+  printf, lun, ''
+  printf, lun, '\begin{table}[ht]'
+  printf, lun, '\centering'
+  printf, lun, '\begin{tabular}{l l|c c c}'
+  printf, lun, 'Threshold&Method&POD&POFD&HSS\\'
+  printf, lun, '\hline'
+  for ithresh = 0, nthresh-1 do begin
+     line1 = string(thresholds(ithresh),format='(f3.1,"\,[nT/s]&")')
+     line2 = line1
+     line1 += ' direct   '
+     line2 += ' indirect '
+     
+     for imetric = 0, nmetric-1 do begin
+        line1 += string( $
+                directs[imetric,ithresh], $
+                format='("& ",f5.3, " ")')
+        line2 += string( $
+                indirects[imetric,ithresh], $
+                format='("& ",f5.3, " ")')
+     endfor
+     line1 += '\\'
+     line2 += '\\'
+     printf, lun, line1
+     printf, lun, line2
+     printf, lun, '\hline'
+  endfor
+
+  printf, lun, '\end{tabular}'
+  printf, lun, '\caption{Performance metrics for the SWMF.}'
+  printf, lun, '\end{table}'
+  
+  free_lun, lun
+
+end
+
+;==============================================================================
 pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
 
 ;; Calculate Dst (symH) error in nT

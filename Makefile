@@ -353,8 +353,9 @@ check_calc:
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc; \
 	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
 	printf ".r Idl/predict.pro\n calc_all_db_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
-	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	mv metrics*.txt dbdt* db_* dst_error.txt idl_log.txt dst_plot_event* deltaB/${RESDIR}/
+	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;     \
+	printf ".r Idl/predict.pro\n save_tables, model=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
+	mv metrics*.txt metric*.tex dbdt* db_* dst_error.txt idl_log.txt dst_plot_event* deltaB/${RESDIR}/
 
 check_dst:
 	@echo "Checking Dst against observations"
