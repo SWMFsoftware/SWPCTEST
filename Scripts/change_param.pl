@@ -2,7 +2,7 @@
 &print_help if $h or $help;
 
 my $NoPlot = $noplot;
-my $IMF    = $imf or "L1.dat";
+my $IMF    = ($imf or "L1.dat");
 
 # Allow in-place editing of the PARAM.in files
 $^I = "";
