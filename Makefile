@@ -64,8 +64,10 @@ help:
 	@echo "test_multiion_v2               (run with multiion GM/BATSRUS v2 model)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
 	@echo "test_multispecies_v2           (run with multispecies GM/BATSRUS v2 model)"
+	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with the Young BC)"
 	@echo "test_cimi		      (run with anisotropic MHD and IM/CIMI)"
 	@echo "test_cimi_v2		      (run with anisotropic MHD v2 and IM/CIMI)"
+	@echo "test_SWPC_Young_v2	      (run with SWPC v2 model with the Young BC)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..10)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
@@ -300,6 +302,23 @@ test_multispecies_v2_run: test_run
 
 ##############################################################################
 
+test_multispecies_Young_v2:
+	@echo "Testing the SWMF with multispecies Young v2 BATSRUS"
+	make test_multispecies_Young_v2_compile
+	make test_multispecies_Young_v2_rundir
+	make test_multispecies_Young_v2_run
+	@echo "Test_multispecies Young v2 started.  make check when complete."
+
+test_multispecies_Young_v2_compile:
+	make test_multispecies_compile
+
+test_multispecies_Young_v2_rundir:
+	make test_rundir PARAMINIT=PARAM.in_multispecies_Young_v2_init LAYOUT=LAYOUT.in
+
+test_multispecies_Young_v2_run: test_run
+
+##############################################################################
+
 test_cimi:
 	@echo "Testing the SWMF with anisotropic BATSRUS + IM/CIMI"
 	make test_cimi_compile
@@ -333,6 +352,22 @@ test_cimi_v2_rundir:
 	make test_rundir PARAMINIT=PARAM.in_cimi_v2_init LAYOUT=LAYOUT.in_cimi
 
 test_cimi_v2_run: test_run
+
+##############################################################################
+
+test_SWPC_Young_v2:
+	@echo "Testing the SWPC v2 with the Young BC."
+	make test_SWPC_Young_v2_compile
+	make test_SWPC_Young_v2_rundir
+	make test_SWPC_Young_v2_run
+	@echo "Test_cimi_v2 started.  make check when complete."
+
+test_SWPC_Young_v2_compile: test_compile
+
+test_SWPC_Young_v2_rundir:
+	make test_rundir PARAMINIT=PARAM.in_SWPC_v2_Young_init LAYOUT=LAYOUT.in_SWPC_v2
+
+test_SWPC_Young_v2_run: test_run
 
 ##############################################################################
 
