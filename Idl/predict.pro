@@ -39,13 +39,16 @@ end
 
 ; ============================================================================
 
-function exceeds, time, array, tmin, tmax, dt, threshold
+function exceeds, time, array, tmin, tmax, dt, threshold, mincount
 
-  ; time and array form a time series
-  ; bin data from tmin to tmax with dt bin size
-  ; return an array of 0-s and 1-s. 
-  ; 1 corresponds to bins where any data exceeds the threshold.
+  ;; time and array form a time series
+  ;; bin data from tmin to tmax with dt bin size
+  ;; return an array of 0-s and 1-s. 
+  ;; 1 corresponds to bins where any data exceeds the threshold.
+  ;; if mincount is present, eliminate bins with fewer data points
 
+  if n_elements(mincount) eq 0 then mincount = 0
+  
   n = n_elements(array)
 
   if n ne n_elements(time) then begin
@@ -53,24 +56,29 @@ function exceeds, time, array, tmin, tmax, dt, threshold
      help, time, array
      retall
   endif
-
+  
   nbin  = fix( (tmax - tmin)/dt ) ;;; + 1
 
   result = intarr(nbin)
+  count  = intarr(nbin)
 
   for i = 0, n - 1 do begin
 
      t = time[i]
      if t lt tmin or t gt tmax then continue
 
-     if array[i] ge threshold then begin
-        ibin = fix( (t - tmin)/dt ) < nbin-1
-        result[ibin] = 1
-     endif
+     ibin = fix( (t - tmin)/dt ) < nbin-1
+
+     count(ibin) += 1
+     if array[i] ge threshold then result[ibin] = 1
     
   endfor
 
-  return, result
+  ii = where(count ge mincount)
+
+  ;;; help, time, array, dt, threshold, mincount, nbin, ii
+
+  return, result(ii)
 
 end
 
@@ -89,7 +97,7 @@ function scale_exp, x, a
 end
 
 ; ============================================================================
-pro read_data, file, date, t, data, tderiv, dataderiv, dn
+pro read_station, file, date, t, data, tderiv, dataderiv, dn
 
   ; extract year, month and day from the date string
   year  = fix(strmid(date,0,4))
@@ -149,7 +157,7 @@ pro predict, choice, $
              models=models, modelnames=modelnames, $
              stationlat=stationlat, stations=stations, $
              firstevent=firstevent, lastevent=lastevent, $
-             deltat=deltat, stencil=stencil, $
+             deltat=deltat, mincount=mincount, stencil=stencil, $
              threshold=threshold, $
              scale=scale, exponent=exponent, $
              coeff=coeff, power=power, $
@@ -167,8 +175,9 @@ pro predict, choice, $
   ;; stations: array of station names (default is all 12 stations)
   ;; stationlat = 'all','veryhigh','high','mid' or 'low' (default='all')
   ;; deltat: width of bins in minutes (default=20)
+  ;; mincount: minimum number of valid observations in each bin
   ;; stencil = 1 or 2: discretization for dB/dt (default=1, compact stencil)
-  ;; scale, exponent: indirect dBdt = scale*(dB)^exponent (default=292,1.14)
+  ;; scale, exponent: indirect dBdt = (dB/scale)^exponent (default=292,1.14)
   ;; coefff, power: artificial scaling of simulated db or dbdt reults:
   ;;                result_sim' = coeff*result_sim^power (default=1,1)
   ;; db_pod, db_pof, db_hss: array of probablity of true and false
@@ -184,6 +193,8 @@ pro predict, choice, $
 
   if n_elements(deltat) lt 1 then deltat = 20.0
   dt = deltat/60.0
+
+  if n_elements(mincount) lt 1 then mincount=0
 
   if not keyword_set(out_file) then out_file=''
   if not keyword_set(append)   then append=0
@@ -205,7 +216,7 @@ pro predict, choice, $
   endif
 
   ;; scaling and exponent for indirect db calculation:
-  ;; dB/dt [nT/s] = scale*(dB[nT])^exponent
+  ;; dB/dt [nT/s] = (dB[nT]/scale)^exponent
   if n_elements(scale)    lt 1 then scale = 292.0
   if n_elements(exponent) lt 1 then exponent = 1.14
 
@@ -244,7 +255,7 @@ pro predict, choice, $
 
   nmodel = n_elements(models)
 
-  events = ['?', 'Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6']
+  events = ['?', 'Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6', 'Event7']
 
   periods= ['?', $
             '2003_Oct29_0600-Oct30_0600', $
@@ -252,11 +263,12 @@ pro predict, choice, $
             '2001_Aug31_0000-Sep01_0000', $
             '2005_Aug31_1000-Sep01_1200', $
             '2010_Apr05_0000-Apr06_0000', $
-            '2011_Aug05_0900-Aug06_0900' ]
+            '2011_Aug05_0900-Aug06_0900', $
+            '2017_Sep05_0000-Sep09_0000']
 
-  dates = ['?', '20031029', '20061214', '20010831', '20050831', '20100405', '20110805']
-  tmins = [-1.,  6.0,       12.0,        0.0,       10.0,        0.0,        9.0 ]
-  tmaxs = [-1.,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0 ]
+  dates = ['?', '20031029', '20061214', '20010831', '20050831', '20100405', '20110805', '20170905']
+  tmins = [-1.,  6.0,       12.0,        0.0,       10.0,        0.0,        9.0,        0.0 ]
+  tmaxs = [-1.,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0,       96.0 ]
 
   if n_elements(firstevent) eq 0 then firstevent = 1
   if n_elements(lastevent)  eq 0 then lastevent  = n_elements(events)-1
@@ -342,9 +354,9 @@ pro predict, choice, $
            if verbose then print,'reading observation and simulation data'
 
            ; Read db and calculate db/dt from observations and simulations
-           read_data, file_obs_db, date, t_db_obs, $
+           read_station, file_obs_db, date, t_db_obs, $
                       db_obs, t_dbdt_obs, dbdt_obs, stencil
-           read_data, file_sim_db, date, t_db_sim, $
+           read_station, file_sim_db, date, t_db_sim, $
                       db_sim, t_dbdt_sim, dbdt_sim, stencil
 
            ; Calculate contingency tables and create plots
@@ -356,10 +368,10 @@ pro predict, choice, $
                  tmax = tmaxs(ievent) ;; max(t_db_sim) < max(t_db_obs)
 
                  exc_obs  = $
-                    exceeds(t_db_obs, db_obs, tmin, tmax, dt, threshold)
+                    exceeds(t_db_obs, db_obs, tmin, tmax, dt, threshold, mincount)
 
                  exc_sim = $
-                    exceeds(t_db_sim, db_sim, tmin, tmax, dt, threshold)
+                    exceeds(t_db_sim, db_sim, tmin, tmax, dt, threshold, mincount)
 
                  all      = n_elements(exc_obs)
                  if all ne n_elements(exc_sim) then begin
@@ -407,13 +419,13 @@ pro predict, choice, $
                  proxy_sim = (db_sim/scale)^exponent
 
                  exc_obs = $
-                    exceeds(t_dbdt_obs, dbdt_obs, tmin, tmax, dt, threshold)
+                    exceeds(t_dbdt_obs, dbdt_obs, tmin, tmax, dt, threshold, mincount)
 
                  exc_sim = $
-                    exceeds(t_dbdt_sim, dbdt_sim, tmin, tmax, dt, threshold)
+                    exceeds(t_dbdt_sim, dbdt_sim, tmin, tmax, dt, threshold, mincount)
 
                  exc_db_sim = $
-                    exceeds(t_db_sim, proxy_sim, tmin, tmax, dt, threshold)
+                    exceeds(t_db_sim, proxy_sim, tmin, tmax, dt, threshold, mincount)
 
                  all      = n_elements(exc_obs)
                  if all ne n_elements(exc_sim) then begin
@@ -533,10 +545,14 @@ pro predict, choice, $
         dbdt_pof = f/(f+n)
         dbdt_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
 
-        printf, lun, modelname,' total dbdt: pod, pof, hss=', $
+        printf, lun, modelname,' total dbdt: pod, far, hss=', $
                 dbdt_pod, dbdt_pof, dbdt_hss, $
-                format='(2a,3f8.4)'
+                '     TP, TN, FP, FN, total=', h,n,f,m,h+n+f+m, $
+                format='(2a,3f8.4,a,5i4)'
 
+        ;;; print,'TP, TN, FP, FN, total=',h,n,f,m,h+n+f+m
+        ;;; help,exc_obs,exc_sim
+        
      endif
 
      if choice eq 'dbdt' or choice eq 'db' then begin
@@ -550,9 +566,10 @@ pro predict, choice, $
         db_pof = f/(f+n)
         db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
      
-        printf, lun, modelname,' total db  : pod, pof, hss=', $
+        printf, lun, modelname,' total db  : pod, far, hss=', $
                 db_pod, db_pof, db_hss, $
-                format='(2a,3f8.4)'
+                '     TP, TN, FP, FN, total=', h,n,f,m,h+n+f+m, $
+                format='(2a,3f8.4,a,5i4)'
      
      endif
 
@@ -859,7 +876,7 @@ pro save_comparison_table, $
 
   ; Size of results arrays:
   nthresh = n_elements(thresholds)
-  nmetric = 3 ; POD, POFD, HSS
+  nmetric = 3 ; POD, FAR, HSS
 
   ; Arrays to store results:
   directs    = fltarr(nmetric, nthresh)
@@ -1039,7 +1056,7 @@ pro save_deltab_comp_table, $
 
   ; Size of results arrays:
   nthresh = n_elements(thresholds)
-  nmetric = 3 ; POD, POFD, HSS
+  nmetric = 3 ; POD, FAR, HSS
 
   ; Arrays to store results:
   directs    = fltarr(nmetric, nthresh)
@@ -1188,7 +1205,7 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent
 
   ; Size of results arrays:
   nthresh = n_elements(thresholds)
-  nmetric = 3 ; POD, POFD, HSS
+  nmetric = 3 ; POD, FAR, HSS
 
   ; Arrays to store results:
   directs    = fltarr(nmetric, nthresh)
