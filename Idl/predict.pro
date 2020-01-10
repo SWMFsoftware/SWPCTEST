@@ -255,20 +255,19 @@ pro predict, choice, $
 
   nmodel = n_elements(models)
 
-  events = ['?', 'Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6', 'Event7']
+  events = ['Event0', 'Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6']
 
-  periods= ['?', $
+  periods= ['2017_Sep05_0000-Sep09_0000', $
             '2003_Oct29_0600-Oct30_0600', $
             '2006_Dec14-1200-Dec16_0000', $
             '2001_Aug31_0000-Sep01_0000', $
             '2005_Aug31_1000-Sep01_1200', $
             '2010_Apr05_0000-Apr06_0000', $
-            '2011_Aug05_0900-Aug06_0900', $
-            '2017_Sep05_0000-Sep09_0000']
+            '2011_Aug05_0900-Aug06_0900'  ]
 
-  dates = ['?', '20031029', '20061214', '20010831', '20050831', '20100405', '20110805', '20170905']
-  tmins = [-1.,  6.0,       12.0,        0.0,       10.0,        0.0,        9.0,        0.0 ]
-  tmaxs = [-1.,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0,       96.0 ]
+  dates = ['20170905', '20031029', '20061214', '20010831', '20050831', '20100405', '20110805', '20170905']
+  tmins = [0.0,   6.0,       12.0,        0.0,       10.0,        0.0,        9.0]
+  tmaxs = [96.0,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0]
 
   if n_elements(firstevent) eq 0 then firstevent = 1
   if n_elements(lastevent)  eq 0 then lastevent  = n_elements(events)-1
