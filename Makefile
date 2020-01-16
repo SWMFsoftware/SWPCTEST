@@ -6,7 +6,8 @@ MYDIR 	    = ${DIR}/SWPCTEST
 MYINPUTDIR  = ${MYDIR}/Inputs
 MYSCRIPTDIR = ${MYDIR}/Scripts
 GMDIR       = ${DIR}/GM/BATSRUS
-QUEDIR      = $(MYDIR)/run_test
+QUEDIR      = $(MYDIR)/run
+NRUN        = 1
 RESDIR	    = Results
 RES2DIR	    = SWMF_CCMC
 RTDIR	    = ${MYDIR}/run_realtime
@@ -39,7 +40,8 @@ help:
 	@echo "simulations; see README for more information."
 	@echo ""
 	@echo "Examples:"
-	@echo "make test                      (run all test events in run_test directory)"
+	@echo "make test                      (run all test events in run1 directory)"
+	@echo "make test NRUN=5               (run all test events with 5 (up to 9) different number of cores)"
 	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
 	@echo "make test QUEDIR=/nobackup/${USER}/run_swpctest (set absolute path for run directory)"
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
@@ -49,9 +51,9 @@ help:
 	@echo "make test_rundir               (create rundirs for all EVENTS)"
 	@echo "make test_run                  (submit runs to que)"
 	@echo ""
-	@echo "make check                     (process results from ./run_test into deltaB/Results)"
-	@echo "make check          RESDIR=New (process results from ./run_test into deltaB/New)"
-	@echo "make check_postproc RESDIR=New (collect results from ./run_test)"
+	@echo "make check                     (process results from ./run1 into deltaB/Results)"
+	@echo "make check          RESDIR=New (process results from ./run1 into deltaB/New)"
+	@echo "make check_postproc RESDIR=New (collect results from ./run1)"
 	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
 	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
 	@echo ""
@@ -155,26 +157,26 @@ LAYOUT    = LAYOUT.in_rbe
 
 test_rundir:
 	@echo "Creating rundirs"
-	for e in ${EVENTLIST}; do	 				     \
-		rm -rf ${QUEDIR}/run_event$$e;				     \
-		cd $(DIR);						     \
-		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}/run_event$$e;\
-		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/job.long           ${QUEDIR}/run_event$$e;\
-		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}/run_event$$e/LAYOUT.in;\
-		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}/run_event$$e/PARAM.in;\
-		cd ${QUEDIR}/run_event$$e;				     \
-		  	${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF};\
-	done
+	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                           \
+		rm -rf ${QUEDIR}$${iRun}/run_event$$e;      \
+		cd $(DIR);                                  \
+		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/run_event$$e;           \
+		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}$${iRun}/run_event$$e;           \
+		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/run_event$$e;           \
+		cp SWPCTEST/Inputs/job.long           ${QUEDIR}$${iRun}/run_event$$e;           \
+		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/run_event$$e/LAYOUT.in; \
+		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/run_event$$e/PARAM.in;  \
+		cd ${QUEDIR}$${iRun}/run_event$$e;				     		\
+	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};      \
+	done; done
 
 test_run:
 	@echo "Submitting jobs"
 	cd ..; 							\
-	for e in ${EVENTLIST}; do				\
-		cd ${QUEDIR}/run_event$$e;			\
-		./qsub.pfe.pl job.long ev$$e;		    	\
-	done
+	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
+		cd ${QUEDIR}$${iRun}/run_event$$e;		\
+		./qsub.pfe.pl job.long ev$$e.$${iRun};		\
+	done; done
 
 ##############################################################################
 
@@ -250,18 +252,17 @@ test_multiion_v2_compile:
 
 test_multiion_v2_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init LAYOUT=LAYOUT.in
-	for e in ${EVENTLIST}; do	 			    \
-		cp Inputs/job_more.long      ${QUEDIR}/run_event$$e;\
-	done
-
+	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do			\
+		cp Inputs/job_more.long      ${QUEDIR}$${iRun}/run_event$$e;	\
+	done; done
 
 test_multiion_v2_run:
 	@echo "Submitting jobs"
 	cd ..; 							\
-	for e in ${EVENTLIST}; do				\
-		cd ${QUEDIR}/run_event$$e;			\
+	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
+		cd ${QUEDIR}$${iRun}/run_event$$e;		\
 		./qsub.pfe.pl job_more.long ev$$e;	    	\
-	done
+	done; done
 
 ##############################################################################
 
