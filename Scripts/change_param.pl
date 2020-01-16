@@ -3,8 +3,9 @@
 
 my $NoPlot = $noplot;
 my $IMF    = ($imf or "L1.dat");
+my $iRun   = $irun;
 
-# Allow in-place editing of the PARAM.in files
+# Allow in-place editing of the PARAM.in and job.long files
 $^I = "";
 
 use strict;
@@ -114,6 +115,15 @@ while(<>){
     print;
 }
 
+if($iRun){
+    @ARGV = glob("job.long");
+    print "Editing @ARGV with iRun=$iRun\n";
+    while(<>){
+	s/(select=)(\d\d)/$1.($2+$iRun)/e;
+	print;
+    }
+}
+
 exit 0;
 #####################################################
 sub print_help{
@@ -123,10 +133,13 @@ Change the #STARTTIME and #ENDTIME commands in the PARAM.in*
 files in the run directory based on the first and last time
 shown in the IMF.dat or L1.dat file.
 
-Usage: ./change_param.pl [-noplot] [-imf=IMFFILE]
+Also change the number of nodes in job.long by adding IRUN if present.
+
+Usage: ./change_param.pl [-noplot] [-imf=IMFFILE] [-irun=IRUN]
 
 -noplot      - do not save 2D plots (including magnetogram grids)
 -imf=IMFFILE - use IMFFILE instead of the default L1.dat file
+-irun=IRUN   - add IRUN to the number of nodes in job scripts
 ";
     exit 0;
 }
