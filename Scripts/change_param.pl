@@ -119,7 +119,7 @@ if($iRun){
     @ARGV = glob("job.long");
     print "Editing @ARGV with iRun=$iRun\n";
     while(<>){
-	s/(select=)(\d\d)/$1.($2+$iRun)/e;
+	s/(PBS -l select=|SBATCH \-N )(\d\d)/$1.($2+$iRun)/e;
 	print;
     }
 }
