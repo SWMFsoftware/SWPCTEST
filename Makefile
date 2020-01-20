@@ -15,9 +15,6 @@ RTDIR	    = ${MYDIR}/run_realtime
 # Toggle saving all outputs to file (defaults is to not save plots.)
 PLOT='-noplot'
 
-# Assume running on Pleiades (needed for testing on other machines)
-MACHINE='pfe'
-
 # Comma separated list of event indexes
 EVENTS=1,2,3,4,5,6
 
@@ -163,7 +160,7 @@ test_rundir:
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/run_event$$e;           \
 		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}$${iRun}/run_event$$e;           \
 		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/run_event$$e;           \
-		cp SWPCTEST/Inputs/job.long           ${QUEDIR}$${iRun}/run_event$$e;           \
+		cp SWPCTEST/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/run_event$$e/job.long;  \
 		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/run_event$$e/LAYOUT.in; \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/run_event$$e/PARAM.in;  \
 		cd ${QUEDIR}$${iRun}/run_event$$e;				     		\
