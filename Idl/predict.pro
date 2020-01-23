@@ -165,7 +165,8 @@ pro predict, choice, $
              dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof, dbdt_hss=dbdt_hss, $
              out_file=out_file, append=append, $
              showinfo=showinfo, verbose=verbose, $
-             showplot=showplot, saveplot=saveplot
+             showplot=showplot, saveplot=saveplot,$
+             mydir=mydir
 
   ;; choice = 'db', 'dbdt', 'corr'
   ;; models: array directories containing results
@@ -272,6 +273,9 @@ pro predict, choice, $
   if n_elements(firstevent) eq 0 then firstevent = 1
   if n_elements(lastevent)  eq 0 then lastevent  = n_elements(events)-1
 
+  if not keyword_set(mydir)    then mydir='.'
+  mydir = mydir+'/'
+
   !p.charsize = 1.6
 
   nstation = n_elements(stations)
@@ -300,6 +304,13 @@ pro predict, choice, $
      model     = models[imodel]
      modelname = modelnames[imodel]
 
+     ;; remove anything before deltaB
+     if(strpos(model,'deltaB/') ge 0) then model = strmid(model,strpos(model,'deltaB/')+7)
+     if(strpos(modelname,'deltaB/') ge 0) then modelname = strmid(modelname,strpos(modelname,'deltaB/')+7)
+
+     ;; replace / with _
+     modelname = strjoin(strsplit(modelname,'/',/extract),'_')
+
      if verbose then print,' imodel, modelname=', imodel, modelname
 
      ;; first index: hit, false, miss, nopred
@@ -311,8 +322,7 @@ pro predict, choice, $
         if verbose then print,' ievent, event=', ievent, ' ', events(ievent)
 
         if saveplot then begin
-           plotfile  = choice + '_' + modelname + $
-                       '_event' + string(ievent, format='(i2.2)')
+           plotfile  = choice + '_event' + string(ievent, format='(i2.2)')
 
            case choice of
               'db': plotfile += '_'+string(fix(threshold),format='(i0,"nT")')
@@ -335,15 +345,16 @@ pro predict, choice, $
            ; Station PBQ was replaced with SNK after 2007
            if date gt '2007' and station eq 'PBQ' then station = 'SNK'
 
-           file_obs_db = 'deltaB/Observations/'+event+'/'+station+'.txt'
+           file_obs_db = mydir+'deltaB/Observations/'+event+'/'+station+'.txt'
+
            if not file_test(file_obs_db) then begin
               print,'For event=',event,' there is no observation for station=',station
               continue
            endif
 
-           file_sim_db  = 'deltaB/'+model+'/'+event+'/'+station+'.txt'
+           file_sim_db  = mydir+'deltaB/'+model+'/'+event+'/'+station+'.txt'
            if not file_test(file_sim_db) then begin
-              if station eq 'SNK' then file_sim_db  = 'deltaB/'+model+'/'+event+'/PBQ.txt'
+              if station eq 'SNK' then file_sim_db  = mydir+'deltaB/'+model+'/'+event+'/PBQ.txt'
               if not file_test(file_sim_db) then begin
                  print,'For event=',event,' there is no result from model=',model,' for station=',station
                  continue
@@ -807,7 +818,7 @@ pro show_hss_dt_table, stations, directs, indirects
 end
 
 ;==============================================================================
-pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent
+pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent, mydir=mydir
   
 ;; Calculate scores for the models listed in the 'models' string array
 ;; for all station groups (low, mid, high, veryhigh, all).
@@ -846,7 +857,8 @@ pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent
                    scale=scale, exponent=exponent, $
                    firstevent=ievent, lastevent=ievent, $
                    deltat=deltat, stencil=stencil, out_file=filename, $
-                   append=ithresh, saveplot=(stationlat eq 'all')
+                   append=ithresh, saveplot=(stationlat eq 'all'),    $
+                   mydir=mydir
 
         endfor
      endfor
@@ -854,8 +866,9 @@ pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent
 end
 ;==============================================================================
 
-pro save_comparison_table, $
-   stationlat, model1, model2, firstevent=firstevent, lastevent=lastevent
+pro save_comp_dbdt_table, $
+   stationlat, model1, model2, firstevent=firstevent, lastevent=lastevent, $
+   mydir=mydir
 
 ;; Compare deltaB/model1 and deltaB/model2 outputs 
 ;; for the stationlat station group:
@@ -902,7 +915,7 @@ pro save_comparison_table, $
              models=[model1], $
              firstevent=firstevent, lastevent=lastevent, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
      directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
      indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
@@ -913,7 +926,7 @@ pro save_comparison_table, $
              models=[model2], $
              firstevent=firstevent, lastevent=lastevent, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
      directs2[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
      indirects2[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
@@ -965,8 +978,8 @@ pro save_comparison_table, $
 end
 
 ;==============================================================================
-pro save_comparison_tables, $
-   model1, model2, firstevent=firstevent, lastevent=lastevent
+pro save_comp_dbdt_tables, $
+   model1, model2, firstevent=firstevent, lastevent=lastevent, mydir=mydir
   
   ;; Create comparison tables between results stored in
   ;; deltaB/model1 and deltaB/model2. Defaults are 'Results' and 'SWMF_CCMC'.
@@ -980,14 +993,15 @@ pro save_comparison_tables, $
 
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
-     save_comparison_table, stationlats[ilat], $
+     save_comp_dbdt_table, stationlats[ilat], $
                             model1, model2, $
-                            firstevent=firstevent, lastevent=lastevent
+                            firstevent=firstevent, lastevent=lastevent, $
+                            mydir=mydir
   endfor
 end
 ;==============================================================================
 
-pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lastevent
+pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lastevent, mydir=mydir
 
 ;; Calculate scores for the models listed in the 'models' string
 ;; array for all station groups (low, mid, high, veryhigh, all).
@@ -1026,7 +1040,8 @@ pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lasteven
                    scale=scale, exponent=exponent, $
                    firstevent=ievent, lastevent=ievent, $
                    deltat=deltat, stencil=stencil, out_file=filename, $
-                   append=ithresh, saveplot=(stationlat eq 'all')
+                   append=ithresh, saveplot=(stationlat eq 'all'),    $
+                   mydir=mydir
 
         endfor
      endfor
@@ -1034,8 +1049,9 @@ pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lasteven
 end
 ;==============================================================================
 
-pro save_deltab_comp_table, $
-   stationlat, model1, model2, firstevent=firstevent, lastevent=lastevent
+pro save_comp_db_table, $
+   stationlat, model1, model2, firstevent=firstevent, lastevent=lastevent, $
+   mydir=mydir
 
 ;; Compare deltaB/model1 and deltaB/model2 outputs 
 ;; for the stationlat station group:
@@ -1081,7 +1097,7 @@ pro save_deltab_comp_table, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model1], $
              firstevent=firstevent, lastevent=lastevent, $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
      directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
 
@@ -1090,7 +1106,7 @@ pro save_deltab_comp_table, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model2], $
              firstevent=firstevent, lastevent=lastevent, $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
      directs2[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
   endfor
@@ -1142,8 +1158,8 @@ end
 
 ;==============================================================================
 
-pro save_deltab_comp_tables, $
-   model1, model2, firstevent=firstevent, lastevent=lastevent
+pro save_comp_db_tables, $
+   model1, model2, firstevent=firstevent, lastevent=lastevent, mydir=mydir
   
   ;; Create comparison tables between results stored in
   ;; deltaB/model1 and deltaB/model2. Defaults are 'Results' and 'SWMF_CCMC'.
@@ -1157,15 +1173,16 @@ pro save_deltab_comp_tables, $
 
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
-     save_deltab_comp_table, stationlats[ilat], $
+     save_comp_db_table, stationlats[ilat], $
                              model1, model2, $
-                             firstevent=firstevent, lastevent=lastevent
+                             firstevent=firstevent, lastevent=lastevent, $
+                             mydir=mydir
   endfor
 end
 
 ;==============================================================================
 
-pro save_tables, model=model, firstevent=firstevent, lastevent=lastevent
+pro save_tables, model=model, firstevent=firstevent, lastevent=lastevent, mydir=mydir
   
   ;; Create tables containing db/dt and db skill scores.
   ;; Defaults are 'Results'
@@ -1180,13 +1197,13 @@ pro save_tables, model=model, firstevent=firstevent, lastevent=lastevent
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
      save_table, stationlats[ilat], model, $
-                 firstevent=firstevent, lastevent=lastevent
+                 firstevent=firstevent, lastevent=lastevent, mydir=mydir
   endfor
 end
 
 ;==============================================================================
 
-pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent
+pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, mydir=mydir
 
 ;; Create tables containing db/dt and db skill scores.
 ;; for the stationlat station group:
@@ -1222,7 +1239,8 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model], $
              firstevent=firstevent, lastevent=lastevent, $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, $
+             mydir=mydir
 
      directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
   endfor
@@ -1276,7 +1294,8 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent
              models=[model], $
              firstevent=firstevent, lastevent=lastevent, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof
+             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof,     $
+             mydir=mydir
 
      directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
      indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
@@ -1326,7 +1345,7 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent
 end
 
 ;==============================================================================
-pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
+pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,mydir=mydir
 
 ;; Calculate Dst (symH) error in nT
 ;; for the models listed in the 'models' string array
@@ -1335,11 +1354,22 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
   common getlog_param
   common log_data
   common plotlog_param
-  
+
+  if not keyword_set(mydir)    then mydir='.'
+  mydir = mydir+'/'
+
+  modelnames = models
+
   ;; Default directory
   if n_elements(models) lt 1 then models=['Results']
   nmodel = n_elements(models)
-  
+
+  for imodel = 0, nmodel-1 do begin
+     modelname = models[imodel]
+     if(strpos(modelname,'deltaB/') ge 0) then modelname = strmid(modelname,strpos(modelname,'deltaB/')+7)
+     modelnames[imodel] = strjoin(strsplit(modelname,'/',/extract),'_')
+  endfor
+
   ;; Use all six events by default
   if n_elements(firstevent) lt 1 then firstevent=1
   if n_elements(lastevent)  lt 1 then lastevent =6
@@ -1355,14 +1385,14 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
   unit = 1
   openw, unit, 'dst_error.txt'
   printf, unit, 'L1 norm of Dst error in nT'
-  printf, unit, 'event ', models
+  printf, unit, 'event ', modelnames
 
   colors=[255,50,250,150,200,100,25,220,125]
 
   for ievent = firstevent, lastevent do begin
      ;; read in measured values
      eventnumber = strtrim(string(ievent),2)
-     logfilename="Dst/event_"+eventnumber+".txt"
+     logfilename=mydir+"Dst/event_"+eventnumber+".txt"
      logfilenameplot = logfilename
      legends = ['Observation']
      read_log_data
@@ -1371,12 +1401,16 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent
      wlognames0 = wlognames
      for imodel = 0, nmodel-1 do begin
         model = models[imodel]
+
+        ;; remove anything before deltaB
+        if(strpos(model,'deltaB/') ge 0) then model = strmid(model,strpos(model,'deltaB/')+7)
+
         if model eq 'run_test' then begin
            logfilename='run_test/run_event'+eventnumber+'/GM/IO2/log*.log'
            legends    = [legends, 'Simulation']
         endif else begin
-           logfilename='deltaB/'+models[imodel]+'/Event'+eventnumber+'/log*.log'
-           legends    =	[legends, models[imodel]]
+           logfilename= mydir+'deltaB/'+model+'/Event'+eventnumber+'/log*.log'
+           legends    =	[legends, modelnames[imodel]]
         endelse
         read_log_data
         logfilenameplot += ' ' + logfilenames
