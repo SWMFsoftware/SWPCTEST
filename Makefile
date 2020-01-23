@@ -5,12 +5,15 @@ include ../Makefile.def
 MYDIR 	    = ${DIR}/SWPCTEST
 MYINPUTDIR  = ${MYDIR}/Inputs
 MYSCRIPTDIR = ${MYDIR}/Scripts
+MYIDLDIR    = ${MYDIR}/Idl
 GMDIR       = ${DIR}/GM/BATSRUS
 QUEDIR      = $(MYDIR)/run
-NRUN        = 1
 RESDIR	    = Results
+RES1DIR	    = Results
 RES2DIR	    = SWMF_CCMC
 RTDIR	    = ${MYDIR}/run_realtime
+PREDICT     = .r ${MYIDLDIR}/predict.pro
+NRUN        = 1
 
 # Toggle saving all outputs to file (defaults is to not save plots.)
 PLOT='-noplot'
@@ -55,7 +58,7 @@ help:
 	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
 	@echo ""
 	@echo "make check_dst     RESDIR=New EVENTS=2,4 (calculate Dst error only for events 2..4)"
-	@echo "make check_compare RESDIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
+	@echo "make check_compare RES1DIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
 	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
 	@echo "test_rbe                       (run with RB/RBE model)"
@@ -155,15 +158,15 @@ LAYOUT    = LAYOUT.in_rbe
 test_rundir:
 	@echo "Creating rundirs"
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                           \
-		rm -rf ${QUEDIR}$${iRun}/run_event$$e;      \
+		rm -rf ${QUEDIR}$${iRun}/Event$$e;      \
 		cd $(DIR);                                  \
-		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/run_event$$e;           \
-		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}$${iRun}/run_event$$e;           \
-		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/run_event$$e;           \
-		cp SWPCTEST/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/run_event$$e/job.long;  \
-		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/run_event$$e/LAYOUT.in; \
-		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/run_event$$e/PARAM.in;  \
-		cd ${QUEDIR}$${iRun}/run_event$$e;				     		\
+		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
+		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}$${iRun}/Event$$e;           \
+		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
+		cp SWPCTEST/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
+		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/Event$$e/LAYOUT.in; \
+		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
+		cd ${QUEDIR}$${iRun}/Event$$e;				     		\
 	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};      \
 	done; done
 
@@ -171,8 +174,14 @@ test_run:
 	@echo "Submitting jobs"
 	cd ..; 							\
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
-		cd ${QUEDIR}$${iRun}/run_event$$e;		\
-		./qsub.pfe.pl job.long ev$$e.$${iRun};		\
+		cd ${QUEDIR}$${iRun}/Event$$e;		\
+		if [[ "${MACHINE}" == "frontera" ]];                    \
+		   then sed -i "s/sub1/ev$$e/g" job.long; 		\
+		   sbatch job.long;                        \
+		fi;                                                     \
+		if [[ "${MACHINE}" == "pfe" ]];                         \
+		   then ./qsub.pfe.pl job.long ev$$e.$${iRun};     \
+		fi;                                                     \
 	done; done
 
 ##############################################################################
@@ -250,14 +259,14 @@ test_multiion_v2_compile:
 test_multiion_v2_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init LAYOUT=LAYOUT.in
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do			\
-		cp Inputs/job_more.long      ${QUEDIR}$${iRun}/run_event$$e;	\
+		cp Inputs/job_more.long      ${QUEDIR}$${iRun}/Event$$e;	\
 	done; done
 
 test_multiion_v2_run:
 	@echo "Submitting jobs"
 	cd ..; 							\
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
-		cd ${QUEDIR}$${iRun}/run_event$$e;		\
+		cd ${QUEDIR}$${iRun}/Event$$e;		\
 		./qsub.pfe.pl job_more.long ev$$e;	    	\
 	done; done
 
@@ -369,45 +378,66 @@ test_SWPC_Young_v2_run: test_run
 
 ##############################################################################
 
+FULLRESDIR  = ${MYDIR}/deltaB/${RESDIR}
+FULLRES1DIR = ${MYDIR}/deltaB/${RES1DIR}
+FULLRES2DIR = ${MYDIR}/deltaB/${RES2DIR}
+
+RunDirList  = $(sort $(dir $(wildcard run[1-9]/Event[0-9]/)))
+ResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run[1-9]/)))
+
+CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
+
 check_postproc:
 	@echo "Post processing simulation results"
-	for e in ${EVENTLIST}; do					\
-		cd ${QUEDIR}/run_event$$e;				\
-		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;	\
-		mkdir -p ${MYDIR}/deltaB/${RESDIR}/Event$$e;		\
-		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log 	\
-			${MYDIR}/deltaB/${RESDIR}/Event$$e/;		\
-		cd ${MYDIR}/deltaB/${RESDIR}/Event$$e/;			\
-		${MYSCRIPTDIR}/convert_mags.py;				\
-	done
+        ## only post process the new runs, supposed that the old runs with run_test have been post processed
+	if([ ! -d ${MYDIR}/deltaB/${RESDIR}/Event${FIRSTEVENT} ]); then  \
+	  for RunDir in ${RunDirList};  do				\
+		cd ${MYDIR}/$${RunDir};					\
+		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;   \
+		mkdir -p ${FULLRESDIR}/$${RunDir};			\
+		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log      \
+			${FULLRESDIR}/$${RunDir}/;			\
+		cd ${FULLRESDIR}/$${RunDir}/;				\
+		${MYSCRIPTDIR}/convert_mags.py; 			\
+	  done;								\
+	fi
 
 check_calc:
 	@echo "Checking results against observations"
-	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc; \
-	printf ".r Idl/predict.pro\n calc_all_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
-	printf ".r Idl/predict.pro\n calc_all_db_events,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
-	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;     \
-	printf ".r Idl/predict.pro\n save_tables, model=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	mv metrics*.txt metric*.tex dbdt* db_* dst_error.txt idl_log.txt dst_plot_event* deltaB/${RESDIR}/
+	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;	\
+	for ResDir in ${ResDirList}; do					\
+	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 		\
+		@echo 'woring on $${ResDir}';				\
+		cd $${ResDir};						\
+		printf "${PREDICT}\n calc_all_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_allevents_log.txt; 	\
+		printf "${PREDICT}\n calc_all_db_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_alldb_log.txt; 	\
+		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
+		printf "${PREDICT}\n save_tables, model=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_savetalbe_log.txt;	\
+           fi; \
+	done
 
 check_dst:
 	@echo "Checking Dst against observations"
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;\
-	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	mv dst_error.txt deltaB/${RESDIR}/
+	for ResDir in ${ResDirList}; do						\
+	    if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then              \
+		@echo ' working on $${ResDir}';				\
+		cd $${ResDir};						\
+		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
+	    fi; \
+	done
 
 check_tar:
 	@echo "Saving results as tarball"
 	tar -czf ${RESDIR}_$$(date +%Y%m%d_%H%M).tgz deltaB/${RESDIR}
 
 check_compare:
-	@echo "Compare ${RESDIR} and ${RES2DIR}"
+	@echo "Compare ${RES1DIR} and ${RES2DIR}"
 	export IDL_STARTUP=idlrc; export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; \
-	printf ".r Idl/predict.pro\n save_comparison_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt; \
-	printf ".r Idl/predict.pro\n save_deltab_comp_tables,'${RESDIR}','${RES2DIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;\
-	printf ".r Idl/predict.pro\n calc_dst_error,models=['${RESDIR}','${RES2DIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n" | idl > idl_log.txt;
-	mkdir -p COMPARE_${RESDIR}_vs_${RES2DIR}
-	mv metric_table*.tex dst_error.txt idl_log.txt dst_plot_event* COMPARE_${RESDIR}_vs_${RES2DIR}/
+	mkdir -p ${CompDir}; cd ${CompDir}; \
+	printf "${PREDICT}\n save_comp_dbdt_tables, '${FULLRES1DIR}','${FULLRES2DIR}', firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt; \
+	printf "${PREDICT}\n save_comp_db_tables,   '${FULLRES1DIR}','${FULLRES2DIR}', firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt; \
+	printf "${PREDICT}\n calc_dst_error,models=['${FULLRES1DIR}','${FULLRES2DIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt
 
 realtime_start_rundir:
 	cd ${DIR}; \
@@ -420,22 +450,38 @@ realtime_start_rundir:
 	${MYSCRIPTDIR}/magnetometer.py; \
 	${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF}
 
+clean_calc:
+	@echo "Cleaning calculated files"
+	rm -f results*.txt;
+	for ResDir in ${ResDirList}; do					\
+		cd $${ResDir};						\
+		rm -f *.txt;						\
+		rm -f *.pdf;						\
+		rm -f *.eps;						\
+		rm -f *.tex;						\
+	done
+
 clean:
 	@echo "Cleaning result files"
-	rm -f results*.txt
-	rm -f deltaB/${RESDIR}/*.txt
-	rm -f deltaB/${RESDIR}/*.pdf
-	rm -f deltaB/${RESDIR}/*.eps
-	@for e in ${EVENTLIST}; do         		\
-		rm -f deltaB/${RESDIR}/Event$$e/*.txt; 	\
-		rm -f deltaB/${RESDIR}/Event$$e/*.eps;	\
-		rm -f deltaB/${RESDIR}/Event$$e/*.log;	\
-		rm -f deltaB/${RESDIR}/Event$$e/*.mag;	\
-		rm -f deltaB/${RESDIR}/Event$$e/runlog*;	\
-		rm -f deltaB/${RESDIR}/Event$$e/PARAM.in;	\
+	rm -f results*.txt;
+	for ResDir in ${ResDirList}; do					\
+		cd $${ResDir};						\
+		rm -f *.txt;						\
+		rm -f *.pdf;						\
+		rm -f *.eps;						\
+		rm -f *.tex;						\
+		for e in ${EVENTLIST}; do         			\
+			rm -f $${ResDir}/Event$$e/*.txt; 		\
+			rm -f $${ResDir}/Event$$e/*.eps;		\
+			rm -f $${ResDir}/Event$$e/*.log;		\
+			rm -f $${ResDir}/Event$$e/*.mag;		\
+			rm -f $${ResDir}/Event$$e/runlog*;		\
+			rm -f $${ResDir}/Event$$e/PARAM.in;		\
+		done; 							\
 	done
 
 distclean:
 	make clean
 	@echo "Cleaning all rundirectories"
-	rm -rf ../run_event* ${QUEDIR}/run_event* *~
+	rm -rf ../Event* ${QUEDIR}/Event* *~
+
