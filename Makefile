@@ -172,15 +172,15 @@ test_rundir:
 
 test_run:
 	@echo "Submitting jobs"
-	cd ..; 							\
-	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
-		cd ${QUEDIR}$${iRun}/Event$$e;		\
+	cd ..; 								\
+	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do		\
+		cd ${QUEDIR}$${iRun}/Event$$e;				\
 		if [[ "${MACHINE}" == "frontera" ]];                    \
-		   then sed -i "s/sub1/ev$$e/g" job.long; 		\
-		   sbatch job.long;                        \
+		   then sed -i "s/sub1/ev$$e.$${iRun}/g" job.long; 	\
+		   sbatch job.long;                        		\
 		fi;                                                     \
 		if [[ "${MACHINE}" == "pfe" ]];                         \
-		   then ./qsub.pfe.pl job.long ev$$e.$${iRun};     \
+		   then ./qsub.pfe.pl job.long ev$$e.$${iRun};     	\
 		fi;                                                     \
 	done; done
 
