@@ -157,17 +157,21 @@ LAYOUT    = LAYOUT.in_rbe
 
 test_rundir:
 	@echo "Creating rundirs"
-	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                           \
-		rm -rf ${QUEDIR}$${iRun}/Event$$e;      \
-		cd $(DIR);                                  \
+	if([ -d ${MYDIR}/run1 ]); then  			\
+		rm -rf ${MYDIR}/run_backup;			\
+		mkdir -p ${MYDIR}/run_backup;			\
+		mv run[1-9] ${MYDIR}/run_backup/;		\
+	fi;							\
+	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
+		cd $(DIR);                                  				    \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
 		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp SWPCTEST/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
 		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/Event$$e/LAYOUT.in; \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
-		cd ${QUEDIR}$${iRun}/Event$$e;				     		\
-	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};      \
+		cd ${QUEDIR}$${iRun}/Event$$e;				     		    \
+	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};  \
 	done; done
 
 test_run:
@@ -388,9 +392,9 @@ ResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB
 CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
 
 check_postproc:
-	@echo "Post processing simulation results"
         ## only post process the new runs, supposed that the old runs with run_test have been post processed
-	if([ ! -d ${MYDIR}/deltaB/${RESDIR}/Event${FIRSTEVENT} ]); then  \
+	if([ ! -d ${MYDIR}/deltaB/${RESDIR} ]); then  			\
+	  echo "Post processing simulation results to deltaB/${RESDIR}";\
 	  for RunDir in ${RunDirList};  do				\
 		cd ${MYDIR}/$${RunDir};					\
 		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;   \
@@ -400,6 +404,8 @@ check_postproc:
 		cd ${FULLRESDIR}/$${RunDir}/;				\
 		${MYSCRIPTDIR}/convert_mags.py; 			\
 	  done;								\
+	else								\
+	  echo "${RESDIR} exist already, skip post processing.";	\
 	fi
 
 check_calc:
