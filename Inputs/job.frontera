@@ -6,7 +6,7 @@
 #SBATCH -p normal             # Queue (partition) name: normal or development
 #SBATCH -N 10                 # Total # of nodes 
 #SBATCH --tasks-per-node 56   # Number of MPI tasks per node. 
-#SBATCH -t 20:00:00           # Run time (hh:mm:ss)
+#SBATCH -t 35:00:00           # Run time (hh:mm:ss)
 #SBATCH --mail-type=all       # Send email at begin and end of job
 ###SBATCH --mail-user=your_email@umich.edu
 ###SBATCH -A myproject       # Project/Allocation name (req'd if you have more than 1)
