@@ -410,17 +410,21 @@ check_postproc:
 
 check_calc:
 	@echo "Checking results against observations"
+	make clean_calc RESDIR=${RESDIR}; 						\
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;	\
-	for ResDir in ${ResDirList}; do					\
-	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 		\
-		@echo 'woring on $${ResDir}';				\
-		cd $${ResDir};						\
+	for ResDir in ${ResDirList}; do							\
+	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 				\
+		@echo 'woring on $${ResDir}';						\
+		cd $${ResDir};								\
 		printf "${PREDICT}\n calc_all_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_allevents_log.txt; 	\
 		printf "${PREDICT}\n calc_all_db_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_alldb_log.txt; 	\
 		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
 		printf "${PREDICT}\n save_tables, model=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_savetalbe_log.txt;	\
-           fi; \
-	done
+           fi; 			\
+	done;			\
+	cd ${FULLRESDIR};	\
+	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}'\n"   | idl > idl_dst_stat_log.txt;	\
+	printf "${PREDICT}\n score_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}'\n" | idl > idl_score_stat_log.txt
 
 check_dst:
 	@echo "Checking Dst against observations"
@@ -458,7 +462,9 @@ realtime_start_rundir:
 
 clean_calc:
 	@echo "Cleaning calculated files"
-	rm -f results*.txt;
+	rm -f results*.txt;						\
+	cd ${FULLRESDIR}; 						\
+	rm -f *txt;							\
 	for ResDir in ${ResDirList}; do					\
 		cd $${ResDir};						\
 		rm -f *.txt;						\
