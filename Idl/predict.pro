@@ -153,20 +153,19 @@ end
 
 ; ============================================================================
 
-pro predict, choice, $
-             models=models, modelnames=modelnames, $
-             stationlat=stationlat, stations=stations, $
-             firstevent=firstevent, lastevent=lastevent, $
-             deltat=deltat, mincount=mincount, stencil=stencil, $
-             threshold=threshold, $
-             scale=scale, exponent=exponent, $
-             coeff=coeff, power=power, $
-             db_pod=db_pod, db_pof=db_pof, db_hss=db_hss, $
+pro predict, choice,                                                  $
+             models=models, modelnames=modelnames,                    $
+             stationlat=stationlat, stations=stations,                $
+             firstevent=firstevent, lastevent=lastevent,              $
+             deltat=deltat, mincount=mincount, stencil=stencil,       $
+             threshold=threshold,                                     $
+             scale=scale, exponent=exponent,                          $
+             coeff=coeff, power=power,                                $
+             db_pod=db_pod, db_pof=db_pof, db_hss=db_hss,             $
              dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof, dbdt_hss=dbdt_hss, $
-             out_file=out_file, append=append, $
-             showinfo=showinfo, verbose=verbose, $
-             showplot=showplot, saveplot=saveplot,$
-             mydir=mydir
+             out_file=out_file, append=append, lunOut=lunOut,         $
+             showinfo=showinfo, verbose=verbose,                      $
+             showplot=showplot, saveplot=saveplot, mydir=mydir
 
   ;; choice = 'db', 'dbdt', 'corr'
   ;; models: array directories containing results
@@ -202,12 +201,9 @@ pro predict, choice, $
   if not keyword_set(verbose)  then verbose=0
   if not keyword_set(showplot) then showplot=0
   if not keyword_set(saveplot) then saveplot=0
+  if not keyword_set(lunOut)   then lunOut=-1 ; -1 is STDOUT
   if saveplot then showplot=1
 
-  ;; lun = -1 is STDOUT
-  if out_file then openw, lun, out_file, append=append, /get_lun $
-  else lun = -1
-  
   ;; Width of stencil for time derivative
   if not keyword_set(stencil) then stencil = 1
 
@@ -229,8 +225,8 @@ pro predict, choice, $
   if n_elements(showinfo) lt 1 then showinfo=1
 
   allstations = $
-     ['frn', 'frd', 'fur', $
-      'wng', 'new', 'ott', $
+     ['frn', 'frd', 'fur',        $
+      'wng', 'new', 'ott',        $
       'mea', 'pbq', 'abk', 'ykc', $
       'hrn', 'iqa' ]
 
@@ -256,7 +252,7 @@ pro predict, choice, $
 
   nmodel = n_elements(models)
 
-  events = ['Event0', 'Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6']
+  events = ['Event0','Event1','Event2','Event3','Event4','Event5','Event6']
 
   periods= ['2017_Sep05_0000-Sep09_0000', $
             '2003_Oct29_0600-Oct30_0600', $
@@ -295,11 +291,6 @@ pro predict, choice, $
 
   if verbose then print,'nstation=', nstation,' p.multi=', !p.multi
 
-  ; write header information to file:
-  printf, lun, 'Stations used = ', stations
-  printf, lun, 'Events used = '  , events[firstevent:lastevent]
-  printf, lun, 'Deltat, threshold = ', deltat, threshold
-  
   for imodel = 0, nmodel-1 do begin
      model     = models[imodel]
      modelname = modelnames[imodel]
@@ -555,17 +546,22 @@ pro predict, choice, $
         dbdt_pof = f/(f+n)
         dbdt_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
 
-        printf, lun, modelname,' total dbdt: pod, far, hss=', $
-                dbdt_pod, dbdt_pof, dbdt_hss, $
-                '     TP, TN, FP, FN, total=', h,n,f,m,h+n+f+m, $
-                format='(2a,3f8.4,a,5i4)'
+        h_ind = total(db_score(0,*))
+        f_ind = total(db_score(1,*))
+        m_ind = total(db_score(2,*))
+        n_ind = total(db_score(3,*))
 
-        ;;; print,'TP, TN, FP, FN, total=',h,n,f,m,h+n+f+m
-        ;;; help,exc_obs,exc_sim
-        
+        db_pod = h_ind/(h_ind+m_ind)
+        db_pof = f_ind/(f_ind+n_ind)
+        db_hss = 2*(h_ind*n_ind-m_ind*f_ind)/((h_ind+m_ind)*(m_ind+n_ind) + (h_ind+f_ind)*(f_ind+n_ind))
+     
+
+        printf, lunOut, threshold, h,n,f,m,h+n+f+m, h_ind,n_ind,f_ind,m_ind,h_ind+n_ind+f_ind+m_ind,    $
+                dbdt_pod, dbdt_pof, dbdt_hss, db_pod, db_pof, db_hss,       $
+                format='(f8.4, 10i6, 6f8.4)'
      endif
 
-     if choice eq 'dbdt' or choice eq 'db' then begin
+     if choice eq 'db' then begin
      
         h = total(db_score(0,*))
         f = total(db_score(1,*))
@@ -576,21 +572,12 @@ pro predict, choice, $
         db_pof = f/(f+n)
         db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
      
-        printf, lun, modelname,' total db  : pod, far, hss=', $
-                db_pod, db_pof, db_hss, $
-                '     TP, TN, FP, FN, total=', h,n,f,m,h+n+f+m, $
-                format='(2a,3f8.4,a,5i4)'
+        printf, lunOut, threshold, h,n,f,m,h+n+f+m, db_pod, db_pof, db_hss, format='(f8.4,5i6, 3f8.4)'
      
      endif
 
   endfor
 
-  ; Close output file.
-  if out_file then begin
-     close, lun
-     free_lun, lun
-  endif
-  
   !p.multi = 0
 
   if choice eq 'corr' gt 0 then begin
@@ -847,20 +834,36 @@ pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent, 
   for ilat = 0, n_elements(stationlats)-1 do begin
      stationlat = stationlats[ilat]
      for ievent = firstevent, lastevent do begin
+        filename=string(stationlat, ievent, $
+                        format='("metrics_lat_",a3,"_event",i2.2,".txt")')
+        openw,  lunOut, filename, append=ithresh, /get_lun
+        printf, lunOut, 'db/dt skill scores for models: ' + models
+        case stationlat of
+           'all'     : printf, lunOut, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
+           'veryhigh': printf, lunOut, 'Stations used: hrn iqa'
+           'high'    : printf, lunOut, 'Stations used: abk pbq ykc mea'
+           'mid'     : printf, lunOut, 'Stations used: wng new ott'
+           'low'     : printf, lunOut, 'Stations used: frd frn fur'
+           else: print,' invalid value for stationlat=',stationlat
+        endcase
+        printf, lunOut, 'Event   =', iEvent
+        printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
+        printf, lunOut, $
+                'threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
         for ithresh = 0, n_elements(thresholds)-1 do begin
            threshold = thresholds[ithresh]
-           filename=string(stationlat, ievent, $
-                           format='("metrics_lat_",a3,"_event",i2.2,".txt")')
            predict,'dbdt', $
                    models=models, $
                    stationlat=stationlat, threshold=threshold, $
-                   scale=scale, exponent=exponent, $
-                   firstevent=ievent, lastevent=ievent, $
-                   deltat=deltat, stencil=stencil, out_file=filename, $
-                   append=ithresh, saveplot=(stationlat eq 'all'),    $
+                   scale=scale, exponent=exponent,             $
+                   firstevent=ievent, lastevent=ievent,        $
+                   deltat=deltat, stencil=stencil,             $
+                   lunOut=lunOut,                            $
+                   saveplot=(stationlat eq 'all'),             $
                    mydir=mydir
-
         endfor
+        close, lunOut
+        free_lun, lunOut
      endfor
   endfor
 end
@@ -935,7 +938,7 @@ pro save_comp_dbdt_table, $
   ; print out comparison
   filename = "metric_table_" + stationlat + ".tex"
   openw, lun, filename, /get_lun
-
+  
   printf, lun, 'models=', model1,' and (',model1,' - ',model2,')'
   printf, lun, 'events =', firstevent,' ... ', lastevent
   printf, lun, 'stationlat=', stationlat
@@ -968,13 +971,12 @@ pro save_comp_dbdt_table, $
      printf, lun, line2
      printf, lun, '\hline'
   endfor
-
+  
   printf, lun, '\end{tabular}'
   printf, lun, '\caption{Performance metrics for the SWMF.}'
   printf, lun, '\end{table}'
   
   free_lun, lun
-  
 end
 
 ;==============================================================================
@@ -1030,20 +1032,36 @@ pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lasteven
   for ilat = 0, n_elements(stationlats)-1 do begin
      stationlat = stationlats[ilat]
      for ievent = firstevent, lastevent do begin
+        filename=string(stationlat, ievent, $
+                        format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
+        openw,  lunOut, filename, append=ithresh, /get_lun
+        printf, lunOut, 'db skill scores for models: ' + models
+        case stationlat of
+           'all'     : printf, lunOut, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
+           'veryhigh': printf, lunOut, 'Stations used: hrn iqa'
+           'high'    : printf, lunOut, 'Stations used: abk pbq ykc mea'
+           'mid'     : printf, lunOut, 'Stations used: wng new ott'
+           'low'     : printf, lunOut, 'Stations used: frd frn fur'
+           else: print,' invalid value for stationlat=',stationlat
+        endcase
+        printf, lunOut, 'Event   =', iEvent
+        printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
+        printf, lunOut, 'threshold  TP  TN  FP  FN  total  pod  far  hss'
         for ithresh = 0, n_elements(thresholds)-1 do begin
            threshold = thresholds[ithresh]
-           filename=string(stationlat, ievent, $
-                           format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
            predict,'db', $
                    models=models, $
                    stationlat=stationlat, threshold=threshold, $
-                   scale=scale, exponent=exponent, $
-                   firstevent=ievent, lastevent=ievent, $
-                   deltat=deltat, stencil=stencil, out_file=filename, $
-                   append=ithresh, saveplot=(stationlat eq 'all'),    $
+                   scale=scale, exponent=exponent,             $
+                   firstevent=ievent, lastevent=ievent,        $
+                   deltat=deltat, stencil=stencil,             $
+                   lunOut=lunOut,                            $
+                   saveplot=(stationlat eq 'all'),             $
                    mydir=mydir
 
         endfor
+        close, lunOut
+        free_lun, lunOut
      endfor
   endfor
 end
@@ -1245,40 +1263,24 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, m
      directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
   endfor
 
-  ; print out the db skill score tables.
-  filename = "metric_table_db_" + stationlat + ".tex"
+  filename = "metric_table_db_" + stationlat + ".txt"
   openw, lun, filename, /get_lun
 
-  printf, lun, 'models=', model
-  printf, lun, 'events =', firstevent,' ... ', lastevent
-  printf, lun, 'stationlat=', stationlat
-  printf, lun, '$\Delta t_{window}=',deltat,'$'
-  printf, lun, ''
-  printf, lun, '\begin{table}[ht]'
-  printf, lun, '\centering'
-  printf, lun, '\begin{tabular}{l|c c c}'
-  printf, lun, 'Threshold&POD&POFD&HSS\\'
-  printf, lun, '\hline'
+  printf, lun, 'model: ' + model
+  case stationlat of
+     'all'     : printf, lun, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
+     'veryhigh': printf, lun, 'Stations used: hrn iqa'
+     'high'    : printf, lun, 'Stations used: abk pbq ykc mea'
+     'mid'     : printf, lun, 'Stations used: wng new ott'
+     'low'     : printf, lun, 'Stations used: frd frn fur'
+     else: print,' invalid value for stationlat=',stationlat
+  endcase
+  printf, lun, 'events = ' + string(firstevent, format='(i2)') + ' ... ' + string(lastevent, format='(i2)')
+  printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT]'
+  printf, lun, 'threshold  pod      far     hss'
   for ithresh = 0, nthresh-1 do begin
-     line1 = string(thresholds(ithresh),format='(f6.1,"\,[nT]")')
-     line2 = line1
-     line1 += ' direct   '
-     line2 += ' indirect '
-     
-     for imetric = 0, nmetric-1 do begin
-        line1 += string( $
-                directs[imetric,ithresh], $
-                format='("& ",f5.3, " ")')
-     endfor
-     line1 += '\\'
-     printf, lun, line1
-     printf, lun, '\hline'
+     printf, lun, thresholds[ithresh], directs[*,ithresh], format='(4f8.4)'
   endfor
-
-  printf, lun, '\end{tabular}'
-  printf, lun, '\caption{Performance metrics for the SWMF.}'
-  printf, lun, '\end{table}'
-  
   free_lun, lun
 
   ; for db/dt skill scores
@@ -1301,47 +1303,26 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, m
      indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
   endfor
 
-  ; print out db/dt skill scores tables.
-  filename = "metric_table_" + stationlat + ".tex"
+  filename = "metric_table_" + stationlat + ".txt"
   openw, lun, filename, /get_lun
 
-  printf, lun, 'model  =', model
-  printf, lun, 'events =', firstevent,' ... ', lastevent
-  printf, lun, 'stationlat=', stationlat
-  printf, lun, '$\Delta t_{window}=',deltat,'$'
-  printf, lun, ''
-  printf, lun, '\begin{table}[ht]'
-  printf, lun, '\centering'
-  printf, lun, '\begin{tabular}{l l|c c c}'
-  printf, lun, 'Threshold&Method&POD&POFD&HSS\\'
-  printf, lun, '\hline'
+  printf, lun, 'model: '+ model
+  case stationlat of
+     'all'     : printf, lun, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
+     'veryhigh': printf, lun, 'Stations used: hrn iqa'
+     'high'    : printf, lun, 'Stations used: abk pbq ykc mea'
+     'mid'     : printf, lun, 'Stations used: wng new ott'
+     'low'     : printf, lun, 'Stations used: frd frn fur'
+     else: print,' invalid value for stationlat=',stationlat
+  endcase
+  printf, lun, 'events = ' + string(firstevent, format='(i2)') + ' ... ' + string(lastevent, format='(i2)')
+  printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT/s]'
+  printf, lun, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
   for ithresh = 0, nthresh-1 do begin
-     line1 = string(thresholds(ithresh),format='(f3.1,"\,[nT/s]&")')
-     line2 = line1
-     line1 += ' direct   '
-     line2 += ' indirect '
-     
-     for imetric = 0, nmetric-1 do begin
-        line1 += string( $
-                directs[imetric,ithresh], $
-                format='("& ",f5.3, " ")')
-        line2 += string( $
-                indirects[imetric,ithresh], $
-                format='("& ",f5.3, " ")')
-     endfor
-     line1 += '\\'
-     line2 += '\\'
-     printf, lun, line1
-     printf, lun, line2
-     printf, lun, '\hline'
+     printf, lun, thresholds[ithresh],  directs[*,ithresh], $
+             indirects[*,ithresh], format='(7f8.4)'
   endfor
-
-  printf, lun, '\end{tabular}'
-  printf, lun, '\caption{Performance metrics for the SWMF.}'
-  printf, lun, '\end{table}'
-  
   free_lun, lun
-
 end
 
 ;==============================================================================
@@ -1431,4 +1412,223 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,my
   endfor
   colors=[255,100,250,150,200,50,25,220,125] ; reset colors
   close,unit
+end
+
+;==============================================================================
+pro dst_stat_nRun, mydir=mydir, ResDir=ResDir
+
+  ;; check how many runs
+  file_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run*/dst_error.txt', count=nRun)
+
+  if nRun le 2 then begin
+     print, ' nRun ='+string(nRun,format='(i2)')+' is less than 2'
+     print, ' skipping combining dst error tables'
+     return
+  end
+
+  print, ' combining the dst error tables for ' + ResDir
+
+  fileOut = mydir+'/deltaB/'+ResDir+'/dst_error_all.txt'
+
+  header_out = 'event     '
+  StrRun     = ''
+  line       = ''
+
+  for iRun=0, nRun-1 do begin
+     file_dst = file_I(iRun)
+
+     ;; ------------------ start reading dst file ----------------------------
+     openr, lunRead, file_dst, /get_lun
+
+     ;; two lines of header
+     readf, lunRead, line
+     readf, lunRead, line
+
+     ;; read the first line of data
+     readf, lunRead, line
+     DataTmp = float(STRSPLIT(line, ' ',/extract))
+     nData   = n_elements(DataTmp)
+
+     if (nData ne 2) then begin
+        print, ' nData /= 2 ?????'
+        print, ' line = ', line
+        exit
+     endif
+
+     ;; maximum 1000 events
+     dst_II = dblarr(nData, 1000)
+
+     iEvent = 0
+     dst_II(*,iEvent) = DataTmp
+
+     while not eof(lunRead) do begin
+        readf, lunRead, line
+
+        DataTmp = float(STRSPLIT(line, ' ',/extract))
+
+        iEvent = iEvent + 1
+        dst_II(*, iEvent) = DataTmp
+     endwhile
+
+     close, lunRead
+     free_lun, lunRead
+     ;; ------------------ end reading dst file ----------------------------
+
+     nEvent = iEvent + 1
+     dst_II = dst_II(*,0:nEvent-1)
+
+     if (iRun eq 0) then begin
+        dst_III = fltarr(nData, nEvent, nRun)
+     endif
+
+     StrRun = StrRun + 'run_' +string(iRun+1, format='(i1)') + '    '
+     dst_III(*,*,iRun) = dst_II
+  endfor
+
+  header_out= header_out + StrRun + 'average   stddev'
+
+  openw,  lun, fileOut, /get_lun
+  printf, lun, 'L1 norm of Dst error in nT for ' + ResDir
+  printf, lun, header_out
+  for iEvent = 0,nEvent-1 do begin
+     printf, lun, dst_III(0,iEvent,0), dst_III(1,iEvent,*), mean(dst_III(1,iEvent,*)), $
+             stddev(dst_III(1,iEvent,*)), format='(i2,5x, 10(f8.2,1x))'
+  endfor
+  close, lun
+  free_lun, lun
+end
+
+;==============================================================================
+pro score_stat_nRun, mydir=mydir, ResDir=ResDir
+
+  ;; check how many runs
+  dir_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run*', count=nRun)
+
+  if nRun le 2 then begin
+     print, ' nRun ='+string(nRun,format='(i2)')+' is less than 2'
+     print, ' skipping combining the skill score tables'
+     return
+  end
+
+  ;; go to run1 so that the file_I do not contain the path info
+  cd, mydir+'/deltaB/'+ResDir+'/run1'
+  file_I = FILE_SEARCH('metric*txt', count=nFile)
+
+  if nFile eq 0 then begin
+     print, ' nFile ='+string(nFile,format='(i2)')+' = 0'
+     print, ' skipping combining the skill score tables'
+     return
+  end
+
+  ;; go back to the ResDir, where the combined tables are save
+  cd, mydir+'/deltaB/'+ResDir
+
+  print, ' combining the skil score tables for ' + ResDir
+
+  ;; ALWAYS 5 lines of header
+  nHeader     = 5
+  StrHeader_I = strarr(nHeader)
+
+  line = ''
+
+  for iFile = 0, nFile-1 do begin
+     fileOut = mydir+'/deltaB/'+ResDir+'/'+file_I(iFile)
+
+     for iRun=0, nRun-1 do begin
+        fileIn = mydir+'/deltaB/'+ResDir+'/run'+string(iRun+1, format='(i1)')+'/'+file_I(iFile)
+
+        openr, lunRead, fileIn, /get_lun
+
+        for i = 0, nHeader-1 do begin
+           readf, lunRead, line
+           StrHeader_I(i) = line
+        endfor
+
+        ;; read the first line of data
+        readf, lunRead, line
+        DataTmp = float(STRSPLIT(line, ' ',/extract))
+        nData   = n_elements(DataTmp)
+
+        if (nData lt 1) then begin
+           print, ' nData < 1 ?????'
+           print, ' line = ', line
+           return
+        endif
+
+        ;; maximum 1000 thresholds
+        table_II = dblarr(nData, 1000)
+
+        iThreshold = 0
+        table_II(*,iThreshold) = DataTmp
+
+        while not eof(lunRead) do begin
+           readf, lunRead, line
+
+           DataTmp = float(STRSPLIT(line, ' ',/extract))
+
+           iThreshold = iThreshold + 1
+           table_II(*, iThreshold) = DataTmp
+        endwhile
+
+        close, lunRead
+        free_lun, lunRead
+
+        nThreshold = iThreshold + 1
+
+        table_II = table_II(*, 0:nThreshold-1)
+
+        ;; create the 3D metric and the 2D output metric
+        if iRun eq 0 then begin
+           table_III    = fltarr(nData,     nThreshold, nRun)
+           table_out_II = fltarr(nData*2-1, nThreshold)
+        endif
+
+        table_III(*,*,iRun) = table_II
+     endfor
+
+     for iThreshold = 0, nThreshold-1 do begin
+        table_local_II  = reform(table_III(*, iThreshold, *), nData, nRun)
+
+        ;; the first element is the threshold, no need to calc the mean/stddev
+        table_out_II(0,iThreshold)    = table_local_II(0,0)
+
+        ;; calc the average and std with nRun
+        for iData = 1, nData-1 do begin
+           table_out_II(iData,         iThreshold) = mean(  table_local_II(iData,*))
+           table_out_II(iData+nData-1, iThreshold) = stddev(table_local_II(iData,*))
+        endfor
+     endfor
+
+     openw,  lunOut, fileOut, /get_lun
+     ;; print the header info
+     printf, lunOut, 'model = ' + ResDir
+     for i = 1, nHeader-2 do begin
+        printf, lunOut, StrHeader_I(i)
+     endfor
+
+     VarNamesOrig  = StrHeader_I(nHeader-1)
+     VarNameOrig_I = strsplit(VarNamesOrig,' ',/extract)
+
+     if (n_elements(VarNameOrig_I) ne nData) then begin
+        print, ' number of var names /= nData ???'
+        exit
+     endif
+
+     VarName_I = strarr(nData*2-1)
+
+     VarName_I(0:nData-1) = VarNameOrig_I
+
+     for iData = 1, nData-1 do begin
+        VarName_I(nData+iData-1) = 'd'+VarNameOrig_I(iData)
+     endfor
+
+     printf, lunOut, strjoin(VarName_I,' ')
+
+     for iThreshold = 0, nThreshold-1 do begin
+        printf, lunOut, table_out_II(*,iThreshold), format='(100f10.4)'
+     endfor
+
+     close, lunOut
+     free_lun, lunOut
+  endfor
 end
