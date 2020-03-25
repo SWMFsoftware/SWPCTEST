@@ -148,6 +148,7 @@ check:
 test_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
+	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -200,6 +201,7 @@ test_order5:
 test_order5_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd,ng=3; \
+	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -220,6 +222,7 @@ test_rbe:
 test_rbe_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
+	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -240,6 +243,7 @@ test_multiion:
 test_multiion_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MultiIon; \
+	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -286,6 +290,7 @@ test_multispecies:
 test_multispecies_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdHpOp; \
+	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -340,6 +345,7 @@ test_cimi:
 test_cimi_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO,GridExpanded; \
+	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
