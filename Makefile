@@ -71,7 +71,8 @@ help:
 	@echo "test_cimi_v2		      (run with anisotropic MHD v2 and IM/CIMI)"
 	@echo "test_SWPC_Young_v2	      (run with SWPC v2 model with the Young BC)"
 	@echo ""
-	@echo "make ballistic                 (ballistic propagation for events 2..10)"
+	@echo "make ballistic                 (ballistic propagation for events 2..14)"
+	@echo "make ballistic_limited         (limiting+ballistic propagation for events 2..14)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
 	@echo
 	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
@@ -99,35 +100,47 @@ propagate1d_rundir:
 	-@(cd ${GMDIR}; make test_L1toBC_rundir TESTDIR=${PROPDIR})
 
 propagate1d_run:
-	for e in ${EVENTLIST}; do 			 		    \
-		cp ${MYINPUTDIR}/event$$e/[Lw]*.dat ${PROPDIR};	    	    \
-		cd ${PROPDIR}; 						    \
-		${MYSCRIPTDIR}/change_param.pl; 		    \
-		${PARALLEL} ${NPFLAG} 4 ./BATSRUS.exe > runlog; 			    \
-		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g'  \
-			IO2/log*.log > ${MYINPUTDIR}/event$$e/IMF_mhd.dat;    \
+	for e in ${EVENTLIST}; do 				\
+		cp ${MYINPUTDIR}/event$$e/[Lw]*.dat ${PROPDIR};	\
+		cd ${PROPDIR}; 					\
+		${MYSCRIPTDIR}/change_param.pl; 		\
+		${PARALLEL} ${NPFLAG} 4 ./BATSRUS.exe > runlog; 	   \
+		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g' \
+			IO2/log*.log > ${MYINPUTDIR}/event$$e/IMF_mhd.dat; \
 	done
 
 propagate1d_plot:
 	for e in 2 3 4 5 6 7 8 9 10; do			\
 		cd ${MYINPUTDIR}/event$$e/;		\
-		idl ${MYDIR}/Idl/compare_imf.pro; \
+		idl ${MYDIR}/Idl/compare_imf.pro; 	\
 	done
 
 propagate1d_wind_plot:
-	for e in 7 8 9 10; do				 \
-		cd ${MYINPUTDIR}/event$$e/;		 \
-		idl ${MYDIR}/Idl/compare_wind.pro; \
+	for e in 7 8 9 10; do				\
+		cd ${MYINPUTDIR}/event$$e/;		\
+		idl ${MYDIR}/Idl/compare_wind.pro; 	\
 	done
 
 ballistic:
-	for e in 2 3 4 5 6; do					\
-		cd ${MYINPUTDIR}/event$$e/;			\
+	for e in 2 3 4 5 6 11 12 13 14; do		\
+		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic.pro;		\
 	done
-	for e in 7 8 9 10; do					\
-		cd ${MYINPUTDIR}/event$$e/;			\
+	for e in 7 8 9 10; do				\
+		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic_wind.pro;	\
+	done
+
+ballistic_limited:
+	for e in 2 3 4 5 6 11 12 13 14; do		\
+		cd ${MYINPUTDIR}/event$$e/;		\
+		idl ${MYDIR}/Idl/ballistic_limited.pro;	\
+	done
+
+convert_ace:
+	for e in 11 12 13 14; do 				\
+		cd ${MYINPUTDIR}/event$$e/;			\
+		${MYSCRIPTDIR}/ace_to_sat.pl ace*.txt > L1.dat; \
 	done
 
 ##############################################################################
