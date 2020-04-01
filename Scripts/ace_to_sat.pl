@@ -2,7 +2,7 @@
 use strict;
 if($. == 1){
     print "Produced from $ARGV
-year mo dy hr mn sc msc BX BY BZ UX UY UZ RHO T
+year  mo  dy  hr  mn  sc msc Bx By Bz Ux Uy Uz rho T
 #START
 ";
 }
