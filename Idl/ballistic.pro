@@ -1,3 +1,6 @@
+common getlog_param
+common log_data
+
 ; Get the extraction position from the IMF_mhd.dat file
 spawn,"perl -ne 'if(/:\s+(\S+)/){print $1;exit}' IMF_mhd.dat",xBC
 ; convert to scalar double precision real
@@ -10,7 +13,7 @@ xL1=double(xL1(0))
 help, xL1
 
 logfilename='L1.dat'
-.r getlog
+read_log_data
 
 ; distance from xL1 to xBC
 dist = 0*logtime + (xL1-xBC)*6378.0 

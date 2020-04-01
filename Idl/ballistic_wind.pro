@@ -1,3 +1,6 @@
+common getlog_param
+common log_data
+
 ; Make sure this is compiled
 .r geopack
 
@@ -14,7 +17,7 @@ help, xL1
 ;;; we could read the actual wind X position too ;;;
 
 logfilename='L1.dat'
-.r getlog
+read_log_data
 
 ; Convert B and V from GSM to GSE
 
