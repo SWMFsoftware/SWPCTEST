@@ -15,17 +15,20 @@ help, xL1
 logfilename='L1.dat'
 read_log_data
 
-; limit change and growth
-i = where(wlognames eq 'Ux')    ; i = i[0]
-wlog(*,i) = limit_change(wlog(*,i), 30)
+; limit growth in density and temperature
+irho = min(where(wlognames eq 'rho'))
+wlog(*,irho) = limit_growth(wlog(*,irho), 1.3)
 
-i = where(wlognames eq 'rho')   ; i = i[0]
-wlog(*,i) = limit_growth(wlog(*,i), 1.3)
+iT = min(where(wlognames eq 'T'))
+wlog(*,iT) = limit_growth(wlog(*,iT), 1.3)
 
-i = where(wlognames eq 'T')     ; i = i[0]
-wlog(*,i) = limit_growth(wlog(*,i), 1.3)
+; limit change in velocity including rule of compression behind shocks
+; note the ux is negative
+iux = min(where(wlognames eq 'Ux'))
+wlog(*,iux) = limit_change(wlog(*,iux), [-50,30], wlog(*,irho), [-10,20])
 
-save_log, 'L1_limited.dat', 'L1.dat limited: Ux+-30', wlognames, wlog
+save_log, 'L1_limited.dat', 'L1.dat limited rho,T:1.3, Ux:-50+30,-10,20', $
+          wlognames, wlog
 
 ; distance from xL1 to xBC
 dist = 0*logtime + (xL1-xBC)*6378.0 
