@@ -67,9 +67,9 @@ help:
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
 	@echo "test_multispecies_v2           (run with multispecies GM/BATSRUS v2 model)"
 	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with the Young BC)"
-	@echo "test_cimi		      (run with anisotropic MHD and IM/CIMI)"
-	@echo "test_cimi_v2		      (run with anisotropic MHD v2 and IM/CIMI)"
-	@echo "test_SWPC_Young_v2	      (run with SWPC v2 model with the Young BC)"
+	@echo "test_cimi                      (run with anisotropic MHD and IM/CIMI)"
+	@echo "test_cimi_v2                   (run with anisotropic MHD v2 and IM/CIMI)"
+	@echo "test_SWPC_Young_v2             (run with SWPC v2 model with the Young BC)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2..14)"
 	@echo "make ballistic_limited         (limiting+ballistic propagation for events 2..14)"
@@ -411,20 +411,21 @@ ResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB
 CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
 
 check_postproc:
-        ## only post process the new runs, supposed that the old runs with run_test have been post processed
-	if([ ! -d ${MYDIR}/deltaB/${RESDIR} ]); then  			\
+	@if([ ! -d ${MYDIR}/deltaB/${RESDIR} ]); then  			\
 	  echo "Post processing simulation results to deltaB/${RESDIR}";\
 	  for RunDir in ${RunDirList};  do				\
-		cd ${MYDIR}/$${RunDir};					\
+	     cd ${MYDIR}/$${RunDir};					\
+	     if([ -f SWMF.SUCCESS ]); then				\
 		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;   \
 		mkdir -p ${FULLRESDIR}/$${RunDir};			\
 		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log      \
 			${FULLRESDIR}/$${RunDir}/;			\
 		cd ${FULLRESDIR}/$${RunDir}/;				\
 		${MYSCRIPTDIR}/convert_mags.py; 			\
+             fi;							\
 	  done;								\
 	else								\
-	  echo "${RESDIR} exist already, skip post processing.";	\
+	  echo "${RESDIR} already exists; skip post processing.";	\
 	fi
 
 check_calc:
@@ -433,7 +434,7 @@ check_calc:
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;	\
 	for ResDir in ${ResDirList}; do							\
 	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 				\
-		@echo 'woring on $${ResDir}';						\
+		@echo 'working on $${ResDir}';						\
 		cd $${ResDir};								\
 		printf "${PREDICT}\n calc_all_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_allevents_log.txt; 	\
 		printf "${PREDICT}\n calc_all_db_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_alldb_log.txt; 	\
