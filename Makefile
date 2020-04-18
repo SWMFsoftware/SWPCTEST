@@ -179,10 +179,10 @@ test_rundir:
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
-		cp -r SWPCTEST/Inputs/event$$e/*      ${QUEDIR}$${iRun}/Event$$e;           \
-		cp SWPCTEST/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
-		cp SWPCTEST/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
-		cp SWPCTEST/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/Event$$e/LAYOUT.in; \
+		cp -r ${MYDIR}/Inputs/event$$e/*      ${QUEDIR}$${iRun}/Event$$e;           \
+		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
+		cp ${MYDIR}/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
+		cp ${MYDIR}/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/Event$$e/LAYOUT.in; \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
 		cd ${QUEDIR}$${iRun}/Event$$e;				     		    \
 	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};  \
@@ -194,7 +194,7 @@ test_run:
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do		\
 		cd ${QUEDIR}$${iRun}/Event$$e;				\
 		if [[ "${MACHINE}" == "frontera" ]];                    \
-		   then sed -i "s/sub1/ev$$e.$${iRun}/g" job.long; 	\
+		   then sed -i "s/sub1/t1.ev$$e.$${iRun}/g" job.long; 	\
 		   sbatch job.long;                        		\
 		fi;                                                     \
 		if [[ "${MACHINE}" == "pfe" ]];                         \
@@ -472,8 +472,8 @@ check_compare:
 realtime_start_rundir:
 	cd ${DIR}; \
 	make rundir MACHINE=${MACHINE} RUNDIR=${RTDIR}; \
-	cp SWPCTEST/Inputs/job.long   ${RTDIR}; \
-	cp SWPCTEST/Inputs/${LAYOUT}  ${RTDIR}/LAYOUT.in; \
+	cp ${MYDIR}/Inputs/job.long  ${RTDIR}; \
+	cp ${MYDIR}/Inputs/${LAYOUT} ${RTDIR}/LAYOUT.in; \
 	cp Param/SWPC/${PARAMINIT}    ${RTDIR}/PARAM.in
 	cd ${RTDIR}; rm -rf Param; mkdir Param; cd Param; \
 	ln -s ${DIR}/Param/SWPC .; cd ../; ${MYSCRIPTDIR}/DSCOVR.py; \
