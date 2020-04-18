@@ -194,7 +194,7 @@ test_run:
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do		\
 		cd ${QUEDIR}$${iRun}/Event$$e;				\
 		if [[ "${MACHINE}" == "frontera" ]];                    \
-		   then sed -i "s/sub1/t1.ev$$e.$${iRun}/g" job.long; 	\
+		   then sed -i "s/sub1/ev$$e.$${iRun}/g" job.long; 	\
 		   sbatch job.long;                        		\
 		fi;                                                     \
 		if [[ "${MACHINE}" == "pfe" ]];                         \
