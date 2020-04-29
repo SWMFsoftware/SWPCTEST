@@ -1,3 +1,5 @@
+.r geopack
+
 common getlog_param
 common log_data
 
@@ -19,6 +21,7 @@ read_log_data
 dist = 0*logtime + (xL1-xBC)*6378.0 
 
 ; Propagate solar wind by xbc
+;correct_imf, wlog, dist, logfilename, 'IMF_ballistic_gsm.dat', /GSM
 correct_imf, wlog, dist, logfilename, 'IMF_ballistic.dat'
 
 exit
