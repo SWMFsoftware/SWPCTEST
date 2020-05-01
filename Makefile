@@ -443,7 +443,7 @@ check_calc:
            fi; 			\
 	done;			\
 	cd ${FULLRESDIR};	\
-	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}'\n"   | idl > idl_dst_stat_log.txt;	\
+	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n"   | idl > idl_dst_stat_log.txt;
 	printf "${PREDICT}\n score_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}'\n" | idl > idl_score_stat_log.txt
 
 check_dst:
