@@ -1415,7 +1415,14 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,my
 end
 
 ;==============================================================================
-pro dst_stat_nRun, mydir=mydir, ResDir=ResDir
+pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, firstevent=firstevent, lastevent=lastevent
+
+  common getlog_param
+  common log_data
+  common plotlog_param
+
+  dates = ['Oct 29 2003', 'Dec 14 2006', 'Aug 31 2001', $
+           'Aug 31 2005', 'Apr 5 2010', 'Aug 5 2011']
 
   ;; check how many runs
   file_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run*/dst_error.txt', count=nRun)
@@ -1423,6 +1430,7 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir
   if nRun le 2 then begin
      print, ' nRun ='+string(nRun,format='(i2)')+' is less than 2'
      print, ' skipping combining dst error tables'
+     print, mydir+'/deltaB/'+ResDir
      return
   end
 
@@ -1496,6 +1504,36 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir
   endfor
   close, lun
   free_lun, lun
+
+  ;; plot the simulated dst for all the runs
+  colors=[255,50,250,150,200,100,25,220,125]
+
+  for ievent = firstevent, lastevent do begin
+     ;; set the observed Dst file info
+     eventnumber = strtrim(string(ievent),2)
+     logfilename = mydir+"/Dst/event_"+eventnumber+".txt"
+
+     logfilenameplot = logfilename
+     legends = ['Observation']
+
+     logfilename = mydir+'/deltaB/'+ResDir+'/run*/Event'+eventnumber+'/log*.log'
+     legends     = [legends, 'run'+string(indgen(nRun)+1,format='(i1)')]
+
+     read_log_data
+     logfilenameplot = logfilenameplot + ' ' + strjoin(logfilenames, ' ')
+
+     logfilename = logfilenameplot
+     read_log_data
+     set_device, 'dst_plot_event'+eventnumber+'.eps', /land
+     logfunc='dst_sm'
+     legendpos = [-0.05,0.02,0.05,0.28]
+     xtitle   = 'Hours from ' + dates[ievent-1]
+     ytitles  = ['Dst [nT]']
+     plot_log_data
+     close_device, /pdf
+  endfor
+
+  colors=[255,100,250,150,200,50,25,220,125] ; reset colors
 end
 
 ;==============================================================================
