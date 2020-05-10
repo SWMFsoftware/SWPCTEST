@@ -1,0 +1,9 @@
+db skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/SWMF_CCMC/
+Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa
+Event   =       5
+Deltat  =  20.00, threshold unit = [nT]
+threshold  TP  TN  FP  FN  total  pod  far  hss
+101.6000   196   357   171    68   792  0.7424  0.3239  0.3814
+213.6000    89   614    48    41   792  0.6846  0.0725  0.5991
+317.5000    30   692    36    34   792  0.4688  0.0495  0.4134
+416.7000    13   733    16    30   792  0.3023  0.0214  0.3319

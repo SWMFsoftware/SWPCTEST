@@ -1,0 +1,19 @@
+logfilename(s) =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_1.txt
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_1.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 1.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        2861
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/SWMF_CCMC//Event1/log*.log
+Error in read_log_data: no matching filename was found.

@@ -1,0 +1,9 @@
+model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/SWMF_CCMC/
+Stations used: frd frn fur
+events =  1 ...  6
+Deltat =  20.00, thresholds unit = [nT]
+threshold  pod      far     hss
+101.6000  0.6758  0.1319  0.5234
+213.6000  0.3256  0.0651  0.2250
+317.5000  0.2759  0.0409  0.1461
+416.7000  0.7143  0.0254  0.2016

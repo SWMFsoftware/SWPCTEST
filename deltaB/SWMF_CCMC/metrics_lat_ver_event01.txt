@@ -1,0 +1,9 @@
+db/dt skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/SWMF_CCMC/
+Stations used: hrn iqa
+Event   =       1
+Deltat  =  20.00, threshold unit = [nT/s]
+threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind
+  0.3000   143     0     1     0   144   142     0     1     1   144  1.0000  1.0000  0.0000  0.9930  1.0000 -0.0070
+  0.7000   127     0     9     8   144   131     4     5     4   144  0.9407  1.0000 -0.0625  0.9704  0.5556  0.4375
+  1.1000    85    19    18    22   144    99    16    21     8   144  0.7944  0.4865  0.2974  0.9252  0.5676  0.4041
+  1.5000    66    40    19    19   144    72    37    22    13   144  0.7765  0.3220  0.4544  0.8471  0.3729  0.4855

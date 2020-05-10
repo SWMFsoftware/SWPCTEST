@@ -1,0 +1,9 @@
+model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/SWMF_CCMC/
+Stations used: wng new ott
+events =  1 ...  6
+Deltat =  20.00, thresholds unit = [nT]
+threshold  pod      far     hss
+101.6000  0.7181  0.1686  0.5278
+213.6000  0.6400  0.0577  0.5697
+317.5000  0.7091  0.0572  0.5529
+416.7000  0.7027  0.0601  0.4668

@@ -1,0 +1,2 @@
+L1 norm of Dst error in nT
+event  SWMF_CCMC

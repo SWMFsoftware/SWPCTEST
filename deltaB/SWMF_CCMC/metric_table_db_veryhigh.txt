@@ -1,0 +1,9 @@
+model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/SWMF_CCMC/
+Stations used: hrn iqa
+events =  1 ...  6
+Deltat =  20.00, thresholds unit = [nT]
+threshold  pod      far     hss
+101.6000  0.8133  0.3434  0.4139
+213.6000  0.7062  0.1298  0.5749
+317.5000  0.5747  0.1080  0.4924
+416.7000  0.4579  0.0625  0.4481
