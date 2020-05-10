@@ -1,0 +1,9 @@
+db skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+Stations used: frd frn fur
+Event   =       1
+Deltat  =  20.00, threshold unit = [nT]
+threshold  TP  TN  FP  FN  total  pod  far  hss
+101.6000   180     0    34     2   216  0.9890  1.0000 -0.0178
+213.6000    69    35   101    11   216  0.8625  0.7426  0.0973
+317.5000    15   128    59    14   216  0.5172  0.3155  0.1219
+416.7000     4   172    37     3   216  0.5714  0.1770  0.1178

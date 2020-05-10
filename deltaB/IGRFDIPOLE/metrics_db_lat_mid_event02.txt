@@ -1,0 +1,9 @@
+db skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+Stations used: wng new ott
+Event   =       2
+Deltat  =  20.00, threshold unit = [nT]
+threshold  TP  TN  FP  FN  total  pod  far  hss
+101.6000    62   153    49    60   324  0.5082  0.2426  0.2705
+213.6000     4   273     5    42   324  0.0870  0.0180  0.1038
+317.5000     0   309     0    15   324  0.0000  0.0000  0.0000
+416.7000     0   320     0     4   324  0.0000  0.0000  0.0000

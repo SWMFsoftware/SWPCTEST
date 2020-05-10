@@ -1,0 +1,88 @@
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+101.6000  1963  2549   365   589  5466  0.7692  0.1253  0.6475
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+213.6000   995  3660   351   460  5466  0.6838  0.0875  0.6109
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+317.5000   583  4206   258   419  5466  0.5818  0.0578  0.5589
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+416.7000   371  4497   225   373  5466  0.4987  0.0476  0.4923
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+  0.3000  1713  2797   304   652  5466  1882  2655   446   483  5466  0.7243  0.0980  0.6374  0.7958  0.1438  0.6532
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+  0.7000   908  3712   293   553  5466  1012  3670   335   449  5466  0.6215  0.0732  0.5812  0.6927  0.0836  0.6245
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+  1.1000   530  4191   275   470  5466   604  4229   237   396  5466  0.5300  0.0616  0.5068  0.6040  0.0531  0.5872
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+For event=Event5 there is no observation for station=ABK
+  1.5000   331  4493   242   400  5466   385  4524   211   346  5466  0.4528  0.0511  0.4421  0.5267  0.0446  0.5229
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+101.6000   516   105    61   116   798  0.8165  0.3675  0.4001
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+213.6000   269   347    46   136   798  0.6642  0.1170  0.5453
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+317.5000   142   503    34   119   798  0.5441  0.0633  0.5247
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+416.7000    94   571    37    96   798  0.4947  0.0609  0.4857
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+  0.3000   409   158    42   189   798   497   120    80   101   798  0.6839  0.2100  0.3808  0.8311  0.4000  0.4165
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+  0.7000   234   337    53   174   798   255   330    60   153   798  0.5735  0.1359  0.4347  0.6250  0.1538  0.4687
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+  1.1000   133   456    62   147   798   139   481    37   141   798  0.4750  0.1197  0.3819  0.4964  0.0714  0.4646
+For event=Event3 there is no observation for station=HRN
+For event=Event4 there is no observation for station=IQA
+  1.5000    82   533    56   127   798    90   548    41   119   798  0.3923  0.0951  0.3339  0.4306  0.0696  0.4104
+For event=Event5 there is no observation for station=ABK
+101.6000   912   512   130   270  1824  0.7716  0.2025  0.5421
+For event=Event5 there is no observation for station=ABK
+213.6000   544   911   124   245  1824  0.6895  0.1198  0.5802
+For event=Event5 there is no observation for station=ABK
+317.5000   344  1137    85   258  1824  0.5714  0.0696  0.5413
+For event=Event5 there is no observation for station=ABK
+416.7000   230  1276    75   243  1824  0.4863  0.0555  0.4869
+For event=Event5 there is no observation for station=ABK
+  0.3000   863   530    92   339  1824   959   539    83   243  1824  0.7180  0.1479  0.5202  0.7978  0.1334  0.6256
+For event=Event5 there is no observation for station=ABK
+  0.7000   479   914   126   305  1824   551   922   118   233  1824  0.6110  0.1212  0.5040  0.7028  0.1135  0.6002
+For event=Event5 there is no observation for station=ABK
+  1.1000   299  1148   124   253  1824   339  1182    90   213  1824  0.5417  0.0975  0.4756  0.6141  0.0708  0.5799
+For event=Event5 there is no observation for station=ABK
+  1.5000   204  1294   114   212  1824   229  1332    76   187  1824  0.4904  0.0810  0.4465  0.5505  0.0540  0.5480
+101.6000   282   929    85   126  1422  0.6912  0.0838  0.6262
+213.6000   113  1167    80    62  1422  0.6457  0.0642  0.5569
+317.5000    82  1232    80    28  1422  0.7455  0.0610  0.5626
+416.7000    43  1272    76    31  1422  0.5811  0.0564  0.4076
+  0.3000   296   956    69   101  1422   279   937    88   118  1422  0.7456  0.0673  0.6954  0.7028  0.0859  0.6315
+  0.7000   154  1171    41    56  1422   158  1177    35    52  1422  0.7333  0.0338  0.7208  0.7524  0.0289  0.7486
+  1.1000    89  1235    43    55  1422   112  1228    50    32  1422  0.6181  0.0336  0.6068  0.7778  0.0391  0.6998
+  1.5000    44  1277    50    51  1422    57  1265    62    38  1422  0.4632  0.0377  0.4276  0.6000  0.0467  0.4952
+101.6000   253  1003    89    77  1422  0.7667  0.0815  0.6766
+213.6000    69  1235   101    17  1422  0.8023  0.0756  0.4988
+317.5000    15  1334    59    14  1422  0.5172  0.0424  0.2699
+416.7000     4  1378    37     3  1422  0.5714  0.0261  0.1596
+  0.3000   145  1153   101    23  1422   147  1059   195    21  1422  0.8631  0.0805  0.6516  0.8750  0.1555  0.4967
+  0.7000    41  1290    73    18  1422    48  1241   122    11  1422  0.6949  0.0536  0.4436  0.8136  0.0895  0.3811
+  1.1000     9  1352    46    15  1422    14  1338    60    10  1422  0.3750  0.0329  0.2093  0.5833  0.0429  0.2670
+  1.5000     1  1389    22    10  1422     9  1379    32     2  1422  0.0909  0.0156  0.0489  0.8182  0.0227  0.3381

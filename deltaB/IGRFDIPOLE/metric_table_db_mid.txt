@@ -1,0 +1,9 @@
+model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+Stations used: wng new ott
+events =  1 ...  6
+Deltat =  20.00, thresholds unit = [nT]
+threshold  pod      far     hss
+101.6000  0.6912  0.0838  0.6262
+213.6000  0.6457  0.0642  0.5569
+317.5000  0.7455  0.0610  0.5626
+416.7000  0.5811  0.0564  0.4076

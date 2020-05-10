@@ -1,20 +1,9 @@
-Stations used =  abk pbq ykc mea
-Events used =  Event6
-Deltat, threshold =       20.0000     0.300000
-IGRFDIPOLE total dbdt: pod, pof, hss=  0.7152  0.0407  0.6464
-IGRFDIPOLE total db  : pod, pof, hss=  0.7636  0.0325  0.7056
-Stations used =  abk pbq ykc mea
-Events used =  Event6
-Deltat, threshold =       20.0000     0.700000
-IGRFDIPOLE total dbdt: pod, pof, hss=  0.5161  0.1692  0.3590
-IGRFDIPOLE total db  : pod, pof, hss=  0.4516  0.0821  0.4099
-Stations used =  abk pbq ykc mea
-Events used =  Event6
-Deltat, threshold =       20.0000      1.10000
-IGRFDIPOLE total dbdt: pod, pof, hss=  0.2727  0.1373  0.1434
-IGRFDIPOLE total db  : pod, pof, hss=  0.3091  0.0386  0.3387
-Stations used =  abk pbq ykc mea
-Events used =  Event6
-Deltat, threshold =       20.0000      1.50000
-IGRFDIPOLE total dbdt: pod, pof, hss=  0.2727  0.0863  0.1915
-IGRFDIPOLE total db  : pod, pof, hss=  0.3030  0.0157  0.3834
+db/dt skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+Stations used: abk pbq ykc mea
+Event   =       6
+Deltat  =  20.00, threshold unit = [nT/s]
+threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind
+  0.3000   118   118     5    47   288   126   119     4    39   288  0.7152  0.0407  0.6464  0.7636  0.0325  0.7056
+  0.7000    48   162    33    45   288    42   179    16    51   288  0.5161  0.1692  0.3590  0.4516  0.0821  0.4099
+  1.1000    15   201    32    40   288    17   224     9    38   288  0.2727  0.1373  0.1434  0.3091  0.0386  0.3387
+  1.5000     9   233    22    24   288    10   251     4    23   288  0.2727  0.0863  0.1915  0.3030  0.0157  0.3834

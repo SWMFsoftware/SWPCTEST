@@ -1,0 +1,558 @@
+logfilename(s) =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_1.txt
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_1.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 1.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        2861
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event1/log*.log
+logfile  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event1/log_e20031029-003533.log
+headlines:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog(*, 0)= it
+  wlog(*, 1)= year
+  wlog(*, 2)= mo
+  wlog(*, 3)= dy
+  wlog(*, 4)= hr
+  wlog(*, 5)= mn
+  wlog(*, 6)= sc
+  wlog(*, 7)= msc
+  wlog(*, 8)= dt
+  wlog(*, 9)= rho
+  wlog(*,10)= mx
+  wlog(*,11)= my
+  wlog(*,12)= mz
+  wlog(*,13)= p
+  wlog(*,14)= bx
+  wlog(*,15)= by
+  wlog(*,16)= bz
+  wlog(*,17)= pmin
+  wlog(*,18)= pmax
+  wlog(*,19)= dst
+  wlog(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       34339
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_1.txt /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event1/log_e20031029-003533.log
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_1.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 1.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        2861
+Setting logtime
+logfile1  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event1/log_e20031029-003533.log
+headlines1:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog1(*, 0)= it
+  wlog1(*, 1)= year
+  wlog1(*, 2)= mo
+  wlog1(*, 3)= dy
+  wlog1(*, 4)= hr
+  wlog1(*, 5)= mn
+  wlog1(*, 6)= sc
+  wlog1(*, 7)= msc
+  wlog1(*, 8)= dt
+  wlog1(*, 9)= rho
+  wlog1(*,10)= mx
+  wlog1(*,11)= my
+  wlog1(*,12)= mz
+  wlog1(*,13)= p
+  wlog1(*,14)= bx
+  wlog1(*,15)= by
+  wlog1(*,16)= bz
+  wlog1(*,17)= pmin
+  wlog1(*,18)= pmax
+  wlog1(*,19)= dst
+  wlog1(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       34339
+Setting logtime1
+logfunc(s)     =dst_sm
+function dst_sm was not found in wlog1
+logfilename(s) =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_2.txt
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_2.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 2.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        2460
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event2/log*.log
+logfile  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event2/log_e20061214-070000.log
+headlines:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog(*, 0)= it
+  wlog(*, 1)= year
+  wlog(*, 2)= mo
+  wlog(*, 3)= dy
+  wlog(*, 4)= hr
+  wlog(*, 5)= mn
+  wlog(*, 6)= sc
+  wlog(*, 7)= msc
+  wlog(*, 8)= dt
+  wlog(*, 9)= rho
+  wlog(*,10)= mx
+  wlog(*,11)= my
+  wlog(*,12)= mz
+  wlog(*,13)= p
+  wlog(*,14)= bx
+  wlog(*,15)= by
+  wlog(*,16)= bz
+  wlog(*,17)= pmin
+  wlog(*,18)= pmax
+  wlog(*,19)= dst
+  wlog(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       29521
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_2.txt /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event2/log_e20061214-070000.log
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_2.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 2.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        2460
+Setting logtime
+logfile1  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event2/log_e20061214-070000.log
+headlines1:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog1(*, 0)= it
+  wlog1(*, 1)= year
+  wlog1(*, 2)= mo
+  wlog1(*, 3)= dy
+  wlog1(*, 4)= hr
+  wlog1(*, 5)= mn
+  wlog1(*, 6)= sc
+  wlog1(*, 7)= msc
+  wlog1(*, 8)= dt
+  wlog1(*, 9)= rho
+  wlog1(*,10)= mx
+  wlog1(*,11)= my
+  wlog1(*,12)= mz
+  wlog1(*,13)= p
+  wlog1(*,14)= bx
+  wlog1(*,15)= by
+  wlog1(*,16)= bz
+  wlog1(*,17)= pmin
+  wlog1(*,18)= pmax
+  wlog1(*,19)= dst
+  wlog1(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       29521
+Setting logtime1
+logfunc(s)     =dst_sm
+function dst_sm was not found in wlog1
+logfilename(s) =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_3.txt
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_3.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 3.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1740
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event3/log*.log
+logfile  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event3/log_e20010830-190000.log
+headlines:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog(*, 0)= it
+  wlog(*, 1)= year
+  wlog(*, 2)= mo
+  wlog(*, 3)= dy
+  wlog(*, 4)= hr
+  wlog(*, 5)= mn
+  wlog(*, 6)= sc
+  wlog(*, 7)= msc
+  wlog(*, 8)= dt
+  wlog(*, 9)= rho
+  wlog(*,10)= mx
+  wlog(*,11)= my
+  wlog(*,12)= mz
+  wlog(*,13)= p
+  wlog(*,14)= bx
+  wlog(*,15)= by
+  wlog(*,16)= bz
+  wlog(*,17)= pmin
+  wlog(*,18)= pmax
+  wlog(*,19)= dst
+  wlog(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       20881
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_3.txt /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event3/log_e20010830-190000.log
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_3.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 3.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1740
+Setting logtime
+logfile1  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event3/log_e20010830-190000.log
+headlines1:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog1(*, 0)= it
+  wlog1(*, 1)= year
+  wlog1(*, 2)= mo
+  wlog1(*, 3)= dy
+  wlog1(*, 4)= hr
+  wlog1(*, 5)= mn
+  wlog1(*, 6)= sc
+  wlog1(*, 7)= msc
+  wlog1(*, 8)= dt
+  wlog1(*, 9)= rho
+  wlog1(*,10)= mx
+  wlog1(*,11)= my
+  wlog1(*,12)= mz
+  wlog1(*,13)= p
+  wlog1(*,14)= bx
+  wlog1(*,15)= by
+  wlog1(*,16)= bz
+  wlog1(*,17)= pmin
+  wlog1(*,18)= pmax
+  wlog1(*,19)= dst
+  wlog1(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       20881
+Setting logtime1
+logfunc(s)     =dst_sm
+function dst_sm was not found in wlog1
+logfilename(s) =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_4.txt
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_4.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 4.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1860
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event4/log*.log
+logfile  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event4/log_e20050831-050000.log
+headlines:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog(*, 0)= it
+  wlog(*, 1)= year
+  wlog(*, 2)= mo
+  wlog(*, 3)= dy
+  wlog(*, 4)= hr
+  wlog(*, 5)= mn
+  wlog(*, 6)= sc
+  wlog(*, 7)= msc
+  wlog(*, 8)= dt
+  wlog(*, 9)= rho
+  wlog(*,10)= mx
+  wlog(*,11)= my
+  wlog(*,12)= mz
+  wlog(*,13)= p
+  wlog(*,14)= bx
+  wlog(*,15)= by
+  wlog(*,16)= bz
+  wlog(*,17)= pmin
+  wlog(*,18)= pmax
+  wlog(*,19)= dst
+  wlog(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       22321
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_4.txt /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event4/log_e20050831-050000.log
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_4.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 4.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1860
+Setting logtime
+logfile1  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event4/log_e20050831-050000.log
+headlines1:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog1(*, 0)= it
+  wlog1(*, 1)= year
+  wlog1(*, 2)= mo
+  wlog1(*, 3)= dy
+  wlog1(*, 4)= hr
+  wlog1(*, 5)= mn
+  wlog1(*, 6)= sc
+  wlog1(*, 7)= msc
+  wlog1(*, 8)= dt
+  wlog1(*, 9)= rho
+  wlog1(*,10)= mx
+  wlog1(*,11)= my
+  wlog1(*,12)= mz
+  wlog1(*,13)= p
+  wlog1(*,14)= bx
+  wlog1(*,15)= by
+  wlog1(*,16)= bz
+  wlog1(*,17)= pmin
+  wlog1(*,18)= pmax
+  wlog1(*,19)= dst
+  wlog1(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       22321
+Setting logtime1
+logfunc(s)     =dst_sm
+function dst_sm was not found in wlog1
+logfilename(s) =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_5.txt
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_5.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 5.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1740
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event5/log*.log
+logfile  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event5/log_e20100404-190000.log
+headlines:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog(*, 0)= it
+  wlog(*, 1)= year
+  wlog(*, 2)= mo
+  wlog(*, 3)= dy
+  wlog(*, 4)= hr
+  wlog(*, 5)= mn
+  wlog(*, 6)= sc
+  wlog(*, 7)= msc
+  wlog(*, 8)= dt
+  wlog(*, 9)= rho
+  wlog(*,10)= mx
+  wlog(*,11)= my
+  wlog(*,12)= mz
+  wlog(*,13)= p
+  wlog(*,14)= bx
+  wlog(*,15)= by
+  wlog(*,16)= bz
+  wlog(*,17)= pmin
+  wlog(*,18)= pmax
+  wlog(*,19)= dst
+  wlog(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       20881
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_5.txt /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event5/log_e20100404-190000.log
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_5.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 5.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1740
+Setting logtime
+logfile1  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event5/log_e20100404-190000.log
+headlines1:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog1(*, 0)= it
+  wlog1(*, 1)= year
+  wlog1(*, 2)= mo
+  wlog1(*, 3)= dy
+  wlog1(*, 4)= hr
+  wlog1(*, 5)= mn
+  wlog1(*, 6)= sc
+  wlog1(*, 7)= msc
+  wlog1(*, 8)= dt
+  wlog1(*, 9)= rho
+  wlog1(*,10)= mx
+  wlog1(*,11)= my
+  wlog1(*,12)= mz
+  wlog1(*,13)= p
+  wlog1(*,14)= bx
+  wlog1(*,15)= by
+  wlog1(*,16)= bz
+  wlog1(*,17)= pmin
+  wlog1(*,18)= pmax
+  wlog1(*,19)= dst
+  wlog1(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       20881
+Setting logtime1
+logfunc(s)     =dst_sm
+function dst_sm was not found in wlog1
+logfilename(s) =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_6.txt
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_6.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 6.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1740
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event6/log*.log
+logfile  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event6/log_e20110805-040000.log
+headlines:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog(*, 0)= it
+  wlog(*, 1)= year
+  wlog(*, 2)= mo
+  wlog(*, 3)= dy
+  wlog(*, 4)= hr
+  wlog(*, 5)= mn
+  wlog(*, 6)= sc
+  wlog(*, 7)= msc
+  wlog(*, 8)= dt
+  wlog(*, 9)= rho
+  wlog(*,10)= mx
+  wlog(*,11)= my
+  wlog(*,12)= mz
+  wlog(*,13)= p
+  wlog(*,14)= bx
+  wlog(*,15)= by
+  wlog(*,16)= bz
+  wlog(*,17)= pmin
+  wlog(*,18)= pmax
+  wlog(*,19)= dst
+  wlog(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       20881
+Setting logtime
+logfilename(s) =
+/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_6.txt /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event6/log_e20110805-040000.log
+logfile  =/Users/gtoth/swmf/HEAD/SWPCTEST/Dst/event_6.txt
+headlines:
+Sym-H and AL  obtained from Kyoto WDC for SWPC Event 6.  Units in nT.
+year mo dy hr mn sc msc dst_sm AL
+  wlog(*, 0)= year
+  wlog(*, 1)= mo
+  wlog(*, 2)= dy
+  wlog(*, 3)= hr
+  wlog(*, 4)= mn
+  wlog(*, 5)= sc
+  wlog(*, 6)= msc
+  wlog(*, 7)= dst_sm
+  wlog(*, 8)= AL
+Number of recorded timesteps: nt=        1740
+Setting logtime
+logfile1  =
+/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE//Event6/log_e20110805-040000.log
+headlines1:
+Volume averages, fluxes, etc
+it year mo dy hr mn sc msc dt rho mx my mz p bx by bz pmin pmax dst dstflx_R=3.0
+  wlog1(*, 0)= it
+  wlog1(*, 1)= year
+  wlog1(*, 2)= mo
+  wlog1(*, 3)= dy
+  wlog1(*, 4)= hr
+  wlog1(*, 5)= mn
+  wlog1(*, 6)= sc
+  wlog1(*, 7)= msc
+  wlog1(*, 8)= dt
+  wlog1(*, 9)= rho
+  wlog1(*,10)= mx
+  wlog1(*,11)= my
+  wlog1(*,12)= mz
+  wlog1(*,13)= p
+  wlog1(*,14)= bx
+  wlog1(*,15)= by
+  wlog1(*,16)= bz
+  wlog1(*,17)= pmin
+  wlog1(*,18)= pmax
+  wlog1(*,19)= dst
+  wlog1(*,20)= dstflx_R=3.0
+Number of recorded timesteps: nt=       20881
+Setting logtime1
+logfunc(s)     =dst_sm
+function dst_sm was not found in wlog1
