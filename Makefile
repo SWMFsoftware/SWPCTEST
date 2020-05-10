@@ -78,6 +78,7 @@ help:
 	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
 	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
 	@echo "make clean RESDIR=Results      (Clear results in RESDIR directory)"
+
 ##############################################################################
 # Some short tests:
 test_event:
@@ -434,7 +435,7 @@ check_calc:
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;	\
 	for ResDir in ${ResDirList}; do							\
 	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 				\
-		@echo 'working on $${ResDir}';						\
+		echo 'working on $${ResDir}';						\
 		cd $${ResDir};								\
 		printf "${PREDICT}\n calc_all_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_allevents_log.txt; 	\
 		printf "${PREDICT}\n calc_all_db_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_alldb_log.txt; 	\
@@ -451,7 +452,7 @@ check_dst:
 	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;\
 	for ResDir in ${ResDirList}; do						\
 	    if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then              \
-		@echo ' working on $${ResDir}';				\
+		echo ' working on $${ResDir}';				\
 		cd $${ResDir};						\
 		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
 	    fi; \
