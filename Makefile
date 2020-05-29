@@ -162,13 +162,12 @@ check:
 test_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
-	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
+	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
-# Default PARAM.in and LAYOUT.in files for the tests
+# Default PARAM.in file for the tests
 PARAMINIT = PARAM.in_SWPC_v2_init
-LAYOUT    = LAYOUT.in_rbe
 
 test_rundir:
 	@echo "Creating rundirs"
@@ -183,7 +182,6 @@ test_rundir:
 		cp -r ${MYDIR}/Inputs/event$$e/*      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
-		cp ${MYDIR}/Inputs/${LAYOUT}	      ${QUEDIR}$${iRun}/Event$$e/LAYOUT.in; \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
 		cd ${QUEDIR}$${iRun}/Event$$e;				     		    \
 	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};  \
@@ -215,12 +213,12 @@ test_order5:
 test_order5_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd,ng=3; \
-	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
+	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
 test_order5_rundir:
-	make test_rundir PARAMINIT=PARAM.in_order5_init LAYOUT=LAYOUT.in
+	make test_rundir PARAMINIT=PARAM.in_order5_init
 
 test_order5_run: test_run
 
@@ -236,12 +234,12 @@ test_rbe:
 test_rbe_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
-	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
+	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
 test_rbe_rundir:
-	make test_rundir PARAMINIT=PARAM.in_rbe_init LAYOUT=LAYOUT.in_rbe
+	make test_rundir PARAMINIT=PARAM.in_rbe_init
 
 test_rbe_run: test_run
 
@@ -257,12 +255,12 @@ test_multiion:
 test_multiion_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MultiIon; \
-	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
+	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
 test_multiion_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multiion_init LAYOUT=LAYOUT.in
+	make test_rundir PARAMINIT=PARAM.in_multiion_init
 
 test_multiion_run: test_run
 
@@ -279,7 +277,7 @@ test_multiion_v2_compile:
 	make test_multiion_compile
 
 test_multiion_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init LAYOUT=LAYOUT.in
+	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do			\
 		cp Inputs/job_more.long      ${QUEDIR}$${iRun}/Event$$e;	\
 	done; done
@@ -304,12 +302,12 @@ test_multispecies:
 test_multispecies_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdHpOp; \
-	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
+	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
 test_multispecies_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multispecies_init LAYOUT=LAYOUT.in
+	make test_rundir PARAMINIT=PARAM.in_multispecies_init
 
 test_multispecies_run: test_run
 
@@ -326,7 +324,7 @@ test_multispecies_v2_compile:
 	make test_multispecies_compile
 
 test_multispecies_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multispecies_v2_init LAYOUT=LAYOUT.in
+	make test_rundir PARAMINIT=PARAM.in_multispecies_v2_init
 
 test_multispecies_v2_run: test_run
 
@@ -343,7 +341,7 @@ test_multispecies_Young_v2_compile:
 	make test_multispecies_compile
 
 test_multispecies_Young_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multispecies_Young_v2_init LAYOUT=LAYOUT.in
+	make test_rundir PARAMINIT=PARAM.in_multispecies_Young_v2_init
 
 test_multispecies_Young_v2_run: test_run
 
@@ -359,12 +357,12 @@ test_cimi:
 test_cimi_compile:
 	-@(cd ..; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO,GridExpanded; \
-	./Config.pl -g=GM:8,8,8,400,1,IE:91,181; \
+	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
 	)
 
 test_cimi_rundir:
-	make test_rundir PARAMINIT=PARAM.in_cimi_init LAYOUT=LAYOUT.in_cimi
+	make test_rundir PARAMINIT=PARAM.in_cimi_init
 
 test_cimi_run: test_run
 
@@ -380,7 +378,7 @@ test_cimi_v2:
 test_cimi_v2_compile: test_cimi_compile
 
 test_cimi_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_cimi_v2_init LAYOUT=LAYOUT.in_cimi
+	make test_rundir PARAMINIT=PARAM.in_cimi_v2_init
 
 test_cimi_v2_run: test_run
 
@@ -396,7 +394,7 @@ test_SWPC_Young_v2:
 test_SWPC_Young_v2_compile: test_compile
 
 test_SWPC_Young_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_SWPC_v2_Young_init LAYOUT=LAYOUT.in_SWPC_v2
+	make test_rundir PARAMINIT=PARAM.in_SWPC_v2_Young_init
 
 test_SWPC_Young_v2_run: test_run
 
@@ -474,7 +472,6 @@ realtime_start_rundir:
 	cd ${DIR}; \
 	make rundir MACHINE=${MACHINE} RUNDIR=${RTDIR}; \
 	cp ${MYDIR}/Inputs/job.long  ${RTDIR}; \
-	cp ${MYDIR}/Inputs/${LAYOUT} ${RTDIR}/LAYOUT.in; \
 	cp Param/SWPC/${PARAMINIT}    ${RTDIR}/PARAM.in
 	cd ${RTDIR}; rm -rf Param; mkdir Param; cd Param; \
 	ln -s ${DIR}/Param/SWPC .; cd ../; ${MYSCRIPTDIR}/DSCOVR.py; \
