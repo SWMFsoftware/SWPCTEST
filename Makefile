@@ -1,6 +1,7 @@
 SHELL=/bin/bash
 
-include ../Makefile.def
+# INCLUDE HERE THE Makefile.def FROM THE SWMF USED
+include /home5/gtoth1/SWPC/SWMF/Makefile.def
 
 MYDIR 	    = ${DIR}/SWPCTEST
 MYINPUTDIR  = ${MYDIR}/Inputs
@@ -160,7 +161,7 @@ check:
 	make check_tar
 
 test_compile:
-	-@(cd ..; \
+	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
 	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
@@ -189,7 +190,6 @@ test_rundir:
 
 test_run:
 	@echo "Submitting jobs"
-	cd ..; 								\
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do		\
 		cd ${QUEDIR}$${iRun}/Event$$e;				\
 		if [[ "${MACHINE}" == "frontera" ]];                    \
@@ -211,7 +211,7 @@ test_order5:
 	@echo "Test_order5 started.  make check when complete."
 
 test_order5_compile:
-	-@(cd ..; \
+	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd,ng=3; \
 	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
@@ -232,7 +232,7 @@ test_rbe:
 	@echo "Test_rbe started.  make check when complete."
 
 test_rbe_compile:
-	-@(cd ..; \
+	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
 	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
@@ -253,7 +253,7 @@ test_multiion:
 	@echo "Test_multiion started.  make check when complete."
 
 test_multiion_compile:
-	-@(cd ..; \
+	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MultiIon; \
 	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
@@ -284,7 +284,6 @@ test_multiion_v2_rundir:
 
 test_multiion_v2_run:
 	@echo "Submitting jobs"
-	cd ..; 							\
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
 		cd ${QUEDIR}$${iRun}/Event$$e;		\
 		./qsub.pfe.pl job_more.long ev$$e;	    	\
@@ -300,7 +299,7 @@ test_multispecies:
 	@echo "Test_multispecies started.  make check when complete."
 
 test_multispecies_compile:
-	-@(cd ..; \
+	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdHpOp; \
 	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
@@ -355,8 +354,8 @@ test_cimi:
 	@echo "Test_cimi started.  make check when complete."
 
 test_cimi_compile:
-	-@(cd ..; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO,GridExpanded; \
+	-@(cd ${DIR}; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI2 -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO,GridExpanded; \
 	./Config.pl -g=GM:8,8,8,IE:91,181; \
 	make SWMF PIDL; \
 	)
