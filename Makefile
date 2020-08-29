@@ -7,6 +7,7 @@ MYDIR 	    = ${DIR}/SWPCTEST
 MYINPUTDIR  = ${MYDIR}/Inputs
 MYSCRIPTDIR = ${MYDIR}/Scripts
 MYIDLDIR    = ${MYDIR}/Idl
+IDLPATH     = ${COMMONDIR}/IDL/General:<IDL_DEFAULT>
 GMDIR       = ${DIR}/GM/BATSRUS
 QUEDIR      = $(MYDIR)/run
 RESDIR	    = Results
@@ -409,9 +410,13 @@ ResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB
 CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
 
 check_postproc:
+	@echo "RunDirList = ${RunDirList}"
+	@echo "MYDIR = ${MYDIR}"
+	@echo "FULLRESDIR = ${FULLRESDIR}"
 	@if([ ! -d ${MYDIR}/deltaB/${RESDIR} ]); then  			\
 	  echo "Post processing simulation results to deltaB/${RESDIR}";\
 	  for RunDir in ${RunDirList};  do				\
+	     echo "processing RunDir=$${RunDir}";                       \
 	     cd ${MYDIR}/$${RunDir};					\
 	     if([ -f SWMF.SUCCESS ]); then				\
 		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;   \
@@ -429,7 +434,7 @@ check_postproc:
 check_calc:
 	@echo "Checking results against observations"
 	make clean_calc RESDIR=${RESDIR}; 						\
-	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;	\
+	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;	\
 	for ResDir in ${ResDirList}; do							\
 	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 				\
 		echo 'working on $${ResDir}';						\
@@ -446,7 +451,7 @@ check_calc:
 
 check_dst:
 	@echo "Checking Dst against observations"
-	export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; export IDL_STARTUP=idlrc;\
+	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;\
 	for ResDir in ${ResDirList}; do						\
 	    if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then              \
 		echo ' working on $${ResDir}';				\
@@ -461,7 +466,7 @@ check_tar:
 
 check_compare:
 	@echo "Compare ${RES1DIR} and ${RES2DIR}"
-	export IDL_STARTUP=idlrc; export IDL_PATH='${GMDIR}/Idl/:<IDL_DEFAULT>'; \
+	export IDL_STARTUP=idlrc; export IDL_PATH='${IDLPATH}'; \
 	mkdir -p ${CompDir}; cd ${CompDir}; \
 	printf "${PREDICT}\n save_comp_dbdt_tables, '${FULLRES1DIR}','${FULLRES2DIR}', firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt; \
 	printf "${PREDICT}\n save_comp_db_tables,   '${FULLRES1DIR}','${FULLRES2DIR}', firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt; \
