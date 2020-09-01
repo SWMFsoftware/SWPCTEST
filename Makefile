@@ -3,7 +3,7 @@ SHELL=/bin/bash
 # INCLUDE HERE THE Makefile.def FROM THE SWMF USED
 include /home5/gtoth1/SWPC/SWMF/Makefile.def
 
-MYDIR 	    = ${DIR}/SWPCTEST
+MYDIR       = $(shell echo `pwd`)
 MYINPUTDIR  = ${MYDIR}/Inputs
 MYSCRIPTDIR = ${MYDIR}/Scripts
 MYIDLDIR    = ${MYDIR}/Idl
