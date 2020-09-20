@@ -486,13 +486,10 @@ clean_calc:
 	@echo "Cleaning calculated files"
 	rm -f results*.txt;						\
 	cd ${FULLRESDIR}; 						\
-	rm -f *txt;							\
+	rm -f metric*.txt idl*.txt dst*.txt;				\
 	for ResDir in ${ResDirList}; do					\
 		cd $${ResDir};						\
-		rm -f *.txt;						\
-		rm -f *.pdf;						\
-		rm -f *.eps;						\
-		rm -f *.tex;						\
+		rm -f metric*.txt idl*.txt dst*.txt d*.pdf d*.eps ;	\
 	done
 
 clean:
@@ -500,17 +497,9 @@ clean:
 	rm -f results*.txt;
 	for ResDir in ${ResDirList}; do					\
 		cd $${ResDir};						\
-		rm -f *.txt;						\
-		rm -f *.pdf;						\
-		rm -f *.eps;						\
-		rm -f *.tex;						\
+		rm -f metric*.txt idl*.txt dst*.txt d*.pdf d*.eps ;	\
 		for e in ${EVENTLIST}; do         			\
-			rm -f $${ResDir}/Event$$e/*.txt; 		\
-			rm -f $${ResDir}/Event$$e/*.eps;		\
-			rm -f $${ResDir}/Event$$e/*.log;		\
-			rm -f $${ResDir}/Event$$e/*.mag;		\
-			rm -f $${ResDir}/Event$$e/runlog*;		\
-			rm -f $${ResDir}/Event$$e/PARAM.in;		\
+			rm -f $${ResDir}/Event$$e/*; 			\
 		done; 							\
 	done
 
