@@ -2,3 +2,4 @@ COMPARE_*
 deltaB
 run*
 *.tgz
+Makefile.def
