@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
-# INCLUDE HERE THE Makefile.def FROM THE SWMF USED
-include /home5/gtoth1/SWPC/SWMF/Makefile.def
+# Include the link to the Makefile.def from the SWMF used
+include Makefile.def
 
 MYDIR       = $(shell echo `pwd -P`)
 MYINPUTDIR  = ${MYDIR}/Inputs
