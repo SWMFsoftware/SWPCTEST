@@ -9,11 +9,12 @@ MYSCRIPTDIR = ${MYDIR}/Scripts
 MYIDLDIR    = ${MYDIR}/Idl
 IDLPATH     = ${COMMONDIR}/IDL/General:<IDL_DEFAULT>
 GMDIR       = ${DIR}/GM/BATSRUS
-QUEDIR      = $(MYDIR)/run
 RESDIR	    = Results
 RES1DIR	    = Results
 RES2DIR	    = SWMF_CCMC
 RTDIR	    = ${MYDIR}/run_realtime
+SIMDIR      = Default
+QUEDIR      = $(MYDIR)/${SIMDIR}/run
 PREDICT     = .r ${MYIDLDIR}/predict.pro
 NRUN        = 1
 
@@ -43,9 +44,11 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "make test                      (run all test events in run1 directory)"
-	@echo "make test NRUN=5               (run all test events with 5 (up to 9) different number of cores)"
+	@echo "make test NRUN=5               (run all test events with 5 (up to 9) different "
+	@echo "                                number of cores)"
 	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
-	@echo "make test QUEDIR=/nobackup/${USER}/run_swpctest (set absolute path for run directory)"
+	@echo "make test QUEDIR=/nobackup/${USER}/run_swpctest "
+	@echo "                               (set absolute path for run directory)"
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
 	@echo "make test PARAMINIT=PARAM.in   (use PARAM.in for the PARAM file)" 
@@ -59,8 +62,10 @@ help:
 	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
 	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
 	@echo ""
-	@echo "make check_dst     RESDIR=New EVENTS=2,4 (calculate Dst error only for events 2..4)"
-	@echo "make check_compare RES1DIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
+	@echo "make check_dst     RESDIR=New EVENTS=2,4 "
+	@echo "                               (calculate Dst error only for events 2..4)"
+	@echo "make check_compare RES1DIR=New RES2DIR=Old "
+	@echo "                               (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
 	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
 	@echo "test_rbe                       (run with RB/RBE model)"
@@ -68,7 +73,8 @@ help:
 	@echo "test_multiion_v2               (run with multiion GM/BATSRUS v2 model)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
 	@echo "test_multispecies_v2           (run with multispecies GM/BATSRUS v2 model)"
-	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with the Young BC)"
+	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with "
+	@echo "                                the Young BC)"
 	@echo "test_cimi                      (run with anisotropic MHD and IM/CIMI)"
 	@echo "test_cimi_v2                   (run with anisotropic MHD v2 and IM/CIMI)"
 	@echo "test_SWPC_Young_v2             (run with SWPC v2 model with the Young BC)"
@@ -77,9 +83,12 @@ help:
 	@echo "make ballistic_limited         (limiting+ballistic propagation for events 2..14)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
 	@echo
-	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* plots)"
-	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/mhd_vs_ballistic_vs_wind.* plots)"
+	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* "
+	@echo "                                plots)"
+	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/ "
+	@echo "                                mhd_vs_ballistic_vs_wind.* plots)"
 	@echo "make clean RESDIR=Results      (Clear results in RESDIR directory)"
+	@echo
 
 ##############################################################################
 # Some short tests:
@@ -173,10 +182,10 @@ PARAMINIT = PARAM.in_SWPC_v2_init
 
 test_rundir:
 	@echo "Creating rundirs"
-	if([ -d ${MYDIR}/run1 ]); then  			\
-		rm -rf ${MYDIR}/run_backup;			\
-		mkdir -p ${MYDIR}/run_backup;			\
-		mv run[1-9] ${MYDIR}/run_backup/;		\
+	if([ -d ${MYDIR}/${SIMDIR}/run1 ]); then  		\
+		rm -rf ${MYDIR}/${SIMDIR}/run_backup;		\
+		mkdir -p ${MYDIR}/${SIMDIR}/run_backup;		\
+		mv run[1-9] ${MYDIR}/${SIMDIR}/run_backup/;	\
 	fi;							\
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
