@@ -413,26 +413,26 @@ FULLRESDIR  = ${MYDIR}/deltaB/${RESDIR}
 FULLRES1DIR = ${MYDIR}/deltaB/${RES1DIR}
 FULLRES2DIR = ${MYDIR}/deltaB/${RES2DIR}
 
-RunDirList  = $(sort $(dir $(wildcard run[1-9]/Event[0-9]/)))
+RunDirList  = $(sort $(dir $(wildcard ${MYDIR}/${SIMDIR}/run[1-9]/Event[0-9]/)))
 ResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run[1-9]/)))
 
 CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
 
 check_postproc:
+	@echo "MYDIR      = ${MYDIR}"
 	@echo "RunDirList = ${RunDirList}"
-	@echo "MYDIR = ${MYDIR}"
 	@echo "FULLRESDIR = ${FULLRESDIR}"
 	@if([ ! -d ${MYDIR}/deltaB/${RESDIR} ]); then  			\
 	  echo "Post processing simulation results to deltaB/${RESDIR}";\
 	  for RunDir in ${RunDirList};  do				\
 	     echo "processing RunDir=$${RunDir}";                       \
-	     cd ${MYDIR}/$${RunDir};					\
+	     cd $${RunDir};						\
 	     if([ -f SWMF.SUCCESS ]); then				\
 		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;   \
-		mkdir -p ${FULLRESDIR}/$${RunDir};			\
+		mkdir -p ${FULLRESDIR}/$${RunDir: -12:12};		\
 		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log      \
-			${FULLRESDIR}/$${RunDir}/;			\
-		cd ${FULLRESDIR}/$${RunDir}/;				\
+			${FULLRESDIR}/$${RunDir: -12:12}/;		\
+		cd ${FULLRESDIR}/$${RunDir: -12:12}/;			\
 		${MYSCRIPTDIR}/convert_mags.py; 			\
              fi;							\
 	  done;								\
