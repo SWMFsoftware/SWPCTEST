@@ -13,7 +13,7 @@ RESDIR	    = Results
 RES1DIR	    = Results
 RES2DIR	    = SWMF_CCMC
 RTDIR	    = ${MYDIR}/run_realtime
-SIMDIR      = Default
+SIMDIR      = Runs
 QUEDIR      = $(MYDIR)/${SIMDIR}/run
 PREDICT     = .r ${MYIDLDIR}/predict.pro
 NRUN        = 1
@@ -47,7 +47,7 @@ help:
 	@echo "make test NRUN=5               (run all test events with 5 (up to 9) different "
 	@echo "                                number of cores)"
 	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
-	@echo "make test QUEDIR=/nobackup/${USER}/run_swpctest "
+	@echo "make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2. Default is Runs/)"
 	@echo "                               (set absolute path for run directory)"
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
@@ -182,10 +182,10 @@ PARAMINIT = PARAM.in_SWPC_v2_init
 
 test_rundir:
 	@echo "Creating rundirs"
-	if([ -d ${MYDIR}/${SIMDIR}/run1 ]); then  		\
-		rm -rf ${MYDIR}/${SIMDIR}/run_backup;		\
-		mkdir -p ${MYDIR}/${SIMDIR}/run_backup;		\
-		mv run[1-9] ${MYDIR}/${SIMDIR}/run_backup/;	\
+	if([ -d ${QUEDIR}1 ]); then  		\
+		rm -rf ${QUEDIR}_backup;	\
+		mkdir -p ${QUEDIR}_backup;	\
+		mv run[1-9] ${QUEDIR}_backup/;	\
 	fi;							\
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
@@ -288,8 +288,8 @@ test_multiion_v2_compile:
 
 test_multiion_v2_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init
-	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do			\
-		cp Inputs/job_more.long      ${QUEDIR}$${iRun}/Event$$e;	\
+	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do		\
+		cp Inputs/job_more.long ${QUEDIR}$${iRun}/Event$$e;	\
 	done; done
 
 test_multiion_v2_run:
@@ -413,7 +413,7 @@ FULLRESDIR  = ${MYDIR}/deltaB/${RESDIR}
 FULLRES1DIR = ${MYDIR}/deltaB/${RES1DIR}
 FULLRES2DIR = ${MYDIR}/deltaB/${RES2DIR}
 
-RunDirList  = $(sort $(dir $(wildcard ${MYDIR}/${SIMDIR}/run[1-9]/Event[0-9]/)))
+RunDirList  = $(sort $(dir $(wildcard ${QUEDIR}[1-9]/Event[0-9]/)))
 ResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run[1-9]/)))
 
 CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
@@ -514,6 +514,5 @@ clean:
 
 distclean:
 	make clean
-	@echo "Cleaning all rundirectories"
-	rm -rf ../Event* ${QUEDIR}/Event* *~
-
+	@echo "Cleaning all run directories"
+	rm -rf ../Event* ${QUEDIR}* *~
