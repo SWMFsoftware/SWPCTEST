@@ -3,3 +3,4 @@ deltaB
 run*
 *.tgz
 Makefile.def
+idl*.txt
