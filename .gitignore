@@ -2,5 +2,5 @@ COMPARE_*
 deltaB
 run*
 *.tgz
-Makefile.def
+SWMF
 idl*.txt

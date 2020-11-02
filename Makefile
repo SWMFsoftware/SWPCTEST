@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
-# Include the link to the Makefile.def from the SWMF used
-include Makefile.def
+# Include Makefile.def from the linked SWMF directory 
+include SWMF/Makefile.def
 
 MYDIR       = $(shell echo `pwd -P`)
 MYINPUTDIR  = ${MYDIR}/Inputs
@@ -158,7 +158,7 @@ convert_ace:
 ##############################################################################
 
 test:
-	@echo "Testing the SWMF"
+	@echo "Testing the Geospace model"
 	make test_compile
 	make test_rundir
 	make test_run
@@ -214,7 +214,7 @@ test_run:
 ##############################################################################
 
 test_order5:
-	@echo "Testing the SWMF with high order scheme"
+	@echo "Testing the Geospcae model with high order scheme"
 	make test_order5_compile
 	make test_order5_rundir
 	make test_order5_run
@@ -235,7 +235,7 @@ test_order5_run: test_run
 ##############################################################################
 
 test_rbe:
-	@echo "Testing the SWMF with RBE component"
+	@echo "Testing the Geospace model with RBE component"
 	make test_rbe_compile
 	make test_rbe_rundir
 	make test_rbe_run
@@ -256,7 +256,7 @@ test_rbe_run: test_run
 ##############################################################################
 
 test_multiion:
-	@echo "Testing the SWMF with multiion BATSRUS"
+	@echo "Testing the Geospace model with multiion BATSRUS"
 	make test_multiion_compile
 	make test_multiion_rundir
 	make test_multiion_run
@@ -277,7 +277,7 @@ test_multiion_run: test_run
 ##############################################################################
 
 test_multiion_v2:
-	@echo "Testing the SWMF with multiion v2 BATSRUS"
+	@echo "Testing the Geospace model with multiion v2 BATSRUS"
 	make test_multiion_v2_compile
 	make test_multiion_v2_rundir
 	make test_multiion_v2_run
@@ -302,7 +302,7 @@ test_multiion_v2_run:
 ##############################################################################
 
 test_multispecies:
-	@echo "Testing the SWMF with multispecies BATSRUS"
+	@echo "Testing the Geospace model with multispecies BATSRUS"
 	make test_multispecies_compile
 	make test_multispecies_rundir
 	make test_multispecies_run
@@ -323,7 +323,7 @@ test_multispecies_run: test_run
 ##############################################################################
 
 test_multispecies_v2:
-	@echo "Testing the SWMF with multispecies v2 BATSRUS"
+	@echo "Testing the Geospace model with multispecies v2 BATSRUS"
 	make test_multispecies_v2_compile
 	make test_multispecies_v2_rundir
 	make test_multispecies_v2_run
@@ -340,7 +340,7 @@ test_multispecies_v2_run: test_run
 ##############################################################################
 
 test_multispecies_Young_v2:
-	@echo "Testing the SWMF with multispecies Young v2 BATSRUS"
+	@echo "Testing the Geospace model with multispecies Young v2 BATSRUS"
 	make test_multispecies_Young_v2_compile
 	make test_multispecies_Young_v2_rundir
 	make test_multispecies_Young_v2_run
@@ -357,7 +357,7 @@ test_multispecies_Young_v2_run: test_run
 ##############################################################################
 
 test_cimi:
-	@echo "Testing the SWMF with anisotropic BATSRUS + IM/CIMI"
+	@echo "Testing the Geospace model with anisotropic BATSRUS + IM/CIMI"
 	make test_cimi_compile
 	make test_cimi_rundir
 	make test_cimi_run
@@ -378,7 +378,7 @@ test_cimi_run: test_run
 ##############################################################################
 
 test_cimi_v2:
-	@echo "Testing the SWMF with anisotropic BATSRUS v2 + IM/CIMI"
+	@echo "Testing the Geospace model with anisotropic BATSRUS v2 + IM/CIMI"
 	make test_cimi_v2_compile
 	make test_cimi_v2_rundir
 	make test_cimi_v2_run
