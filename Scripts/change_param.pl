@@ -98,8 +98,8 @@ while(<>){
     s/.*\s(F107)/$f107\t\t\t$1/i;
 
     # Switch off saving large plots and restart files
-    s/^\#((?:SAVEPLOT)|(?:MAGNETOMETERGRID)|(?:SAVERESTART))\b/$1/ 
-	if $NoPlot;
+    s/^\#((?:SAVEPLOT)|(?:MAGNETOMETERGRID))\b/$1/ if $NoPlot;
+    s/^T(\s+DoSaveRestart)/F$1/ if $NoPlot;
 
     # Change the name of the IMF file
     s/^IMF.dat/$IMF/;
