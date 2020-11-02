@@ -9,11 +9,11 @@ MYSCRIPTDIR = ${MYDIR}/Scripts
 MYIDLDIR    = ${MYDIR}/Idl
 IDLPATH     = ${COMMONDIR}/IDL/General:<IDL_DEFAULT>
 GMDIR       = ${DIR}/GM/BATSRUS
-RESDIR	    = Results
-RES1DIR	    = Results
+SIMDIR      = Runs
+RESDIR	    = ${SIMDIR}
+RES1DIR	    = ${RESDIR}
 RES2DIR	    = SWMF_CCMC
 RTDIR	    = ${MYDIR}/run_realtime
-SIMDIR      = Runs
 QUEDIR      = $(MYDIR)/${SIMDIR}/run
 PREDICT     = .r ${MYIDLDIR}/predict.pro
 NRUN        = 1
@@ -47,7 +47,7 @@ help:
 	@echo "make test NRUN=5               (run all test events with 5 (up to 9) different "
 	@echo "                                number of cores)"
 	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
-	@echo "make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2. Default is Runs/)"
+	@echo 'make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2 dir. Default is Runs.)'
 	@echo "                               (set absolute path for run directory)"
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
@@ -56,11 +56,11 @@ help:
 	@echo "make test_rundir               (create rundirs for all EVENTS)"
 	@echo "make test_run                  (submit runs to que)"
 	@echo ""
-	@echo "make check                     (process results from ./run1 into deltaB/Results)"
-	@echo "make check          RESDIR=New (process results from ./run1 into deltaB/New)"
-	@echo "make check_postproc RESDIR=New (collect results from ./run1)"
-	@echo "make check_calc     RESDIR=New (calculate metrics from results in deltaB/New/)"
-	@echo "make check_tar      RESDIR=New (tar up results and metrics in deltaB/New)"
+	@echo "make check                     (process results from ./Runs into deltaB/Runs)"
+	@echo "make check          SIMDIR=New (process results from ./New into deltaB/New)"
+	@echo "make check_postproc SIMDIR=New (collect results from ./New)"
+	@echo "make check_calc     SIMDIR=New (calculate metrics from results in deltaB/New/)"
+	@echo "make check_tar      SIMDIR=New (tar up results and metrics in deltaB/New)"
 	@echo ""
 	@echo "make check_dst     RESDIR=New EVENTS=2,4 "
 	@echo "                               (calculate Dst error only for events 2..4)"
