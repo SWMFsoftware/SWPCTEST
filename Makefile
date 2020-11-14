@@ -1,7 +1,8 @@
 SHELL=/bin/bash
 
 # Include Makefile.def from the linked SWMF directory 
-include SWMF/Makefile.def
+-include SWMF/Makefile.def
+-include ../Makefile.def
 
 MYDIR       = $(shell echo `pwd -P`)
 MYINPUTDIR  = ${MYDIR}/Inputs
