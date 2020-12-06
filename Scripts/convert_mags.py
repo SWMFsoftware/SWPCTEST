@@ -71,14 +71,11 @@ for i,s in enumerate(stats):
         print('Working on station {}...'.format(s))
     f = open(args.outdir+'/{}.txt'.format(s), 'w')
     f.write('# SWMF run: SWMF_SWPC\n')
-    f.write('#SWMF run finished on {}\n'.format(dt.datetime.now().isoformat()))
-    f.write('# North, East and vertical components of magnetic field\n')
-    f.write('# computed from magnetosphere & ionosphere currents\n')
-    f.write('# Station: {}\n'.format(s.lower()))
-    f.write('# Position (MAG): lon=       355.310 lat=      55.6300\n')
-    f.write('Year Month Day Hour Min Sec GeomagLat GeomagLon B_NorthGeomag')
-    f.write(' B_EastGeomag B_DownGeomag\n[year] [month] [day] [hour] [min]')
-    f.write(' [s] [deg] [deg] [nT] [nT] [nT]\n')
+    f.write('# created at {}\n'.format(dt.datetime.now().isoformat()))
+    f.write('# North, East and vertical components of magnetic field in nT\n')
+    f.write('# computed from magnetosphere and ionosphere currents\n')
+    f.write('# Station: {}\n'.format(s.upper()))
+    f.write('Year Month Day Hour Min Sec B_NorthGeomag B_Eastgeomag B_Downgeomag\n')
 
     # Loop through lines related to this magnetometer:
     for l in rawlines[i::len(stats)]:
@@ -88,8 +85,6 @@ for i,s in enumerate(stats):
 
         # Write time:
         f.write('{1:4.0f}{2:5.0f}{3:5.0f}{4:5.0f}{5:5.0f}{6:5.0f}'.format(*parts))
-        # Write lat-lon:
-        f.write('{:13.3f}{:13.3f}'.format(0.0, 0.0))
         # Write perturbation:
         f.write('{12:13.3f}{13:13.3f}{14:13.3f}\n'.format(*parts))
 
