@@ -75,7 +75,7 @@ for i,s in enumerate(stats):
     f.write('# North, East and vertical components of magnetic field in nT\n')
     f.write('# computed from magnetosphere and ionosphere currents\n')
     f.write('# Station: {}\n'.format(s.upper()))
-    f.write('Year Month Day Hour Min Sec B_NorthGeomag B_Eastgeomag B_Downgeomag\n')
+    f.write('Year Month Day Hour Min Sec B_NorthGeomag B_EastGeomag B_DownGeomag\n')
 
     # Loop through lines related to this magnetometer:
     for l in rawlines[i::len(stats)]:
