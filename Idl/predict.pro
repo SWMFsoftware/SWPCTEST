@@ -1356,7 +1356,8 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
   for ievent = firstevent, lastevent do begin
      ;; read in measured values
      eventnumber = string(ievent,format='(i2.2)')
-     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnumber+'/geoindex*.log '+ $
+     eventnum    = strtrim(string(ievent),2)
+     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnum+'/geoindex*.log '+ $
                  mydir+'Kp/event_'+eventnumber+'.txt'
      read_log_data
      xrange = [logtime1(0), logtime1(-1)]
