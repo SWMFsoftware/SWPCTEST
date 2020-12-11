@@ -26,7 +26,7 @@ PLOT='-noplot'
 EVENTS=1,2,3,4,5,6
 
 # Space separated list (replace comma with space)
-EVENTLIST  = $(shell echo ${EVENTS} | tr , ' ')
+EVENTLIST  = $(foreach v, $(shell echo ${EVENTS} | tr , ' '), $(shell printf '%02d' $(v)))
 
 # First and last events (used as arguments of some IDL scripts)
 FIRSTEVENT = $(shell echo ${EVENTS} | sed 's/,.*//')
