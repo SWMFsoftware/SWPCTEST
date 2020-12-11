@@ -1326,6 +1326,72 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, m
 end
 
 ;==============================================================================
+pro calc_kp_error, mydir=mydir, resdir=resdir, $
+                   firstevent=firstevent, lastevent=lastevent
+
+;; Calculate Kp error for multiple runs and events 
+;; and save results into kp_error.txt
+
+  common getlog_param
+  common log_data
+  common plotlog_param
+
+  if not keyword_set(mydir) then mydir='.'
+  mydir += '/'
+
+  if not keyword_set(resdir) then begin
+     print,'Kp_error: keyword resdir is required'
+     return
+  endif
+  
+  ;; Use six events by default
+  if n_elements(firstevent) lt 1 then firstevent=1
+  if n_elements(lastevent)  lt 1 then lastevent =6
+
+  ;; plot the simulated Kp for all the runs and events
+  colors=[255,50,250,150,200,100,25,220,125]
+  timeunit = 'date'
+  logfunc  = 'Kp'
+  yranges = [[0,10]]
+  for ievent = firstevent, lastevent do begin
+     ;; read in measured values
+     eventnumber = string(ievent,format='(i2.2)')
+     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnumber+'/geoindex*.log '+ $
+                 mydir+'Kp/event_'+eventnumber+'.txt'
+     read_log_data
+     xrange = [logtime1(0), logtime1(-1)]
+     set_device,mydir+'deltaB/'+ResDir+'/kp_plot_event'+eventnumber+'.eps', /land
+     plot_log_data
+     close_device, /pdf
+     
+     interpol_log,wlog,wlog1,kp,kp1,'kp',wlognames,wlognames1,logtime,timeunit='date'
+     if ievent eq firstevent then begin
+        kpall  = [kp]
+        kp1all = [kp1]
+     endif else begin
+        kpall  = [kpall,kp]
+        kp1all = [kp1all,kp1]
+     endelse
+     set_device,mydir+'deltaB/'+ResDir+'/kp_scatter_event'+eventnumber+'.eps', /square
+     plot, kp, kp1, xrange=[0,10], yrange=[0,10], $
+          title='Event '+eventnumber, xtitle='Observed Kp', ytitle='Run1 Kp',$
+          psym=4, thick=3,symsize=2
+     oplot,[0,10],[0,10],linestyle=2,thick=3
+     close_device, /pdf
+  endfor
+  if firstevent ne lastevent then begin
+     set_device,mydir+'deltaB/'+ResDir+'/kp_scatter_all.eps', /square
+     plot, kpall, kp1all, xrange=[0,10], yrange=[0,10], $
+           title='All events', xtitle='Observed Kp', ytitle='Run1 Kp',$
+           psym=4, thick=3,symsize=2
+     oplot,[0,10],[0,10],linestyle=2,thick=3
+     close_device, /pdf
+  end
+  colors=[255,100,250,150,200,50,25,220,125] ; reset colors 
+
+end
+
+;==============================================================================
 pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,mydir=mydir
 
 ;; Calculate Dst (symH) error in nT
