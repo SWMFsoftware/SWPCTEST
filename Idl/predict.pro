@@ -1363,6 +1363,7 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
      xrange = [logtime1(0), logtime1(-1)]
      set_device,mydir+'deltaB/'+ResDir+'/kp_plot_event'+eventnumber+'.eps', /land
      plot_log_data
+     oplot,logtime1,(wlog1(*,8)-0.89)/1.12,linestyle=2,thick=5
      close_device, /pdf
      
      interpol_log,wlog,wlog1,kp,kp1,'kp',wlognames,wlognames1,logtime,timeunit='date'
@@ -1381,11 +1382,17 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
      close_device, /pdf
   endfor
   if firstevent ne lastevent then begin
+     result = linfit(kpall, kp1all)
+     slope = result(0)
+     const = result(1)
+     print,'Best fit kp1 = ',slope,'*kp +', const
      set_device,mydir+'deltaB/'+ResDir+'/kp_scatter_all.eps', /square
      plot, kpall, kp1all, xrange=[0,10], yrange=[0,10], $
-           title='All events', xtitle='Observed Kp', ytitle='Run1 Kp',$
+           title='Fit a,b='+string(result,format='(f5.2,",",f5.2)'), xtitle='Observed Kp', ytitle='Run1 Kp',$
            psym=4, thick=3,symsize=2
+     oplot,kpall, (kp1all-const)/slope, psym=1, thick=3, symsize=2, color=150
      oplot,[0,10],[0,10],linestyle=2,thick=3
+     oplot,[0,10],slope*[0,10]+const
      close_device, /pdf
   end
   colors=[255,100,250,150,200,50,25,220,125] ; reset colors 
