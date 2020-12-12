@@ -48,13 +48,14 @@ if __name__ == '__main__':
     # Load event info:
     events = parse_events('../event_list.txt')
     for e in events:
+        print(f"Working on event {e}...")
         ev = events[e]
         # Fetch official Kp from Kyoto WDC:
         kp = fetch('kp', ev['start'], ev['end'])
         # Save to file:
         with open(f'event_{e:02d}.txt','w') as f:
             f.write('Kp obtained from http://wdc.kugi.kyoto-u.ac.jp/\n')
-            f.write('All times are the center of each 3-hour bin\n')
+            f.write('All times are the end of each 3-hour bin\n')
             f.write('year mo dy hr mn sc kp\n')
-            for t, k in zip(kp['time'], kp['kp']):
+            for t, k in zip(kp['time']+dt.timedelta(hours=1.5), kp['kp']):
                 f.write(f'{t:%Y %m %d %H %M %S}\t{k:9.7f}\n')
