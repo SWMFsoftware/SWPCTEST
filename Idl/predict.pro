@@ -1327,10 +1327,12 @@ end
 
 ;==============================================================================
 pro calc_kp_error, mydir=mydir, resdir=resdir, $
-                   firstevent=firstevent, lastevent=lastevent
+                   firstevent=firstevent, lastevent=lastevent, $
+                   const=const, slope=slope
 
-;; Calculate Kp error for multiple runs and events 
-;; and save results into kp_error.txt
+  ;; Calculate Kp error for multiple runs and events.
+  ;; Fit a linear trend from run1: kpfit = slope*kp1 + const
+  ;; Create one scatter plot for all events, and time series plots per event
 
   common getlog_param
   common log_data
@@ -1348,6 +1350,44 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
   if n_elements(firstevent) lt 1 then firstevent=1
   if n_elements(lastevent)  lt 1 then lastevent =6
 
+  ;; interpolate to observed times and collect data from all events
+  for ievent = firstevent, lastevent do begin
+     ;; read in measured values
+     eventnumber = string(ievent,format='(i2.2)')
+     eventnum    = strtrim(string(ievent),2)
+     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnum+'/geoindex*.log '+ $
+                 mydir+'Kp/event_'+eventnumber+'.txt'
+     read_log_data
+     interpol_log,wlog,wlog1,kp,kp1,'kp',wlognames,wlognames1,logtime,timeunit='date'
+     if ievent eq firstevent then begin
+        kpall  = [kp]
+        kp1all = [kp1]
+     endif else begin
+        kpall  = [kpall,kp]
+        kp1all = [kp1all,kp1]
+     endelse
+  endfor
+
+  ;; linear fit from simulated to observed kp
+  n = n_elements(kpall)
+  result   = linfit(kp1all, kpall)
+  const    = result(0)
+  slope    = result(1)
+  kp1fit   = const + slope*kp1all ; detrended simulation Kp
+  error    = total(abs(kpall-kp1all))/n
+  errorfit = total(abs(kpall-kp1fit))/n
+  print,'Best fit kp1 = ',slope,'*kp +', const
+  print,'<|Kp-Kp1|>=', error,' <|Kp-Kp1fit|>=', errorfit
+  set_device,mydir+'deltaB/'+ResDir+'/kp_scatter_all.eps', /square
+  title = string(result,error,errorfit,format='("Fit const,slope=",f5.2,",",f5.2,"!C","Error orig,fit=",f5.2,",",f5.2)')
+  plot, kpall, kp1all, xrange=[0,10], yrange=[0,10], $
+        title=title, xtitle='Observed Kp', ytitle='Run1 Kp and fit (green)',$
+        psym=1, thick=3,symsize=2
+  oplot,kpall, kp1fit, psym=1, thick=3, symsize=2, color=150
+  oplot,[0,10],[0,10], color=150, thick=3
+  oplot,slope*[0,10]+const,[0,10], thick=3
+  close_device, /pdf
+
   ;; plot the simulated Kp for all the runs and events
   colors=[255,50,250,150,200,100,25,220,125]
   timeunit = 'date'
@@ -1357,44 +1397,16 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
      ;; read in measured values
      eventnumber = string(ievent,format='(i2.2)')
      eventnum    = strtrim(string(ievent),2)
+     title = 'Event '+eventnum
      logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnum+'/geoindex*.log '+ $
                  mydir+'Kp/event_'+eventnumber+'.txt'
      read_log_data
      xrange = [logtime1(0), logtime1(-1)]
      set_device,mydir+'deltaB/'+ResDir+'/kp_plot_event'+eventnumber+'.eps', /land
      plot_log_data
-     oplot,logtime1,(wlog1(*,8)-0.89)/1.12,linestyle=2,thick=5
-     close_device, /pdf
-     
-     interpol_log,wlog,wlog1,kp,kp1,'kp',wlognames,wlognames1,logtime,timeunit='date'
-     if ievent eq firstevent then begin
-        kpall  = [kp]
-        kp1all = [kp1]
-     endif else begin
-        kpall  = [kpall,kp]
-        kp1all = [kp1all,kp1]
-     endelse
-     set_device,mydir+'deltaB/'+ResDir+'/kp_scatter_event'+eventnumber+'.eps', /square
-     plot, kp, kp1, xrange=[0,10], yrange=[0,10], $
-          title='Event '+eventnumber, xtitle='Observed Kp', ytitle='Run1 Kp',$
-          psym=4, thick=3,symsize=2
-     oplot,[0,10],[0,10],linestyle=2,thick=3
+     oplot,logtime1,slope*wlog1(*,8)+const,linestyle=2,thick=5
      close_device, /pdf
   endfor
-  if firstevent ne lastevent then begin
-     result = linfit(kpall, kp1all)
-     slope = result(0)
-     const = result(1)
-     print,'Best fit kp1 = ',slope,'*kp +', const
-     set_device,mydir+'deltaB/'+ResDir+'/kp_scatter_all.eps', /square
-     plot, kpall, kp1all, xrange=[0,10], yrange=[0,10], $
-           title='Fit a,b='+string(result,format='(f5.2,",",f5.2)'), xtitle='Observed Kp', ytitle='Run1 Kp',$
-           psym=4, thick=3,symsize=2
-     oplot,kpall, (kp1all-const)/slope, psym=1, thick=3, symsize=2, color=150
-     oplot,[0,10],[0,10],linestyle=2,thick=3
-     oplot,[0,10],slope*[0,10]+const
-     close_device, /pdf
-  end
   colors=[255,100,250,150,200,50,25,220,125] ; reset colors 
 
 end
