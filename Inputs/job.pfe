@@ -20,7 +20,7 @@
 #PBS -m abe
 
 # Specify group (uses default group if not specified):
-#### PBS -W group_list=s1359
+#PBS -W group_list=s6176
 
 # cd into the run directory
 cd $PBS_O_WORKDIR
