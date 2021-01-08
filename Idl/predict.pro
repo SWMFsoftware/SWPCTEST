@@ -252,7 +252,7 @@ pro predict, choice,                                                  $
 
   nmodel = n_elements(models)
 
-  events = ['Event0','Event1','Event2','Event3','Event4','Event5','Event6']
+  events = ['Event00','Event01','Event02','Event03','Event04','Event05','Event06']
 
   periods= ['2017_Sep05_0000-Sep09_0000', $
             '2003_Oct29_0600-Oct30_0600', $
@@ -1355,7 +1355,7 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
      ;; read in measured values
      eventnumber = string(ievent,format='(i2.2)')
      eventnum    = strtrim(string(ievent),2)
-     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnum+'/geoindex*.log '+ $
+     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnumber+'/geoindex*.log '+ $
                  mydir+'Kp/event_'+eventnumber+'.txt'
      read_log_data
      interpol_log,wlog,wlog1,kp,kp1,'kp',wlognames,wlognames1,logtime,timeunit='date'
@@ -1398,7 +1398,7 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
      eventnumber = string(ievent,format='(i2.2)')
      eventnum    = strtrim(string(ievent),2)
      title = 'Event '+eventnum
-     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnum+'/geoindex*.log '+ $
+     logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnumber+'/geoindex*.log '+ $
                  mydir+'Kp/event_'+eventnumber+'.txt'
      read_log_data
      xrange = [logtime1(0), logtime1(-1)]
@@ -1458,7 +1458,7 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,my
 
   for ievent = firstevent, lastevent do begin
      ;; read in measured values
-     eventnumber = strtrim(string(ievent),2)
+     eventnumber = string(ievent,format='(i2.2)')
      logfilename=mydir+"Dst/event_"+eventnumber+".txt"
      logfilenameplot = logfilename
      legends = ['Observation']
@@ -1596,7 +1596,7 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, firstevent=firstevent, lastevent=
 
   for ievent = firstevent, lastevent do begin
      ;; set the observed Dst file info
-     eventnumber = strtrim(string(ievent),2)
+     eventnumber = string(ievent,format='(i2.2)')
      logfilename = mydir+"/Dst/event_"+eventnumber+".txt"
 
      logfilenameplot = logfilename
