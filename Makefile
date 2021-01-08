@@ -29,8 +29,8 @@ EVENTS=1,2,3,4,5,6
 EVENTLIST  = $(foreach v, $(shell echo ${EVENTS} | tr , ' '), $(shell printf '%02d' $(v)))
 
 # First and last events (used as arguments of some IDL scripts)
-FIRSTEVENT = $(shell echo ${EVENTS} | sed 's/,.*//')
-LASTEVENT  = $(shell echo ${EVENTS} | sed 's/.*,//')
+FIRSTEVENT = $(shell printf '%02d' $(shell echo ${EVENTS} | sed 's/,.*//'))
+LASTEVENT  = $(shell printf '%02d' $(shell echo ${EVENTS} | sed 's/.*,//'))
 
 # Number of processors to run on
 NP=64
@@ -410,30 +410,34 @@ test_SWPC_Young_v2_run: test_run
 
 ##############################################################################
 
+FULLSIMDIR  = $(MYDIR)/${SIMDIR}
 FULLRESDIR  = ${MYDIR}/deltaB/${RESDIR}
 FULLRES1DIR = ${MYDIR}/deltaB/${RES1DIR}
 FULLRES2DIR = ${MYDIR}/deltaB/${RES2DIR}
 
-RunDirList  = $(sort $(dir $(wildcard ${QUEDIR}[1-9]/Event[0-9]/)))
-ResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run[1-9]/)))
+FullRunDirList  = $(sort $(dir $(wildcard ${QUEDIR}[1-9]/Event*/)))
+FullResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run[1-9]/)))
+
+RunDirList = $(subst ${FULLSIMDIR},,${FullRunDirList})
 
 CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
 
 check_postproc:
-	@echo "MYDIR      = ${MYDIR}"
-	@echo "RunDirList = ${RunDirList}"
-	@echo "FULLRESDIR = ${FULLRESDIR}"
+	@echo "MYDIR          = ${MYDIR}"
+	@echo "FullRunDirList = ${FullRunDirList}"
+	@echo "FULLRESDIR     = ${FULLRESDIR}"
+	@echo ""
 	@if([ ! -d ${MYDIR}/deltaB/${RESDIR} ]); then  			\
 	  echo "Post processing simulation results to deltaB/${RESDIR}";\
 	  for RunDir in ${RunDirList};  do				\
-	     echo "processing RunDir=$${RunDir}";                       \
-	     cd $${RunDir};						\
+	     echo "processing RunDir=${FULLSIMDIR}/$${RunDir}";		\
+	     cd ${FULLSIMDIR}/$${RunDir};				\
 	     if([ -f SWMF.SUCCESS ]); then				\
 		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;   \
-		mkdir -p ${FULLRESDIR}/$${RunDir: -12:12};		\
+		mkdir -p ${FULLRESDIR}/$$RunDir;			\
 		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log      \
-			${FULLRESDIR}/$${RunDir: -12:12}/;		\
-		cd ${FULLRESDIR}/$${RunDir: -12:12}/;			\
+			${FULLRESDIR}/$$RunDir;				\
+		cd ${FULLRESDIR}/$$RunDir;				\
 		${MYSCRIPTDIR}/convert_mags.py; 			\
              fi;							\
 	  done;								\
@@ -443,12 +447,13 @@ check_postproc:
 
 check_calc:
 	@echo "Checking results against observations"
-	make clean_calc RESDIR=${RESDIR}; 						\
-	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;	\
-	for ResDir in ${ResDirList}; do							\
-	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 				\
-		echo 'working on $${ResDir}';						\
-		cd $${ResDir};								\
+	@(make clean_calc RESDIR=${RESDIR}; 				\
+	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;		\
+	for ResDir in ${FullResDirList}; do				\
+	   echo "ResDir =$$ResDir"; 					\
+	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 		\
+		echo 'working on $$ResDir';				\
+		cd $${ResDir};						\
 		printf "${PREDICT}\n calc_all_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_allevents_log.txt; 	\
 		printf "${PREDICT}\n calc_all_db_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_alldb_log.txt; 	\
 		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
@@ -456,13 +461,14 @@ check_calc:
            fi; 			\
 	done;			\
 	cd ${FULLRESDIR};	\
-	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n"   | idl > idl_dst_stat_log.txt;
-	printf "${PREDICT}\n score_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}'\n" | idl > idl_score_stat_log.txt
+	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n"   | idl > idl_dst_stat_log.txt; \
+	printf "${PREDICT}\n score_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}'\n" | idl > idl_score_stat_log.txt; \
+	)
 
 check_dst:
 	@echo "Checking Dst against observations"
 	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;\
-	for ResDir in ${ResDirList}; do						\
+	for ResDir in ${FullResDirList}; do						\
 	    if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then              \
 		echo ' working on $${ResDir}';				\
 		cd $${ResDir};						\
@@ -493,19 +499,19 @@ realtime_start_rundir:
 	${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF}
 
 clean_calc:
-	@echo "Cleaning calculated files"
-	rm -f results*.txt;						\
+	@echo "Cleaning calculated files for SIMDIR=${RESDIR}"
+	-@(rm -f results*.txt;						\
 	cd ${FULLRESDIR}; 						\
 	rm -f metric*.txt idl*.txt dst*.txt;				\
-	for ResDir in ${ResDirList}; do					\
+	for ResDir in ${FullResDirList}; do				\
 		cd $${ResDir};						\
 		rm -f metric*.txt idl*.txt dst*.txt d*.pdf d*.eps ;	\
-	done
+	done)
 
 clean:
 	@echo "Cleaning result files"
 	rm -f results*.txt;
-	for ResDir in ${ResDirList}; do					\
+	for ResDir in ${FullResDirList}; do					\
 		cd $${ResDir};						\
 		rm -f metric*.txt idl*.txt dst*.txt d*.pdf d*.eps ;	\
 		for e in ${EVENTLIST}; do         			\
