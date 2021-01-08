@@ -123,23 +123,23 @@ propagate1d_run:
 	done
 
 propagate1d_plot:
-	for e in 2 3 4 5 6 7 8 9 10; do			\
+	for e in 02 03 04 05 06 91 92 93 94; do		\
 		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/compare_imf.pro; 	\
 	done
 
 propagate1d_wind_plot:
-	for e in 7 8 9 10; do				\
+	for e in 91 92 93 94; do			\
 		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/compare_wind.pro; 	\
 	done
 
 ballistic:
-	for e in 2 3 4 5 6 11 12 13 14; do		\
+	for e in 02 03 04 05 06 95 96 97 98; do		\
 		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic.pro;		\
 	done
-	for e in 7 8 9 10; do				\
+	for e in 91 92 93 94; do			\
 		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic_wind.pro;	\
 	done
