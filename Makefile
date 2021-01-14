@@ -173,8 +173,8 @@ check:
 
 test_compile:
 	-@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
-	./Config.pl -g=GM:8,8,8,IE:91,181; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=:8,8,8,ng=2,IE:g=91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -223,8 +223,8 @@ test_order5:
 
 test_order5_compile:
 	-@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=Mhd,ng=3; \
-	./Config.pl -g=GM:8,8,8,IE:91,181; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=:8,8,8,ng=3,IE:g=91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -244,8 +244,8 @@ test_rbe:
 
 test_rbe_compile:
 	-@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE -o=GM:u=Default,e=Mhd; \
-	./Config.pl -g=GM:8,8,8,IE:91,181; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -265,8 +265,8 @@ test_multiion:
 
 test_multiion_compile:
 	-@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MultiIon; \
-	./Config.pl -g=GM:8,8,8,IE:91,181; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
+	./Config.pl -o=GM:u=Default,e=MultiIon,g=8,8,8,ng=2,IE:g=91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -311,8 +311,8 @@ test_multispecies:
 
 test_multispecies_compile:
 	-@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2 -o=GM:u=Default,e=MhdHpOp; \
-	./Config.pl -g=GM:8,8,8,IE:91,181; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
+	./Config.pl -o=GM:u=Default,e=MhdHpOp,g=8,8,8,ng=2,IE:g=91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -366,8 +366,8 @@ test_cimi:
 
 test_cimi_compile:
 	-@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI2 -o=GM:u=Default,e=MhdAnisoP,IM:EarthHO,GridExpanded; \
-	./Config.pl -g=GM:8,8,8,IE:91,181; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI2; \
+	./Config.pl -o=GM:u=Default,e=MhdAnisoP,g=8,8,8,ng=2,IE:g=91,181,IM:EarthHO,GridExpanded; \
 	make SWMF PIDL; \
 	)
 
