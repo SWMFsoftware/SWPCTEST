@@ -22,15 +22,14 @@ NRUN        = 1
 # Toggle saving all outputs to file (defaults is to not save plots.)
 PLOT='-noplot'
 
-# Comma separated list of event indexes
-EVENTS=1,2,3,4,5,6
+# Comma separated list of event indexes, can also use - to indicate a range. 
+EVENTS=1-6
+
+# expand - with the list of numbers, e.g., 3-6 becomes 3,4,5,6
+EVENTS_EXPAND = $(shell echo ${EVENTS} | perl -pe 's/(\d+)-(\d+)/join(",", $$1..$$2)/ge')
 
 # Space separated list (replace comma with space)
-EVENTLIST  = $(foreach v, $(shell echo ${EVENTS} | tr , ' '), $(shell printf '%02d' $(v)))
-
-# First and last events (used as arguments of some IDL scripts)
-FIRSTEVENT = $(shell printf '%02d' $(shell echo ${EVENTS} | sed 's/,.*//'))
-LASTEVENT  = $(shell printf '%02d' $(shell echo ${EVENTS} | sed 's/.*,//'))
+EVENTLIST  = $(foreach v, $(shell echo ${EVENTS_EXPAND} | tr , ' '), $(shell printf '%02d' $(v)))
 
 # Number of processors to run on
 NP=64
@@ -47,7 +46,8 @@ help:
 	@echo "make test                      (run all test events in run1 directory)"
 	@echo "make test NRUN=5               (run all test events with 5 (up to 9) different "
 	@echo "                                number of cores)"
-	@echo "make test EVENTS=2,4           (run events 2 and 4 only)"
+	@echo "make test EVENTS=2,4           (run events 2 and 4 only, EVENTS could be as "
+	@echo "                                1-3,5,6)"
 	@echo 'make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2 dir. Default is Runs.)'
 	@echo "                               (set absolute path for run directory)"
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
@@ -94,7 +94,8 @@ help:
 ##############################################################################
 # Some short tests:
 test_event:
-	@echo "First and last targets are: ${FIRSTEVENT} and ${LASTEVENT}"
+	@echo "EVENTS_EXPAND is ${EVENTS_EXPAND}"
+	@echo "EVENTLIST is ${EVENTLIST}"
 
 ##############################################################################
 
@@ -166,7 +167,6 @@ test:
 	@echo "Tests started.  make check when complete."
 
 check:
-	@echo "Checking results against observations"
 	make check_postproc
 	make check_calc
 	make check_tar
@@ -450,29 +450,22 @@ check_calc:
 	@(make clean_calc RESDIR=${RESDIR}; 				\
 	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;		\
 	for ResDir in ${FullResDirList}; do				\
-	   echo "ResDir =$$ResDir"; 					\
-	   if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then 		\
-		echo 'working on $$ResDir';				\
+		echo "working on $$ResDir";				\
 		cd $${ResDir};						\
-		printf "${PREDICT}\n calc_all_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_allevents_log.txt; 	\
-		printf "${PREDICT}\n calc_all_db_events,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_alldb_log.txt; 	\
-		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
-		printf "${PREDICT}\n save_tables, model=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_savetalbe_log.txt;	\
-           fi; 			\
+		printf "${PREDICT}\n check_calc_all,  models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_check_calc_log.txt; \
 	done;			\
 	cd ${FULLRESDIR};	\
-	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}',firstevent=${FIRSTEVENT},lastevent=${LASTEVENT}\n"   | idl > idl_dst_stat_log.txt; \
-	printf "${PREDICT}\n score_stat_nRun, mydir='${MYDIR}', ResDir='${RESDIR}'\n" | idl > idl_score_stat_log.txt; \
+	printf "${PREDICT}\n stat_nRun, mydir='${MYDIR}', events='${EVENTS_EXPAND}',ResDir='${RESDIR}'\n"   | idl > idl_stat_log.txt; \
 	)
 
 check_dst:
 	@echo "Checking Dst against observations"
 	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;\
 	for ResDir in ${FullResDirList}; do						\
-	    if([ -d $${ResDir}/Event${FIRSTEVENT} ]); then              \
+	    if([ -d $${ResDir}/Event${FIRSTEVENT0} ]); then              \
 		echo ' working on $${ResDir}';				\
 		cd $${ResDir};						\
-		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
+		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
 	    fi; \
 	done
 
@@ -484,9 +477,9 @@ check_compare:
 	@echo "Compare ${RES1DIR} and ${RES2DIR}"
 	export IDL_STARTUP=idlrc; export IDL_PATH='${IDLPATH}'; \
 	mkdir -p ${CompDir}; cd ${CompDir}; \
-	printf "${PREDICT}\n save_comp_dbdt_tables, '${FULLRES1DIR}','${FULLRES2DIR}', firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt; \
-	printf "${PREDICT}\n save_comp_db_tables,   '${FULLRES1DIR}','${FULLRES2DIR}', firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt; \
-	printf "${PREDICT}\n calc_dst_error,models=['${FULLRES1DIR}','${FULLRES2DIR}'],firstevent=${FIRSTEVENT},lastevent=${LASTEVENT},mydir='${MYDIR}'\n" | idl > idl_log.txt
+	printf "${PREDICT}\n save_comp_dbdt_tables, '${FULLRES1DIR}','${FULLRES2DIR}', events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_log.txt; \
+	printf "${PREDICT}\n save_comp_db_tables,   '${FULLRES1DIR}','${FULLRES2DIR}', events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_log.txt; \
+	printf "${PREDICT}\n calc_dst_error,models=['${FULLRES1DIR}','${FULLRES2DIR}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_log.txt
 
 realtime_start_rundir:
 	cd ${DIR}; \
