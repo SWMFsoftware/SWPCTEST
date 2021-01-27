@@ -1,20 +1,20 @@
-function max_curve, array, width
-
-  if width lt 2 then return, array
-
-  ; sliding maximum function (like smooth)
-  n = n_elements(array)
-  result = array
-
-  for i = 0, n - 1 do begin
-     i0 = i - width/2 > 0
-     i1 = i + width/2 - 1 < n-1
-     result(i) = max(array(i0:i1))
-  endfor
-
-  return, result
-end
-
+;function max_curve, array, width
+;
+;  if width lt 2 then return, array
+;
+;  ; sliding maximum function (like smooth)
+;  n = n_elements(array)
+;  result = array
+;
+;  for i = 0, n - 1 do begin
+;     i0 = i - width/2 > 0
+;     i1 = i + width/2 - 1 < n-1
+;     result(i) = max(array(i0:i1))
+;  endfor
+;
+;  return, result
+;end
+;
 ; ============================================================================
 
 function max_curve2, time, array, width
@@ -97,30 +97,15 @@ function scale_exp, x, a
 end
 
 ; ============================================================================
-pro read_station, file, date, t, data, tderiv, dataderiv, dn
-
-  ; extract year, month and day from the date string
-  year  = fix(strmid(date,0,4))
-  month = fix(strmid(date,4,2))
-  day   = fix(strmid(date,6,2))
+pro read_station, file, t, data, date, tderiv, dataderiv, dn
 
   ; read logfile, use hours for time unit
   get_log, file, wlog, wlogname, t, 'h'
 
-  ; Starting day difference in hours
-  hour = 24*(day - fix(wlog(0,2)))
+  date = string(wlog(0,0),format='(i4.4)')+string(wlog(0,1),format='(i2.2)') $
+         + string(wlog(0,2),format='(i2.2)')
 
-  if wlog(0,0) ne year or wlog(0,1) ne month or abs(hour) gt 24 then begin
-     print, 'ERROR for file  =', file
-     print, 'Event date      =', date
-     print, 'Year, month, day=', transpose(wlog(0,0:2))
-     retall
-  endif
-
-  ;if hour ne 0 then print, 'For file=',file, ' adjusting time by ', hour,' hours'
-
-  ; Adjust time
-  t = t - hour
+  ;; t = t - hour
 
   ; Calculate horizontal component (db or dbdt)
   i = where(wlogname eq 'B_NorthGeomag') & i = i(0)
@@ -153,10 +138,68 @@ end
 
 ; ============================================================================
 
+function set_eventlist, events, mydir, model
+
+  ; the format of events could be something like events='1,2-5,7'
+
+  ;; replace // with /
+  model_local = model.replace('//','/')
+
+  ;; remove anything before deltaB
+  if(strpos(model_local, 'deltaB/') ge 0) then model_local = strmid(model_local, strpos(model_local, 'deltaB/')+7)
+
+  if strlen(events) lt 1 then begin
+     ;; empty events string, the events in the  model_local dir
+     events_dir = FILE_SEARCH(mydir+'/deltaB/'+model_local+'/Event*')
+
+     ;; the string before the event number, and replace // with /
+     tmp0 = ('deltaB/'+model_local+'/Event').replace('//','/')
+
+     for i=0,n_elements(events_dir)-1 do begin
+        ;; remove anything before the Event number
+        events_dir(i) = strmid(events_dir(i),strpos(events_dir(i),tmp0)+tmp0.strlen())
+     endfor
+     event_I    = fix(events_dir)
+  endif else begin
+     ;; split the events string, as the  events now only contains numbers.
+     tmp1 = events.split(',')
+     event_I= fix(tmp1)
+  endelse        
+
+  return, event_I
+end
+
+; ============================================================================
+
+function set_date_string, yyyy, mm, dd
+
+  case fix(mm) of
+     1:  mm_s = 'Jan.'
+     2:  mm_s = 'Feb.'
+     3:  mm_s = 'Mar.'
+     4:  mm_s = 'Apr.'
+     5:  mm_s = 'May'
+     6:  mm_s = 'Jun.'
+     7:  mm_s = 'Jul.'
+     8:  mm_s = 'Aug.'
+     9:  mm_s = 'Sep.'
+     10: mm_s = 'Oct.'
+     11: mm_s = 'Nov.'
+     12: mm_s = 'Dec.'
+  endcase
+
+  date_string = mm_s + ' ' + string(dd,format='(i2.2)') + ' ' $
+                + string(yyyy,format='(i4.4)')
+
+  return, date_string
+end
+
+; ============================================================================
+
 pro predict, choice,                                                  $
              models=models, modelnames=modelnames,                    $
              stationlat=stationlat, stations=stations,                $
-             firstevent=firstevent, lastevent=lastevent,              $
+             events=events,                                           $
              deltat=deltat, mincount=mincount, stencil=stencil,       $
              threshold=threshold,                                     $
              scale=scale, exponent=exponent,                          $
@@ -170,8 +213,6 @@ pro predict, choice,                                                  $
   ;; choice = 'db', 'dbdt', 'corr'
   ;; models: array directories containing results
   ;; modelnames: array of names for printing results (default=models)
-  ;; firstevent: first event to use (default is 1)
-  ;; lastevent:  last event to use (default is 6)
   ;; stations: array of station names (default is all 12 stations)
   ;; stationlat = 'all','veryhigh','high','mid' or 'low' (default='all')
   ;; deltat: width of bins in minutes (default=20)
@@ -252,25 +293,14 @@ pro predict, choice,                                                  $
 
   nmodel = n_elements(models)
 
-  events = ['Event00','Event01','Event02','Event03','Event04','Event05','Event06']
-
-  periods= ['2017_Sep05_0000-Sep09_0000', $
-            '2003_Oct29_0600-Oct30_0600', $
-            '2006_Dec14-1200-Dec16_0000', $
-            '2001_Aug31_0000-Sep01_0000', $
-            '2005_Aug31_1000-Sep01_1200', $
-            '2010_Apr05_0000-Apr06_0000', $
-            '2011_Aug05_0900-Aug06_0900'  ]
-
-  dates = ['20170905', '20031029', '20061214', '20010831', '20050831', '20100405', '20110805', '20170905']
   tmins = [0.0,   6.0,       12.0,        0.0,       10.0,        0.0,        9.0]
   tmaxs = [96.0,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0]
 
-  if n_elements(firstevent) eq 0 then firstevent = 1
-  if n_elements(lastevent)  eq 0 then lastevent  = n_elements(events)-1
-
   if not keyword_set(mydir)    then mydir='.'
   mydir = mydir+'/'
+
+  ; well, use the first model....
+  event_I = set_eventlist(events,mydir,models[0])
 
   !p.charsize = 1.6
 
@@ -296,7 +326,7 @@ pro predict, choice,                                                  $
      modelname = modelnames[imodel]
 
      ;; remove anything before deltaB
-     if(strpos(model,'deltaB/') ge 0) then model = strmid(model,strpos(model,'deltaB/')+7)
+     if(strpos(model,    'deltaB/') ge 0) then model     = strmid(model,    strpos(model,    'deltaB/')+7)
      if(strpos(modelname,'deltaB/') ge 0) then modelname = strmid(modelname,strpos(modelname,'deltaB/')+7)
 
      ;; replace / with _
@@ -308,12 +338,29 @@ pro predict, choice,                                                  $
      dbdt_score = fltarr(4,nstation)
      db_score   = fltarr(4,nstation)
 
-     for ievent = firstevent, lastevent do begin
+     for iIndex = 0,n_elements(event_I)-1 do begin
 
-        if verbose then print,' ievent, event=', ievent, ' ', events(ievent)
+        event = event_I(iIndex)
 
+        ;; check whether the format in Observations is two digits or not.
+        if file_test(mydir+'deltaB/Observations/Event'+string(event,format='(i2.2)')) then begin
+           event_string_obs = 'Event'+string(event,format='(i2.2)')
+        endif else begin
+           event_string_obs = 'Event'+string(event,format='(i1.1)')
+        endelse
+
+        ;; check whether the format in SIMDIR/RESDIR is two digits or not.
+        if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')) then begin
+           event_string_sim = 'Event'+string(event,format='(i2.2)')
+        endif else begin
+           event_string_sim = 'Event'+string(event,format='(i1.1)')
+        endelse
+
+        if verbose then print,' ievent, event=', event, '  Event'+string(event_I,format='(i2.2)')
+
+        ;; setting the filename for the figure.
         if saveplot then begin
-           plotfile  = choice + '_event' + string(ievent, format='(i2.2)')
+           plotfile  = choice + '_event' + string(event, format='(i2.2)')
 
            case choice of
               'db': plotfile += '_'+string(fix(threshold),format='(i0,"nT")')
@@ -324,26 +371,21 @@ pro predict, choice,                                                  $
            set_device, plotfile, /land
         endif
 
-        event = events[ievent]
-        date  = dates[ievent]
-
         for istation = 0, nstation-1 do begin
 
            station = strupcase(stations[istation])
 
            if verbose then print,' istation=', istation, ' ', station
 
-           ; Station PBQ was replaced with SNK after 2007
-           if date gt '2007' and station eq 'PBQ' then station = 'SNK'
-
-           file_obs_db = mydir+'deltaB/Observations/'+event+'/'+station+'.txt'
+           file_obs_db = mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.txt'
 
            if not file_test(file_obs_db) then begin
               print,'For event=',event,' there is no observation for station=',station
               continue
            endif
 
-           file_sim_db  = mydir+'deltaB/'+model+'/'+event+'/'+station+'.txt'
+           file_sim_db  = mydir+'deltaB/'+model+'/'+event_string_sim+'/'+station+'.txt'
+
            if not file_test(file_sim_db) then begin
               if station eq 'SNK' then file_sim_db  = mydir+'deltaB/'+model+'/'+event+'/PBQ.txt'
               if not file_test(file_sim_db) then begin
@@ -355,18 +397,35 @@ pro predict, choice,                                                  $
            if verbose then print,'reading observation and simulation data'
 
            ; Read db and calculate db/dt from observations and simulations
-           read_station, file_obs_db, date, t_db_obs, $
-                      db_obs, t_dbdt_obs, dbdt_obs, stencil
-           read_station, file_sim_db, date, t_db_sim, $
-                      db_sim, t_dbdt_sim, dbdt_sim, stencil
+           read_station, file_obs_db, t_db_obs, $
+                      db_obs, date_obs, t_dbdt_obs, dbdt_obs, stencil
+           read_station, file_sim_db, t_db_sim, $
+                      db_sim, date_sim, t_dbdt_sim, dbdt_sim, stencil
+
+           if date_obs ne date_sim then print, "Waring: the observation and simulation are not on the same day."
+
+           date = date_obs
+
+           print, '********************************************'
+           print, 'date =', date
+           print, '********************************************'
+
+           ; Station PBQ was replaced with SNK after 2007
+           if date gt '2007' and station eq 'PBQ' then station = 'SNK'
 
            ; Calculate contingency tables and create plots
            case choice of
               'db':begin
                  ;; artificial scaling
                  db_sim = coeff*db_sim^power
-                 tmin = tmins(ievent) ;; min(t_db_sim) > min(t_db_obs)
-                 tmax = tmaxs(ievent) ;; max(t_db_sim) < max(t_db_obs)
+
+                 if event ge 0 and event le 6 then begin
+                    tmin = tmins(event) ;; min(t_db_sim) > min(t_db_obs)
+                    tmax = tmaxs(event) ;; max(t_db_sim) < max(t_db_obs)
+                 endif else begin
+                    tmin = 1.0
+                    tmax = 96.0
+                 endelse
 
                  exc_obs  = $
                     exceeds(t_db_obs, db_obs, tmin, tmax, dt, threshold, mincount)
@@ -414,8 +473,13 @@ pro predict, choice,                                                  $
                  ;; artificial scaling
                  dbdt_sim = coeff*dbdt_sim^power
 
-                 tmin = tmins(ievent) ;; min(t_dbdt_sim) > min(t_dbdt_obs)
-                 tmax = tmaxs(ievent) ;; max(t_dbdt_sim) < max(t_dbdt_obs)
+                 if event ge 0 and event le 6 then begin
+                    tmin = tmins(event) ;; min(t_db_sim) > min(t_db_obs)
+                    tmax = tmaxs(event) ;; max(t_db_sim) < max(t_db_obs)
+                 endif else begin
+                    tmin = 1.0
+                    tmax = 96.0
+                 endelse
 
                  proxy_sim = (db_sim/scale)^exponent
 
@@ -512,7 +576,7 @@ pro predict, choice,                                                  $
 
         if showinfo then begin
            info = 'Model=' + modelname + $
-                  ', event' + string(ievent, format='(i2.2)') + '=' + date + $
+                  ', event' + string(event, format='(i2.2)') + '=' + date + $
                   ', deltat=' + string(fix(deltat),format='(i0,"min")')
            if choice eq 'db' then info += $
               + ', threshold=' + string(fix(threshold),format='(i0,"nT")')
@@ -530,7 +594,7 @@ pro predict, choice,                                                  $
 
         if saveplot then close_device, /pdf
 
-     endfor                     ; imodel
+     endfor                     ; iIndex for event_I
 
      !p.multi(0) = 0
 
@@ -576,7 +640,7 @@ pro predict, choice,                                                  $
      
      endif
 
-  endfor
+  endfor         ;; imodel
 
   !p.multi = 0
 
@@ -624,7 +688,7 @@ end
 
 function func, arg
 
-  common func_param, thresholds, stations, imodel, firstevent, lastevent, opt
+  common func_param, thresholds, stations, imodel, events, opt
 
   averagehss  = 0.0
   averagehss2 = 0.0
@@ -636,13 +700,13 @@ function func, arg
      if opt eq 'db' then begin
         predict,'dbdt', threshold=thresholds[ithreshold], $
                 stations=stations, imodel=imodel, $
-                firstevent=firstevent, lastevent=lastevent, $
+                events=events,                               $
                 scale=arg(0), exponent=arg(1), db_hss = hss, $
                 dbdt_hss = hss2
      endif else begin
         predict,'dbdt', threshold=thresholds[ithreshold], $
                 stations=stations, imodel=imodel, $
-                firstevent=firstevent, lastevent=lastevent, $
+                events=events,                       $
                 coeff=arg(0), power=arg(1), dbdt_hss = hss
      endelse
 
@@ -670,10 +734,10 @@ end
 ;==============================================================================
 
 pro optimize, thresholds=thresholds1, stations=stations1, imodel=imodel1, $
-              firstevent=firstevent1, lastevent=lastevent1, opt=opt1, $
+              events=events1, opt=opt1, $
               scale=scale, exponent=exponent
 
-  common func_param, thresholds, stations, imodel, firstevent, lastevent, opt
+  common func_param, thresholds, stations, imodel, events, opt
 
   if keyword_set(thresholds1) then $
      thresholds = thresholds1 $
@@ -690,15 +754,10 @@ pro optimize, thresholds=thresholds1, stations=stations1, imodel=imodel1, $
   else $
      imodel = 0
 
-  if keyword_set(firstevent1) then $
-     firstevent = firstevent1 $
+  if keyword_set(events1) then $
+     events=events1            $
   else $
-     firstevent = 1
-
-  if keyword_set(lastevent1) then $
-     lastevent = lastevent1 $
-  else $
-     lastevent = 6
+     events='1-6'
 
   ; what shall we optimize for: db or dbdt
   if keyword_set(opt1) then $
@@ -723,8 +782,7 @@ pro optimize, thresholds=thresholds1, stations=stations1, imodel=imodel1, $
   print,'thresholds = ', thresholds
   print,'stations   = ', stations
   print,'imodel     = ', imodel
-  print,'firstevent = ', firstevent
-  print,'lastevent  = ', lastevent
+  print,'events     = ', events
  
   if opt eq 'db' then $
      print, 'Optimal scale, exponent, hss=', results, averagehss(0), $
@@ -805,20 +863,19 @@ pro show_hss_dt_table, stations, directs, indirects
 end
 
 ;==============================================================================
-pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent, mydir=mydir
+pro calc_all_events, models=models, events=events, mydir=mydir
   
 ;; Calculate scores for the models listed in the 'models' string array
 ;; for all station groups (low, mid, high, veryhigh, all).
 ;; Save scores into separate files for each station group and 
-;; each event from firstevent to lastevent (default is 1 to 6).
+;; each event from the events string (default is 1,2,3,4,5,6).
 ;; Create plots of dB/dt per model and per event for the station group 'all'.
-
-  ;; Use all six events by default
-  if n_elements(firstevent) lt 1 then firstevent=1
-  if n_elements(lastevent)  lt 1 then lastevent =6
 
   ;; Compare deltaB/Results with deltaB/SWMF_CCMC by default
   if n_elements(models) lt 1 then models=['Results', 'SWMF_CCMC']
+
+  ;; well, use the first model....
+  event_I = set_eventlist(events,mydir,models[0])
 
   ;; Set station groups and thresholds
   stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
@@ -833,8 +890,9 @@ pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent, 
   ; Create full metrics for each event:
   for ilat = 0, n_elements(stationlats)-1 do begin
      stationlat = stationlats[ilat]
-     for ievent = firstevent, lastevent do begin
-        filename=string(stationlat, ievent, $
+     for iIndex = 0, n_elements(event_I)-1 do begin
+        event=event_I(iIndex)
+        filename=string(stationlat, event, $
                         format='("metrics_lat_",a3,"_event",i2.2,".txt")')
         openw,  lunOut, filename, append=ithresh, /get_lun
         printf, lunOut, 'db/dt skill scores for models: ' + models
@@ -846,7 +904,7 @@ pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent, 
            'low'     : printf, lunOut, 'Stations used: frd frn fur'
            else: print,' invalid value for stationlat=',stationlat
         endcase
-        printf, lunOut, 'Event   =', iEvent
+        printf, lunOut, 'Event   =', event
         printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
         printf, lunOut, $
                 'threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
@@ -856,9 +914,9 @@ pro calc_all_events, models=models, firstevent=firstevent, lastevent=lastevent, 
                    models=models, $
                    stationlat=stationlat, threshold=threshold, $
                    scale=scale, exponent=exponent,             $
-                   firstevent=ievent, lastevent=ievent,        $
+                   events=string(event,format='(i2.2)'),       $
                    deltat=deltat, stencil=stencil,             $
-                   lunOut=lunOut,                            $
+                   lunOut=lunOut,                              $
                    saveplot=(stationlat eq 'all'),             $
                    mydir=mydir
         endfor
@@ -870,21 +928,27 @@ end
 ;==============================================================================
 
 pro save_comp_dbdt_table, $
-   stationlat, model1, model2, firstevent=firstevent, lastevent=lastevent, $
-   mydir=mydir
+   stationlat, model1, model2, events=events, mydir=mydir
 
 ;; Compare deltaB/model1 and deltaB/model2 outputs 
 ;; for the stationlat station group:
 ;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low'. Default is all.
 ;; If model1 is not given 'Results' is assumed. 
 ;; If model2 is not given 'SWMF_CCMC' are used.
-;; Events starting from firstevent to lastevent are used. Defaults are 1 to 6.
+;; Events starting from the event string (default is 1,2,3,4,5,6).
 
   if n_elements(stationlat) lt 1 then stationlat='all'
   if n_elements(model1)     lt 1 then model1 = 'Results'
   if n_elements(model2)     lt 1 then model2 = 'SWMF_CCMC'
-  if n_elements(firstevent) lt 1 then firstevent = 1
-  if n_elements(lastevent)  lt 1 then lastevent  = 6
+
+  ;; check if the two models have the same events, if not, quit
+  event1_I = set_eventlist(events,mydir,model1)
+  event2_I = set_eventlist(events,mydir,model2)
+
+  if not array_equal(event1_I, event2_I) then begin
+     print, model1 + ' and ' + model2 + ' do not have the same event list.'
+     retall
+  endif
 
   thresholds=[0.3, 0.7, 1.1, 1.5]
   deltat = 20.
@@ -916,7 +980,7 @@ pro save_comp_dbdt_table, $
      predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model1], $
-             firstevent=firstevent, lastevent=lastevent, $
+             events=events, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
@@ -927,7 +991,7 @@ pro save_comp_dbdt_table, $
      predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model2], $
-             firstevent=firstevent, lastevent=lastevent, $
+             events=events, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
@@ -940,7 +1004,7 @@ pro save_comp_dbdt_table, $
   openw, lun, filename, /get_lun
   
   printf, lun, 'models=', model1,' and (',model1,' - ',model2,')'
-  printf, lun, 'events =', firstevent,' ... ', lastevent
+  printf, lun, 'events =' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
   printf, lun, 'stationlat=', stationlat
   printf, lun, '$\Delta t_{window}=',deltat,'$'
   printf, lun, ''
@@ -981,12 +1045,12 @@ end
 
 ;==============================================================================
 pro save_comp_dbdt_tables, $
-   model1, model2, firstevent=firstevent, lastevent=lastevent, mydir=mydir
+   model1, model2, events=events, mydir=mydir
   
   ;; Create comparison tables between results stored in
   ;; deltaB/model1 and deltaB/model2. Defaults are 'Results' and 'SWMF_CCMC'.
-  ;; Combine scores for all events from firstevents to lastevent
-  ;; (default is 1 to 6).
+  ;; Combine scores for all events from the event string (default is 1
+  ;; to 6). 
   ;; Create a separate table for the various station groups:
   ;; low, mid, high, veryhigh, all.
 
@@ -996,27 +1060,26 @@ pro save_comp_dbdt_tables, $
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
      save_comp_dbdt_table, stationlats[ilat], $
-                            model1, model2, $
-                            firstevent=firstevent, lastevent=lastevent, $
-                            mydir=mydir
+                           model1, model2, $
+                           events=events, $
+                           mydir=mydir
   endfor
 end
 ;==============================================================================
 
-pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lastevent, mydir=mydir
+pro calc_all_db_events, models=models, events=events, mydir=mydir
 
 ;; Calculate scores for the models listed in the 'models' string
 ;; array for all station groups (low, mid, high, veryhigh, all).
 ;; Save scores into separate files for each station group and 
-;; each event from firstevent to lastevent (default is 1 to 6).
+;; each event from the event string (default is 1 to 6).
 ;; Create plots of dB/dt per model and per event for the station group 'all'.
-
-  ; Use all six events by default
-  if n_elements(firstevent) lt 1 then firstevent=1
-  if n_elements(lastevent)  lt 1 then lastevent =6
 
   ; Compare deltaB/Results with deltaB/SWMF_CCMC by default
   if n_elements(models) lt 1 then models=['Results', 'SWMF_CCMC']
+
+  ;; well, use the first model....
+  event_I = set_eventlist(events,mydir,models[0])
 
   ; Set station groups and thresholds
   stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
@@ -1031,8 +1094,9 @@ pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lasteven
   ; Create full metrics for each event:
   for ilat = 0, n_elements(stationlats)-1 do begin
      stationlat = stationlats[ilat]
-     for ievent = firstevent, lastevent do begin
-        filename=string(stationlat, ievent, $
+     for iIndex = 0, n_elements(event_I)-1 do begin
+        event = event_I(iIndex)
+        filename=string(stationlat, event, $
                         format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
         openw,  lunOut, filename, append=ithresh, /get_lun
         printf, lunOut, 'db skill scores for models: ' + models
@@ -1044,7 +1108,7 @@ pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lasteven
            'low'     : printf, lunOut, 'Stations used: frd frn fur'
            else: print,' invalid value for stationlat=',stationlat
         endcase
-        printf, lunOut, 'Event   =', iEvent
+        printf, lunOut, 'Event   =', event
         printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
         printf, lunOut, 'threshold  TP  TN  FP  FN  total  pod  far  hss'
         for ithresh = 0, n_elements(thresholds)-1 do begin
@@ -1053,12 +1117,11 @@ pro calc_all_db_events, models=models, firstevent=firstevent, lastevent=lasteven
                    models=models, $
                    stationlat=stationlat, threshold=threshold, $
                    scale=scale, exponent=exponent,             $
-                   firstevent=ievent, lastevent=ievent,        $
+                   events=string(event,format='(i2.2)'),        $
                    deltat=deltat, stencil=stencil,             $
-                   lunOut=lunOut,                            $
+                   lunOut=lunOut,                              $
                    saveplot=(stationlat eq 'all'),             $
                    mydir=mydir
-
         endfor
         close, lunOut
         free_lun, lunOut
@@ -1068,7 +1131,7 @@ end
 ;==============================================================================
 
 pro save_comp_db_table, $
-   stationlat, model1, model2, firstevent=firstevent, lastevent=lastevent, $
+   stationlat, model1, model2, events=events, $
    mydir=mydir
 
 ;; Compare deltaB/model1 and deltaB/model2 outputs 
@@ -1076,13 +1139,20 @@ pro save_comp_db_table, $
 ;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low'. Default is all.
 ;; If model1 is not given 'Results' is assumed. 
 ;; If model2 is not given 'SWMF_CCMC' are used.
-;; Events starting from firstevent to lastevent are used. Defaults are 1 to 6.
+;; Events starting from the events string (default is 1 to 6).
 
   if n_elements(stationlat) lt 1 then stationlat='all'
   if n_elements(model1)     lt 1 then model1 = 'Results'
   if n_elements(model2)     lt 1 then model2 = 'SWMF_CCMC'
-  if n_elements(firstevent) lt 1 then firstevent = 1
-  if n_elements(lastevent)  lt 1 then lastevent  = 6
+
+  ;; check if the two models have the same events, if not, quit
+  event1_I = set_eventlist(events,mydir,model1)
+  event2_I = set_eventlist(events,mydir,model2)
+
+  if not array_equal(event1_I, event2_I) then begin
+     print, model1 + ' and ' + model2 + ' do not have the same event list.'
+     retall
+  endif
 
   thresholds=[101.6, 213.6, 317.5, 416.7]
   deltat = 20.
@@ -1114,7 +1184,7 @@ pro save_comp_db_table, $
      predict,'db',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model1], $
-             firstevent=firstevent, lastevent=lastevent, $
+             events=events, $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
      directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
@@ -1123,7 +1193,7 @@ pro save_comp_db_table, $
      predict,'db',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model2], $
-             firstevent=firstevent, lastevent=lastevent, $
+             events=events, $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, mydir=mydir
 
      directs2[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
@@ -1134,7 +1204,7 @@ pro save_comp_db_table, $
   openw, lun, filename, /get_lun
 
   printf, lun, 'models=', model1,' and (',model1,' - ',model2,')'
-  printf, lun, 'events =', firstevent,' ... ', lastevent
+  printf, lun, 'events =' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
   printf, lun, 'stationlat=', stationlat
   printf, lun, '$\Delta t_{window}=',deltat,'$'
   printf, lun, ''
@@ -1177,11 +1247,11 @@ end
 ;==============================================================================
 
 pro save_comp_db_tables, $
-   model1, model2, firstevent=firstevent, lastevent=lastevent, mydir=mydir
+   model1, model2, events=events, mydir=mydir
   
   ;; Create comparison tables between results stored in
   ;; deltaB/model1 and deltaB/model2. Defaults are 'Results' and 'SWMF_CCMC'.
-  ;; Combine scores for all events from firstevents to lastevent
+  ;; Combine scores for all events from the event string.
   ;; (default is 1 to 6).
   ;; Create a separate table for the various station groups:
   ;; low, mid, high, veryhigh, all.
@@ -1192,19 +1262,19 @@ pro save_comp_db_tables, $
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
      save_comp_db_table, stationlats[ilat], $
-                             model1, model2, $
-                             firstevent=firstevent, lastevent=lastevent, $
-                             mydir=mydir
+                         model1, model2, $
+                         events=events, $
+                         mydir=mydir
   endfor
 end
 
 ;==============================================================================
 
-pro save_tables, model=model, firstevent=firstevent, lastevent=lastevent, mydir=mydir
+pro save_tables, model=model, events=events, mydir=mydir
   
   ;; Create tables containing db/dt and db skill scores.
   ;; Defaults are 'Results'
-  ;; Combine scores for all events from firstevents to lastevent
+  ;; Combine scores for all events from the event string
   ;; (default is 1 to 6).
   ;; Create a separate table for the various station groups:
   ;; low, mid, high, veryhigh, all.
@@ -1215,24 +1285,24 @@ pro save_tables, model=model, firstevent=firstevent, lastevent=lastevent, mydir=
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
      save_table, stationlats[ilat], model, $
-                 firstevent=firstevent, lastevent=lastevent, mydir=mydir
+                 events=events, mydir=mydir
   endfor
 end
 
 ;==============================================================================
 
-pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, mydir=mydir
+pro save_table, stationlat, model, events=events, mydir=mydir
 
 ;; Create tables containing db/dt and db skill scores.
 ;; for the stationlat station group:
 ;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low'. Default is all.
 ;; If model1 is not given 'Results' is assumed. 
-;; Events starting from firstevent to lastevent are used. Defaults are 1 to 6.
+;; Events starting from the events strng (default is 1 to 6).
 
   if n_elements(stationlat) lt 1 then stationlat='all'
   if n_elements(model)      lt 1 then model = 'Results'
-  if n_elements(firstevent) lt 1 then firstevent = 1
-  if n_elements(lastevent)  lt 1 then lastevent  = 6
+
+  event_I = set_eventlist(events,mydir,model)
 
   thresholds=[101.6, 213.6, 317.5, 416.7]
   deltat = 20.
@@ -1256,7 +1326,7 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, m
      predict,'db',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model], $
-             firstevent=firstevent, lastevent=lastevent, $
+             events=events, $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, $
              mydir=mydir
 
@@ -1275,7 +1345,7 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, m
      'low'     : printf, lun, 'Stations used: frd frn fur'
      else: print,' invalid value for stationlat=',stationlat
   endcase
-  printf, lun, 'events = ' + string(firstevent, format='(i2)') + ' ... ' + string(lastevent, format='(i2)')
+  printf, lun, 'events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
   printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT]'
   printf, lun, 'threshold  pod      far     hss'
   for ithresh = 0, nthresh-1 do begin
@@ -1294,7 +1364,7 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, m
      predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
              exponent=exponent,deltat=deltat, stencil=stencil, $
              models=[model], $
-             firstevent=firstevent, lastevent=lastevent, $
+             events=events, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof,     $
              mydir=mydir
@@ -1315,7 +1385,7 @@ pro save_table, stationlat, model, firstevent=firstevent, lastevent=lastevent, m
      'low'     : printf, lun, 'Stations used: frd frn fur'
      else: print,' invalid value for stationlat=',stationlat
   endcase
-  printf, lun, 'events = ' + string(firstevent, format='(i2)') + ' ... ' + string(lastevent, format='(i2)')
+  printf, lun, 'events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
   printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT/s]'
   printf, lun, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
   for ithresh = 0, nthresh-1 do begin
@@ -1327,7 +1397,7 @@ end
 
 ;==============================================================================
 pro calc_kp_error, mydir=mydir, resdir=resdir, $
-                   firstevent=firstevent, lastevent=lastevent, $
+                   events=events, $
                    const=const, slope=slope
 
   ;; Calculate Kp error for multiple runs and events.
@@ -1347,19 +1417,19 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
   endif
   
   ;; Use six events by default
-  if n_elements(firstevent) lt 1 then firstevent=1
-  if n_elements(lastevent)  lt 1 then lastevent =6
+  event_I = set_eventlist(events,mydir,resdir)
 
   ;; interpolate to observed times and collect data from all events
-  for ievent = firstevent, lastevent do begin
+  for iIndex = 0,n_elements(event_I)-1 do begin
      ;; read in measured values
-     eventnumber = string(ievent,format='(i2.2)')
-     eventnum    = strtrim(string(ievent),2)
+     event = event_I(iIndex)
+     eventnumber = string(event,format='(i2.2)')
+     eventnum    = strtrim(string(event),2)
      logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnumber+'/geoindex*.log '+ $
                  mydir+'Kp/event_'+eventnumber+'.txt'
      read_log_data
      interpol_log,wlog,wlog1,kp,kp1,'kp',wlognames,wlognames1,logtime,timeunit='date'
-     if ievent eq firstevent then begin
+     if event eq event_I(0) then begin
         kpall  = [kp]
         kp1all = [kp1]
      endif else begin
@@ -1393,10 +1463,11 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
   timeunit = 'date'
   logfunc  = 'Kp'
   yranges = [[0,10]]
-  for ievent = firstevent, lastevent do begin
+  for iIndext = 0, n_elements(event_I)-1 do begin
+     event = event_I(iIndex)
      ;; read in measured values
-     eventnumber = string(ievent,format='(i2.2)')
-     eventnum    = strtrim(string(ievent),2)
+     eventnumber = string(event,format='(i2.2)')
+     eventnum    = strtrim(string(event),2)
      title = 'Event '+eventnum
      logfilename=mydir+'deltaB/'+ResDir+'/run*/Event'+eventnumber+'/geoindex*.log '+ $
                  mydir+'Kp/event_'+eventnumber+'.txt'
@@ -1412,7 +1483,7 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
 end
 
 ;==============================================================================
-pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,mydir=mydir
+pro calc_dst_error, models=models, events=events, mydir=mydir
 
 ;; Calculate Dst (symH) error in nT
 ;; for the models listed in the 'models' string array
@@ -1437,16 +1508,7 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,my
      modelnames[imodel] = strjoin(strsplit(modelname,'/',/extract),'_')
   endfor
 
-  ;; Use all six events by default
-  if n_elements(firstevent) lt 1 then firstevent=1
-  if n_elements(lastevent)  lt 1 then lastevent =6
-
-  ;; the CCMC limits
-  tmins = [-1.,  6.0,       12.0,        0.0,       10.0,        0.0,        9.0 ]
-  tmaxs = [-1.,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0 ]
-
-  dates = ['Oct 29 2003', 'Dec 14 2006', 'Aug 31 2001', $
-           'Aug 31 2005', 'Apr 5 2010', 'Aug 5 2011']
+  event_I = set_eventlist(events,mydir,models[0])
 
   errors = fltarr(nmodel)
   unit = 1
@@ -1456,27 +1518,45 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,my
 
   colors=[255,50,250,150,200,100,25,220,125]
 
-  for ievent = firstevent, lastevent do begin
-     ;; read in measured values
-     eventnumber = string(ievent,format='(i2.2)')
-     logfilename=mydir+"Dst/event_"+eventnumber+".txt"
+  for iIndex = 0, n_elements(event_I)-1 do begin
+     event=event_I(iIndex)
+     ;; read in measured values, well, event number is in 2 digits
+     ;; form now. 
+     logfilename=mydir+"Dst/event_"+string(event,format='(i2.2)')+".txt"
      logfilenameplot = logfilename
      legends = ['Observation']
      read_log_data
      wlog0 = wlog
      logtime0 = logtime
      wlognames0 = wlognames
+
      for imodel = 0, nmodel-1 do begin
         model = models[imodel]
 
         ;; remove anything before deltaB
         if(strpos(model,'deltaB/') ge 0) then model = strmid(model,strpos(model,'deltaB/')+7)
 
+        ;; in case of processing the old 1 digit form of the event number
         if model eq 'run_test' then begin
-           logfilename='run_test/run_event'+eventnumber+'/GM/IO2/log*.log'
+           if file_test('run_test/run_event'+string(event,format='(i2.2)')+'/GM/IO2/log*.log') then begin
+              logfilename = 'run_test/run_event'+string(event,format='(i2.2)')+'/GM/IO2/log*.log'
+           endif else if file_test('run_test/run_event'+string(event,format='(i1.1)')+'/GM/IO2/log*.log') then begin
+              logfilename = 'run_test/run_event'+string(event,format='(i1.1)')+'/GM/IO2/log*.log'
+           endif else begin
+              print, "Error: No simulation file is found. Stop"
+              retall
+           endelse
            legends    = [legends, 'Simulation']
         endif else begin
-           logfilename= mydir+'deltaB/'+model+'/Event'+eventnumber+'/log*.log'
+           if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')+'/log*.log') then begin
+              logfilename= mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')+'/log*.log'
+           endif else if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i1.1)')+'/log*.log') then begin
+              logfilename= mydir+'deltaB/'+model+'/Event'+string(event,format='(i1.1)')+'/log*.log'
+           endif else begin
+              print, "Error: No simulation file is found. Stop"
+              retall
+           endelse
+
            legends    =	[legends, modelnames[imodel]]
         endelse
         read_log_data
@@ -1487,28 +1567,25 @@ pro calc_dst_error, models=models, firstevent=firstevent, lastevent=lastevent,my
      endfor
      logfilename = logfilenameplot
      read_log_data
-     set_device, 'dst_plot_event'+eventnumber+'.eps', /land
+     set_device, 'dst_plot_event'+string(event,format='(i2.2)')+'.eps', /land
      logfunc='dst_sm'
      legendpos = [-0.05,0.02,0.05,0.23]
-     xtitle   = 'Hours from ' + dates[ievent-1]
+     xtitle   = 'Hours from ' + set_date_string(wlog(0,0),wlog(0,1),wlog(0,2))
      ytitles  = ['Dst [nT]']
      plot_log_data
      close_device, /pdf
-     printf, unit, ievent, errors, format='(i2,10f8.2)'
+     printf, unit, event, errors, format='(i2,10f8.2)'
   endfor
   colors=[255,100,250,150,200,50,25,220,125] ; reset colors
   close,unit
 end
 
 ;==============================================================================
-pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, firstevent=firstevent, lastevent=lastevent
+pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, events=events
 
   common getlog_param
   common log_data
   common plotlog_param
-
-  dates = ['Oct 29 2003', 'Dec 14 2006', 'Aug 31 2001', $
-           'Aug 31 2005', 'Apr 5 2010', 'Aug 5 2011']
 
   ;; check how many runs
   file_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run*/dst_error.txt', count=nRun)
@@ -1519,6 +1596,9 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, firstevent=firstevent, lastevent=
      print, mydir+'/deltaB/'+ResDir
      return
   end
+
+  ;; take the event list from run1
+  event_I = set_eventlist(events,mydir,ResDir+'/run1')
 
   print, ' combining the dst error tables for ' + ResDir
 
@@ -1594,13 +1674,22 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, firstevent=firstevent, lastevent=
   ;; plot the simulated dst for all the runs
   colors=[255,50,250,150,200,100,25,220,125]
 
-  for ievent = firstevent, lastevent do begin
+  for iIndex = 0, n_elements(event_I)-1 do begin
+     event = event_I(iIndex)
      ;; set the observed Dst file info
-     eventnumber = string(ievent,format='(i2.2)')
-     logfilename = mydir+"/Dst/event_"+eventnumber+".txt"
+     logfilename = mydir+"/Dst/event_"+string(event,format='(i2.2)')+".txt"
 
      logfilenameplot = logfilename
      legends = ['Observation']
+
+     if file_test(mydir+'/deltaB/'+ResDir+'/run*/Event'+string(event,format='(i2.2)')+'/log*.log') then begin
+        eventnumber = string(event,format='(i2.2)')
+     endif else if file_test(mydir+'/deltaB/'+ResDir+'/run*/Event'+string(event,format='(i1.1)')+'/log*.log') then begin
+        eventnumber = string(event,format='(i1.1)')
+     endif else begin
+        print, "Error: No simulation file is found. Stop"
+        retall
+     endelse
 
      logfilename = mydir+'/deltaB/'+ResDir+'/run*/Event'+eventnumber+'/log*.log'
      legends     = [legends, 'run'+string(indgen(nRun)+1,format='(i1)')]
@@ -1610,10 +1699,10 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, firstevent=firstevent, lastevent=
 
      logfilename = logfilenameplot
      read_log_data
-     set_device, 'dst_plot_event'+eventnumber+'.eps', /land
+     set_device, 'dst_plot_event'+string(event,format='(i2.2)')+'.eps', /land
      logfunc='dst_sm'
      legendpos = [-0.05,0.02,0.05,0.28]
-     xtitle   = 'Hours from ' + dates[ievent-1]
+     xtitle   = 'Hours from ' + set_date_string(wlog(0,0),wlog(0,1),wlog(0,2))
      ytitles  = ['Dst [nT]']
      plot_log_data
      close_device, /pdf
@@ -1755,4 +1844,39 @@ pro score_stat_nRun, mydir=mydir, ResDir=ResDir
      close, lunOut
      free_lun, lunOut
   endfor
+end
+
+;==============================================================================
+
+pro check_calc_all, models=models, events=events, mydir=mydir
+
+  if (not file_test('Event*',/DIRECTORY)) then begin
+     print, "Error: no simulation results in dir:" + models
+     retall
+  endif
+
+  calc_all_events,    models=models, events=events, mydir=mydir
+  calc_all_db_events, models=models, events=events, mydir=mydir
+  calc_dst_error,     models=models, events=events, mydir=mydir
+  save_tables,        model =models, events=events, mydir=mydir
+
+end
+
+;==============================================================================
+
+pro stat_nRun, events=events, mydir=mydir, ResDir=ResDir
+
+  dst_stat_nRun,   events=events, mydir=mydir, ResDir=ResDir
+  score_stat_nRun, mydir=mydir, ResDir=ResDir
+
+end
+
+;==============================================================================
+
+pro check_compare_all, models, events=events, mydir=mydir
+
+  save_comp_dbdt_tables, models, events=events, mydir=mydir
+  save_comp_db_tables,   models, events=events, mydir=mydir
+  calc_dst_error, models=models, events=events, mydir=mydir
+
 end
