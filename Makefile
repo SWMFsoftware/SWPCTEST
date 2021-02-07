@@ -43,33 +43,25 @@ help:
 	@echo "simulations; see README for more information."
 	@echo ""
 	@echo "Examples:"
-	@echo "make test                      (run all test events in run1 directory)"
-	@echo "make test NRUN=5               (run all test events with 5 (up to 9) different "
-	@echo "                                number of cores)"
-	@echo "make test EVENTS=2,4           (run events 2 and 4 only, EVENTS could be as "
-	@echo "                                1-3,5,6)"
+	@echo "make test                      (run events 1-6 in run1 directory)"
+	@echo "make test NRUN=5               (run events 1-6 five times (up to 9) on different number of cores)"
+	@echo "make test EVENTS=2-5,91-93     (run events 2,3,4,5,91,92,93 only)"
 	@echo 'make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2 dir. Default is Runs.)'
-	@echo "                               (set absolute path for run directory)"
+	@echo ""
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
 	@echo "make test PARAMINIT=PARAM.in   (use PARAM.in for the PARAM file)" 
 	@echo "make test_compile              (compile SWMF)"
-	@echo "make test_rundir               (create rundirs for all EVENTS)"
-	@echo "make test_run                  (submit runs to que)"
+	@echo "make test_rundir EVENTS=2-5    (create run directories for events 2-5)"
+	@echo "make test_run                  (submit runs to queue)"
 	@echo ""
-	@echo "make check                     (process results from ./Runs into deltaB/Runs)"
-	@echo "make check          SIMDIR=New (process results from ./New into deltaB/New)"
-	@echo "make check          EVENTS=''  (process results from ./Runs into deltaB/New,"
-	@echo "                                the event list is determined automatically."
-	@echo "                                It would use the DEFAULT, 1-6, if not specified)"
-	@echo "make check_postproc SIMDIR=New (collect results from ./New)"
-	@echo "make check_calc     SIMDIR=New (calculate metrics from results in deltaB/New/)"
+	@echo "make check                     (process results of events 1-6 in ./Runs into deltaB/Runs)"
+	@echo "make check EVENTS=  SIMDIR=New (process all results from ./New into deltaB/New)"
+	@echo "make check_postproc SIMDIR=New (collect results of events 1-6 from ./New into deltaB/New)"
+	@echo "make check_calc     SIMDIR=New (calculate all metrics from results in deltaB/New/)"
+	@echo "make check_dst      SIMDIR=New (calculate Dst error only from results in deltaB/New/)"
 	@echo "make check_tar      SIMDIR=New (tar up results and metrics in deltaB/New)"
-	@echo ""
-	@echo "make check_dst     RESDIR=New EVENTS=2,4 "
-	@echo "                               (calculate Dst error only for events 2..4)"
-	@echo "make check_compare RES1DIR=New RES2DIR=Old "
-	@echo "                               (compare 2 runs into COMPARE_New_vs_Old/)"
+	@echo "make check_compare RES1DIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
 	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
 	@echo "test_rbe                       (run with RB/RBE model)"
@@ -77,20 +69,17 @@ help:
 	@echo "test_multiion_v2               (run with multiion GM/BATSRUS v2 model)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
 	@echo "test_multispecies_v2           (run with multispecies GM/BATSRUS v2 model)"
-	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with "
-	@echo "                                the Young BC)"
+	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with the Young BC)"
 	@echo "test_cimi                      (run with anisotropic MHD and IM/CIMI)"
 	@echo "test_cimi_v2                   (run with anisotropic MHD v2 and IM/CIMI)"
 	@echo "test_SWPC_Young_v2             (run with SWPC v2 model with the Young BC)"
 	@echo ""
-	@echo "make ballistic                 (ballistic propagation for events 2..14)"
-	@echo "make ballistic_limited         (limiting+ballistic propagation for events 2..14)"
+	@echo "make ballistic                 (ballistic propagation for events 2-6,95-98)"
+	@echo "make ballistic_limited         (limiting+ballistic propagation for events 2-6,95-98)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
+	@echo "make propagate1d_plot          (create Inputs/event*/mhd_vs_ballistic.* plots)"
+	@echo "make propagate1d_wind_plot     (create Inputs/event*/ mhd_vs_ballistic_vs_wind.* plots)"
 	@echo
-	@echo "make propagate1d_plot          (create Inputs/event2..10/mhd_vs_ballistic.* "
-	@echo "                                plots)"
-	@echo "make propagate1d_wind_plot     (create Inputs/event7..10/ "
-	@echo "                                mhd_vs_ballistic_vs_wind.* plots)"
 	@echo "make clean RESDIR=Results      (Clear results in RESDIR directory)"
 	@echo
 
@@ -149,13 +138,13 @@ ballistic:
 	done
 
 ballistic_limited:
-	for e in 2 3 4 5 6 11 12 13 14; do		\
+	for e in 02 03 04 05 06 95 96 97 98; do		\
 		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic_limited.pro;	\
 	done
 
 convert_ace:
-	for e in 11 12 13 14; do 				\
+	for e in 95 96 97 98; do 				\
 		cd ${MYINPUTDIR}/event$$e/;			\
 		${MYSCRIPTDIR}/ace_to_sat.pl ace*.txt > L1.dat; \
 	done
