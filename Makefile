@@ -166,7 +166,7 @@ check:
 test_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
-	./Config.pl -o=GM:u=Default,e=Mhd,g=:8,8,8,ng=2,IE:g=91,181; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=91,181; \
 	make SWMF PIDL; \
 	)
 
@@ -216,7 +216,7 @@ test_order5:
 test_order5_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
-	./Config.pl -o=GM:u=Default,e=Mhd,g=:8,8,8,ng=3,IE:g=91,181; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=3,IE:g=91,181; \
 	make SWMF PIDL; \
 	)
 
