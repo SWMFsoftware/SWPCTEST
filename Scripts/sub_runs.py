@@ -83,7 +83,7 @@ if __name__ == '__main__':
                 start_time = params[1]
                 end_time   = params[2]
 
-                nameDir=os.getcwd()+'/Inputs_tmp/'+'event'+str(RunID).zfill(2)
+                nameDir=os.getcwd()+'/Events/'+'event'+str(RunID).zfill(2)
                 str_time_filename = start_time[0:10].replace('-','_')
 
                 DoSaveFile = (not os.path.isfile(nameDir+'/IMF.dat') or
@@ -97,9 +97,12 @@ if __name__ == '__main__':
                 if DoSaveFile:
                     print("Either the IMF.dat or dst file is missing. Download the files")
                     # create the event dir if needed
+                    if not os.path.isdir(os.getcwd()+'/Events'):
+                        os.mkdir(os.getcwd()+'/Events')
+                        print("Created dir:", os.getcwd()+'/Events')
                     if not os.path.isdir(nameDir):
-                        print("Created dir:", nameDir)
                         os.mkdir(nameDir)
+                        print("Created dir:", nameDir)
                     else:
                         print(nameDir+' already exists!')
 
@@ -109,7 +112,7 @@ if __name__ == '__main__':
                     shutil.move(str_time_filename+'_info.txt',
                                 nameDir+'/'+str_time_filename+'_info.txt')
                     shutil.move(str_time_filename+'_dst.txt',
-                                './Dst/event_'+str(RunID).zfill(2)+'.txt')
+                                nameDir+'/'+'event_'+str(RunID).zfill(2)+'.txt')
                     shutil.move('IMF.dat',nameDir+'/IMF.dat')
                 else:
                     print("Both IMF.dat and dst files exist. ")
