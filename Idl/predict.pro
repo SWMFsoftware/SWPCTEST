@@ -208,7 +208,8 @@ pro predict, choice,                                                  $
              dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof, dbdt_hss=dbdt_hss, $
              out_file=out_file, append=append, lunOut=lunOut,         $
              showinfo=showinfo, verbose=verbose,                      $
-             showplot=showplot, saveplot=saveplot, mydir=mydir
+             showplot=showplot, saveplot=saveplot, mydir=mydir,       $
+             stations_used=stations_used, DoPrintHeader=DoPrintHeader
 
   ;; choice = 'db', 'dbdt', 'corr'
   ;; models: array directories containing results
@@ -243,6 +244,7 @@ pro predict, choice,                                                  $
   if not keyword_set(showplot) then showplot=0
   if not keyword_set(saveplot) then saveplot=0
   if not keyword_set(lunOut)   then lunOut=-1 ; -1 is STDOUT
+  if not keyword_set(DoPrintHeader) then DoPrintHeader = 0
   if saveplot then showplot=1
 
   ;; Width of stencil for time derivative
@@ -297,7 +299,7 @@ pro predict, choice,                                                  $
   tmaxs = [96.0,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0]
 
   if not keyword_set(mydir)    then mydir='.'
-  mydir = mydir+'/'
+  if strmid(mydir,mydir.strlen()-1) ne '/' then mydir = mydir+'/'
 
   ; well, use the first model....
   event_I = set_eventlist(events,mydir,models[0])
@@ -371,18 +373,22 @@ pro predict, choice,                                                  $
            set_device, plotfile, /land
         endif
 
+        stations_used = ''
+
         for istation = 0, nstation-1 do begin
 
            station = strupcase(stations[istation])
 
            if verbose then print,' istation=', istation, ' ', station
 
-           file_obs_db = mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.txt'
-
-           if not file_test(file_obs_db) then begin
+           if file_test(mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.txt') then begin
+              file_obs_db = mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.txt'
+           endif else if file_test(mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.csv') then begin
+              file_obs_db = mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.csv'
+           endif else begin
               print,'For event=',event,' there is no observation for station=',station
               continue
-           endif
+           endelse
 
            file_sim_db  = mydir+'deltaB/'+model+'/'+event_string_sim+'/'+station+'.txt'
 
@@ -393,6 +399,8 @@ pro predict, choice,                                                  $
                  continue
               endif
            endif
+
+           stations_used = stations_used +  station + ' '
 
            if verbose then print,'reading observation and simulation data'
 
@@ -406,9 +414,7 @@ pro predict, choice,                                                  $
 
            date = date_obs
 
-           print, '********************************************'
-           print, 'date =', date
-           print, '********************************************'
+           print, 'For event=',event, ' station =', station, ' date =', date
 
            ; Station PBQ was replaced with SNK after 2007
            if date gt '2007' and station eq 'PBQ' then station = 'SNK'
@@ -618,11 +624,20 @@ pro predict, choice,                                                  $
         db_pod = h_ind/(h_ind+m_ind)
         db_pof = f_ind/(f_ind+n_ind)
         db_hss = 2*(h_ind*n_ind-m_ind*f_ind)/((h_ind+m_ind)*(m_ind+n_ind) + (h_ind+f_ind)*(f_ind+n_ind))
-     
 
-        printf, lunOut, threshold, h,n,f,m,h+n+f+m, h_ind,n_ind,f_ind,m_ind,h_ind+n_ind+f_ind+m_ind,    $
-                dbdt_pod, dbdt_pof, dbdt_hss, db_pod, db_pof, db_hss,       $
-                format='(f8.4, 10i6, 6f8.4)'
+        if lunOut ne -1 and DoPrintHeader ne 0 then begin
+           printf, lunOut, 'db/dt skill scores for models: ' + models
+           printf, lunOut, 'Stations used: ', strtrim(stations_used)
+           printf, lunOut, 'Event   =', event
+           printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
+           printf, lunOut, $
+                   'threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
+        endif
+
+        if lunOut ne -1 then $
+           printf, lunOut, threshold, h,n,f,m,h+n+f+m, h_ind,n_ind,f_ind,m_ind,h_ind+n_ind+f_ind+m_ind,    $
+                   dbdt_pod, dbdt_pof, dbdt_hss, db_pod, db_pof, db_hss,       $
+                   format='(f8.4, 10i6, 6f8.4)'
      endif
 
      if choice eq 'db' then begin
@@ -635,8 +650,17 @@ pro predict, choice,                                                  $
         db_pod = h/(h+m)
         db_pof = f/(f+n)
         db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
+
+        if lunOut ne -1 and DoPrintHeader ne 0 then begin
+           printf, lunOut, 'db skill scores for models: ' + models
+           printf, lunOut, 'Stations used: ', strtrim(stations_used)
+           printf, lunOut, 'Event   =', event
+           printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
+           printf, lunOut, 'threshold  TP  TN  FP  FN  total  pod  far  hss'
+        endif
      
-        printf, lunOut, threshold, h,n,f,m,h+n+f+m, db_pod, db_pof, db_hss, format='(f8.4,5i6, 3f8.4)'
+        if lunOut ne -1 then $
+           printf, lunOut, threshold, h,n,f,m,h+n+f+m, db_pod, db_pof, db_hss, format='(f8.4,5i6, 3f8.4)'
      
      endif
 
@@ -895,19 +919,7 @@ pro calc_all_events, models=models, events=events, mydir=mydir
         filename=string(stationlat, event, $
                         format='("metrics_lat_",a3,"_event",i2.2,".txt")')
         openw,  lunOut, filename, append=ithresh, /get_lun
-        printf, lunOut, 'db/dt skill scores for models: ' + models
-        case stationlat of
-           'all'     : printf, lunOut, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
-           'veryhigh': printf, lunOut, 'Stations used: hrn iqa'
-           'high'    : printf, lunOut, 'Stations used: abk pbq ykc mea'
-           'mid'     : printf, lunOut, 'Stations used: wng new ott'
-           'low'     : printf, lunOut, 'Stations used: frd frn fur'
-           else: print,' invalid value for stationlat=',stationlat
-        endcase
-        printf, lunOut, 'Event   =', event
-        printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
-        printf, lunOut, $
-                'threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
+        DoPrintHeader = 1
         for ithresh = 0, n_elements(thresholds)-1 do begin
            threshold = thresholds[ithresh]
            predict,'dbdt', $
@@ -918,7 +930,8 @@ pro calc_all_events, models=models, events=events, mydir=mydir
                    deltat=deltat, stencil=stencil,             $
                    lunOut=lunOut,                              $
                    saveplot=(stationlat eq 'all'),             $
-                   mydir=mydir
+                   mydir=mydir, DoPrintHeader=DoPrintHeader
+           DoPrintHeader = 0
         endfor
         close, lunOut
         free_lun, lunOut
@@ -1099,18 +1112,7 @@ pro calc_all_db_events, models=models, events=events, mydir=mydir
         filename=string(stationlat, event, $
                         format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
         openw,  lunOut, filename, append=ithresh, /get_lun
-        printf, lunOut, 'db skill scores for models: ' + models
-        case stationlat of
-           'all'     : printf, lunOut, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
-           'veryhigh': printf, lunOut, 'Stations used: hrn iqa'
-           'high'    : printf, lunOut, 'Stations used: abk pbq ykc mea'
-           'mid'     : printf, lunOut, 'Stations used: wng new ott'
-           'low'     : printf, lunOut, 'Stations used: frd frn fur'
-           else: print,' invalid value for stationlat=',stationlat
-        endcase
-        printf, lunOut, 'Event   =', event
-        printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
-        printf, lunOut, 'threshold  TP  TN  FP  FN  total  pod  far  hss'
+        DoPrintHeader = 1
         for ithresh = 0, n_elements(thresholds)-1 do begin
            threshold = thresholds[ithresh]
            predict,'db', $
@@ -1121,7 +1123,8 @@ pro calc_all_db_events, models=models, events=events, mydir=mydir
                    deltat=deltat, stencil=stencil,             $
                    lunOut=lunOut,                              $
                    saveplot=(stationlat eq 'all'),             $
-                   mydir=mydir
+                   mydir=mydir, DoPrintHeader=DoPrintHeader
+           DoPrintHeader = 0
         endfor
         close, lunOut
         free_lun, lunOut
@@ -1328,7 +1331,7 @@ pro save_table, stationlat, model, events=events, mydir=mydir
              models=[model], $
              events=events, $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, $
-             mydir=mydir
+             mydir=mydir, stations_used=stations_used
 
      directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
   endfor
@@ -1337,14 +1340,7 @@ pro save_table, stationlat, model, events=events, mydir=mydir
   openw, lun, filename, /get_lun
 
   printf, lun, 'model: ' + model
-  case stationlat of
-     'all'     : printf, lun, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
-     'veryhigh': printf, lun, 'Stations used: hrn iqa'
-     'high'    : printf, lun, 'Stations used: abk pbq ykc mea'
-     'mid'     : printf, lun, 'Stations used: wng new ott'
-     'low'     : printf, lun, 'Stations used: frd frn fur'
-     else: print,' invalid value for stationlat=',stationlat
-  endcase
+  printf, lun, 'Stations used: ', strtrim(stations_used)
   printf, lun, 'events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
   printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT]'
   printf, lun, 'threshold  pod      far     hss'
@@ -1367,7 +1363,7 @@ pro save_table, stationlat, model, events=events, mydir=mydir
              events=events, $
              dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
              db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof,     $
-             mydir=mydir
+             mydir=mydir, stations_used=stations_used
 
      directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
      indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
@@ -1375,16 +1371,8 @@ pro save_table, stationlat, model, events=events, mydir=mydir
 
   filename = "metric_table_" + stationlat + ".txt"
   openw, lun, filename, /get_lun
-
   printf, lun, 'model: '+ model
-  case stationlat of
-     'all'     : printf, lun, 'Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa'
-     'veryhigh': printf, lun, 'Stations used: hrn iqa'
-     'high'    : printf, lun, 'Stations used: abk pbq ykc mea'
-     'mid'     : printf, lun, 'Stations used: wng new ott'
-     'low'     : printf, lun, 'Stations used: frd frn fur'
-     else: print,' invalid value for stationlat=',stationlat
-  endcase
+  printf, lun, 'Stations used: ', strtrim(stations_used)
   printf, lun, 'events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
   printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT/s]'
   printf, lun, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
@@ -1494,7 +1482,7 @@ pro calc_dst_error, models=models, events=events, mydir=mydir
   common plotlog_param
 
   if not keyword_set(mydir)    then mydir='.'
-  mydir = mydir+'/'
+  if strmid(mydir,mydir.strlen()-1) ne '/' then mydir = mydir+'/'
 
   modelnames = models
 
@@ -1856,9 +1844,24 @@ pro check_calc_all, models=models, events=events, mydir=mydir
   endif
 
   calc_all_events,    models=models, events=events, mydir=mydir
+  print,'----------------------------------------------------'
+  print,'calc_all_events done.'
+  print,'----------------------------------------------------'
+
   calc_all_db_events, models=models, events=events, mydir=mydir
+  print,'----------------------------------------------------'
+  print,'calc_all_db_events done.'
+  print,'----------------------------------------------------'
+
   calc_dst_error,     models=models, events=events, mydir=mydir
+  print,'----------------------------------------------------'
+  print,'calc_dst_error done.'
+  print,'----------------------------------------------------'
+
   save_tables,        model =models, events=events, mydir=mydir
+  print,'----------------------------------------------------'
+  print,'save_tables done.'
+  print,'----------------------------------------------------'
 
 end
 
