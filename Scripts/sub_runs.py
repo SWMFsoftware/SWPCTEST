@@ -8,6 +8,8 @@ import re
 import get_data
 import os
 import shutil
+import pandas as pd
+import extract_supermag
 
 if __name__ == '__main__':
     
@@ -100,6 +102,7 @@ if __name__ == '__main__':
                     if not os.path.isdir(os.getcwd()+'/Events'):
                         os.mkdir(os.getcwd()+'/Events')
                         print("Created dir:", os.getcwd()+'/Events')
+
                     if not os.path.isdir(nameDir):
                         os.mkdir(nameDir)
                         print("Created dir:", nameDir)
@@ -114,6 +117,27 @@ if __name__ == '__main__':
                     shutil.move(str_time_filename+'_dst.txt',
                                 nameDir+'/'+'event_'+str(RunID).zfill(2)+'.txt')
                     shutil.move('IMF.dat',nameDir+'/IMF.dat')
+
+                stations=pd.read_csv('stations.csv')
+                print("extract super mag data")
+
+                for index,value in stations.iterrows():
+                    station  = value['IAGA']
+                    filenameIn = os.getcwd()+ '/supermag_data/' + start_time[0:4] + '/' + station \
+                        + '.csv'
+                    filenameOut = nameDir + '/deltaB/' + station + '.csv'
+
+                    if not os.path.isdir(nameDir + '/deltaB'):
+                        os.mkdir(nameDir + '/deltaB')
+                        print('Created dir:', nameDir + '/deltaB')
+
+                    if os.path.isfile(filenameIn):
+                        if not os.path.isfile(filenameOut):
+                            print('extracting data for Station:', station)
+                            extract_supermag.extract_data(filenameIn,filenameOut,
+                                                          start_time,end_time)
+                    else:
+                        print(station + ' is missing.')
                 else:
                     print("Both IMF.dat and dst files exist. ")
 
