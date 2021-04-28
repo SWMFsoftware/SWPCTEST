@@ -85,60 +85,29 @@ if __name__ == '__main__':
                 start_time = params[1]
                 end_time   = params[2]
 
-                nameDir=os.getcwd()+'/Events/'+'event'+str(RunID).zfill(2)
+                EventDir=os.getcwd()+'/Events/'+'event'+str(RunID).zfill(2)
                 str_time_filename = start_time[0:10].replace('-','_')
 
-                DoSaveFile = (not os.path.isfile(nameDir+'/IMF.dat') or
+                # create the Events dir if needed
+                if not os.path.isdir(os.getcwd()+'/Events'):
+                    os.mkdir(os.getcwd()+'/Events')
+                    print("Created dir:", os.getcwd()+'/Events')
+
+                # create the Events/event** dir if needed
+                if not os.path.isdir(EventDir):
+                    os.mkdir(EventDir)
+                    print("Created dir:", EventDir)
+
+                DoSaveFile = (not os.path.isfile(EventDir+'/IMF.dat') or
                               not os.path.isfile('./Dst/event_'+str(RunID).zfill(2)+'.txt'))
 
                 # download the data if needed
-                f107 = get_data.download_omni(str_start_time=start_time,
-                                              str_end_time  =end_time, 
-                                              DoSaveFile=DoSaveFile)
-
                 if DoSaveFile:
                     print("Either the IMF.dat or dst file is missing. Download the files")
-                    # create the event dir if needed
-                    if not os.path.isdir(os.getcwd()+'/Events'):
-                        os.mkdir(os.getcwd()+'/Events')
-                        print("Created dir:", os.getcwd()+'/Events')
-
-                    if not os.path.isdir(nameDir):
-                        os.mkdir(nameDir)
-                        print("Created dir:", nameDir)
-                    else:
-                        print(nameDir+' already exists!')
-
-                    # move the files into the corresponding dir
-                    shutil.move(str_time_filename+'_orig.dat',
-                                nameDir+'/'+str_time_filename+'_orig.dat')
-                    shutil.move(str_time_filename+'_info.txt',
-                                nameDir+'/'+str_time_filename+'_info.txt')
-                    shutil.move(str_time_filename+'_dst.txt',
-                                nameDir+'/'+'event_'+str(RunID).zfill(2)+'.txt')
-                    shutil.move('IMF.dat',nameDir+'/IMF.dat')
-
-                stations=pd.read_csv('stations.csv')
-                print("extract super mag data")
-
-                for index,value in stations.iterrows():
-                    station  = value['IAGA']
-                    filenameIn = os.getcwd()+ '/supermag_data/' + start_time[0:4] + '/' + station \
-                        + '.csv'
-                    filenameOut = nameDir + '/deltaB/' + station + '.csv'
-
-                    if not os.path.isdir(nameDir + '/deltaB'):
-                        os.mkdir(nameDir + '/deltaB')
-                        print('Created dir:', nameDir + '/deltaB')
-
-                    if os.path.isfile(filenameIn):
-                        if not os.path.isfile(filenameOut):
-                            print('extracting data for Station:', station)
-                            extract_supermag.extract_data(filenameIn,filenameOut,
-                                                          start_time,end_time)
-                    else:
-                        print(station + ' is missing.')
+                    get_data.download_omni(str_start_time=start_time,
+                                           str_end_time  =end_time, 
+                                           DoSaveFile=DoSaveFile, 
+                                           str_time_filename=str_time_filename,
+                                           out_dir=EventDir, RunID=RunID)
                 else:
-                    print("Both IMF.dat and dst files exist. ")
-
-                print('F107 = '+str(f107))
+                    print("Both IMF.dat and dst files exist for Event "+ str(RunID))
