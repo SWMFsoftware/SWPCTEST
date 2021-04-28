@@ -5,7 +5,8 @@ from datetime import datetime
 
 def download_omni(str_start_time='2019-08-04T00:00:00',
                   str_end_time  ='2019-08-08T00:00:00',
-                  DoSaveFile=True):
+                  str_time_filename='2019_08_04',
+                  out_dir='./',RunID=1,DoSaveFile=True):
 
     from ai import cdas
     from statistics import mean 
@@ -42,7 +43,7 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
 
     if DoSaveFile:
         # write the header for the orig solar wind file.
-        sw_output = open(str_start_time[0:10].replace('-','_')+'_orig.dat','w')
+        sw_output = open(out_dir+'/'+str_time_filename+'_orig.dat','w')
         sw_output.write("Initial OMNI file\n\n")
         sw_output.write("#COORDINATES\n")
         sw_output.write("GSE\n\n")
@@ -50,7 +51,7 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
         sw_output.write("#START\n")
 
         # write the header for the Sym-H and AL file.
-        kp_output = open(str_start_time[0:10].replace('-','_')+'_dst.txt','w')
+        kp_output = open(out_dir+'/event_'+str(RunID).zfill(2)+'.txt','w')
         kp_output.write('Sym-H and AL obtained from OMNI 1 min data. Units in nT.\n')
         kp_output.write('year mo dy hr mn sc msc dst_sm AL \n')
 
@@ -75,7 +76,7 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
 
         # write the header for the solar wind file that does not contain any 
         # bad data.
-        sw_output = open('IMF.dat','w')
+        sw_output = open(out_dir + '/IMF.dat','w')
         sw_output.write("Final OMNI file\n\n")
         sw_output.write("#COORDINATES\n")
         sw_output.write("GSE\n\n")
@@ -90,7 +91,7 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
             sw_output.write(sw_write+'\n')
         sw_output.close()
 
-        info_output=open(str_start_time[0:10].replace('-','_')+'_info.txt','w')
+        info_output=open(out_dir+'/'+str_time_filename+'_info.txt','w')
         info_output.write("Initial # of points ="
                           +str(len(data_sw[keys_sw[0]]))+'\n')
         info_output.write("Final   # of points ="
