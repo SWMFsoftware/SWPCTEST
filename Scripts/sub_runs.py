@@ -99,7 +99,7 @@ if __name__ == '__main__':
                     print("Created dir:", EventDir)
 
                 DoSaveFile = (not os.path.isfile(EventDir+'/IMF.dat') or
-                              not os.path.isfile('./Dst/event_'+str(RunID).zfill(2)+'.txt'))
+                              not os.path.isfile(EventDir+'/event_'+str(RunID).zfill(2)+'.txt'))
 
                 # download the data if needed
                 if DoSaveFile:
