@@ -113,16 +113,15 @@ if __name__ == '__main__':
                     # else:
                     #     print(station + ' is missing.')
 
-                if len(os.listdir(EventDir + '/deltaB')) ==0:
-                    FileId=open('runidl1','w')
-                    FileId.write(';\n;\n')
-                    FileId.write('.r Idl/supermag-api Idl/download_supermag\n')
-                    FileId.write('download_supermag,\''+start_time + '\',\'' +end_time + '\','
-                                 +'str_stations=['+str_stations[:-1]+'],dir_out=\''
-                                 +EventDir+'/deltaB/\'\n')
-                    FileId.write('exit\n')
-                    FileId.close()
+                FileId=open('runidl1','w')
+                FileId.write(';\n;\n')
+                FileId.write('.r Idl/supermag-api Idl/download_supermag\n')
+                FileId.write('download_supermag,\''+start_time + '\',\'' +end_time + '\','
+                             +'str_stations=['+str_stations[:-1]+'],dir_out=\''
+                             +EventDir+'/deltaB/\'\n')
+                FileId.write('exit\n')
+                FileId.close()
                     
-                    subprocess.call(["idl", "runidl1"])
-                else:
-                    print("No need to download SuperMag data for Event " + str(RunID))
+                subprocess.call(["idl", "runidl1"])
+
+                os.remove("runidl1")
