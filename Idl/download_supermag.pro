@@ -35,9 +35,14 @@ pro download_supermag, str_start_time, str_end_time, userid=userid, $
   for i=0, n_elements(str_stations)-1 do begin
      str_station=str_stations[i]
 
+     if FILE_TEST(dir_out+'/'+str_station+'.csv') then begin
+        print, dir_out+'/'+str_station+'.csv' + ' already exists, skip downloading'
+        continue
+     endif
+
      ;; see whether the str_station is in str_all_stations
      if total(strmatch(str_all_stations,str_station,/fold_case)) eq 0 then begin
-        print, 'Error: '+str_station+" is not available"
+        print, 'Warning: '+str_station+" is not available"
         continue
      endif
 
@@ -46,7 +51,7 @@ pro download_supermag, str_start_time, str_end_time, userid=userid, $
                                    min_start, ss_start, 86400*diff_time,      $
                                    str_station, data_mag, error=errstr)
      if (iStatus eq 0) then begin
-        print, 'Error: '+str_station+" is not available, errstr = "+errstr
+        print, 'Warning: '+str_station+" is not available, errstr = "+errstr
         continue
      endif
 
@@ -60,7 +65,8 @@ pro download_supermag, str_start_time, str_end_time, userid=userid, $
      openw, lun, dir_out+'/'+str_station+'.csv', /get_lun
      printf, lun, 'Date_UTC,dbn_nez,dbe_nez,dbz_nez'
      for j=0, n_elements(str_time)-1 do begin
-        printf, lun,str_time[j], data_mag[j].N.nez, data_mag[j].E.nez, data_mag[j].Z.nez,format='(a,",",2(f,","),f)'
+        if data_mag[j].N.nez ne 999999 and data_mag[j].E.nez ne 999999 and data_mag[j].Z.nez ne 999999 then $
+           printf, lun,str_time[j], data_mag[j].N.nez, data_mag[j].E.nez, data_mag[j].Z.nez,format='(a,",",2(f,","),f)'
      endfor
      Free_Lun, lun
   end
