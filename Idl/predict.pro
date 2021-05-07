@@ -1794,9 +1794,11 @@ pro score_stat_nRun, mydir=mydir, ResDir=ResDir
      openw,  lunOut, fileOut, /get_lun
      ;; print the header info
      printf, lunOut, 'model: '+ mydir + '/deltaB/'+ResDir
-     for i=1, n_elements(headlines)-1 do begin
+     for i=1, n_elements(headlines)-2 do begin
         printf, lunOut, headlines[i]
      endfor
+
+     printf, lunOut, strjoin(wlogname, ' ') + ' ' + strjoin('d'+wlogname(1:*), ' ')
 
      for iThreshold = 0, nThreshold-1 do begin
         printf, lunOut, table_out_II(iThreshold,*), format='(100f10.4)'
