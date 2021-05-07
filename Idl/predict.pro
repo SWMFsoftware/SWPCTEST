@@ -337,6 +337,8 @@ pro predict, choice,                                                  $
      dbdt_score = fltarr(4,nstation)
      db_score   = fltarr(4,nstation)
 
+     stations_used = strarr(n_elements(event_I))
+
      for iIndex = 0,n_elements(event_I)-1 do begin
 
         event = event_I(iIndex)
@@ -369,8 +371,6 @@ pro predict, choice,                                                  $
 
            set_device, plotfile, /land
         endif
-
-        stations_used = ''
 
         for istation = 0, nstation-1 do begin
 
@@ -414,8 +414,6 @@ pro predict, choice,                                                  $
               endelse
            endif
 
-           stations_used = stations_used +  station + ' '
-
            if verbose then print,'reading observation and simulation data'
 
            ; Read db and calculate db/dt from observations and simulations
@@ -439,7 +437,9 @@ pro predict, choice,                                                  $
                   +       string(dd_date,format='(i2.2)')
 
            ; Station PBQ was replaced with SNK after 2007
-           if date gt '2007' and station eq 'PBQ' then station = 'SNK'
+           if yyyy_date gt 2007 and station eq 'PBQ' then station = 'SNK'
+
+           stations_used[iIndex] = stations_used[iIndex] +  station + ' '
 
            ; Calculate contingency tables and create plots
            case choice of
@@ -649,8 +649,10 @@ pro predict, choice,                                                  $
 
         if lunOut ne -1 and DoPrintHeader ne 0 then begin
            printf, lunOut, 'db/dt skill scores for models: ' + models
-           printf, lunOut, 'Stations used: ', strtrim(stations_used)
-           printf, lunOut, 'Event   =', event
+           for iIndex = 0,n_elements(event_I)-1 do begin
+              printf, lunOut, 'Event   =', event_I[iIndex]
+              printf, lunOut, 'For Event '+string(event_I[iIndex],format='(i2)')+', Stations used: '+strtrim(stations_used[iIndex])
+           endfor
            printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
            printf, lunOut, $
                    'threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
@@ -675,8 +677,10 @@ pro predict, choice,                                                  $
 
         if lunOut ne -1 and DoPrintHeader ne 0 then begin
            printf, lunOut, 'db skill scores for models: ' + models
-           printf, lunOut, 'Stations used: ', strtrim(stations_used)
-           printf, lunOut, 'Event   =', event
+           for iIndex = 0,n_elements(event_I)-1 do begin
+              printf, lunOut, 'Event   =', event_I[iIndex]
+              printf, lunOut, 'For Event '+string(event_I[iIndex],format='(i2)')+', Stations used: '+strtrim(stations_used[iIndex])
+           endfor
            printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
            printf, lunOut, 'threshold  TP  TN  FP  FN  total  pod  far  hss'
         endif
@@ -1362,8 +1366,10 @@ pro save_table, stationlat, model, events=events, mydir=mydir
   openw, lun, filename, /get_lun
 
   printf, lun, 'model: ' + model
-  printf, lun, 'Stations used: ', strtrim(stations_used)
-  printf, lun, 'events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
+  printf, lun, 'Events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
+  for iIndex = 0,n_elements(event_I)-1 do begin
+     printf, lun, 'For Event '+string(event_I[iIndex],format='(i2)')+', Stations used: '+strtrim(stations_used[iIndex])
+  endfor
   printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT]'
   printf, lun, 'threshold  pod      far     hss'
   for ithresh = 0, nthresh-1 do begin
@@ -1394,8 +1400,10 @@ pro save_table, stationlat, model, events=events, mydir=mydir
   filename = "metric_table_" + stationlat + ".txt"
   openw, lun, filename, /get_lun
   printf, lun, 'model: '+ model
-  printf, lun, 'Stations used: ', strtrim(stations_used)
-  printf, lun, 'events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
+  printf, lun, 'Events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
+  for iIndex = 0,n_elements(event_I)-1 do begin
+     printf, lun, 'For Event '+string(event_I[iIndex],format='(i2)')+', Stations used: '+strtrim(stations_used[iIndex])
+  endfor
   printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT/s]'
   printf, lun, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
   for ithresh = 0, nthresh-1 do begin
