@@ -102,10 +102,7 @@ pro read_station, file, t, data, date, tderiv, dataderiv, dn
   ; read logfile, use hours for time unit
   get_log, file, wlog, wlogname, t, 'h'
 
-  date = string(wlog(0,0),format='(i4.4)')+string(wlog(0,1),format='(i2.2)') $
-         + string(wlog(0,2),format='(i2.2)')
-
-  ;; t = t - hour
+  date = julday(wlog(0,1), wlog(0,2), wlog(0,0))
 
   ; Calculate horizontal component (db or dbdt)
   i = where(wlogname eq 'B_NorthGeomag') & i = i(0)
@@ -386,18 +383,35 @@ pro predict, choice,                                                  $
            endif else if file_test(mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.csv') then begin
               file_obs_db = mydir+'deltaB/Observations/'+event_string_obs+'/'+station+'.csv'
            endif else begin
-              print,'For event=',event,' there is no observation for station=',station
-              continue
+              if station ne 'PBQ' then begin
+                 print,'For event=',event,' there is no observation for station=',station
+                 continue
+              endif else begin
+                 ;; well, for PBQ, it might also be SNK...
+                 if file_test(mydir+'deltaB/Observations/'+event_string_obs+'/SNK.txt') then begin
+                    file_obs_db = mydir+'deltaB/Observations/'+event_string_obs+'/SNK.txt'
+                 endif else if file_test(mydir+'deltaB/Observations/'+event_string_obs+'/SNK.csv') then begin
+                    file_obs_db = mydir+'deltaB/Observations/'+event_string_obs+'/SNK.csv'
+                 endif else begin
+                    print,'For event=',event,' there is no observation for station= PBQ/SNK'
+                    continue
+                 endelse
+              endelse
            endelse
 
            file_sim_db  = mydir+'deltaB/'+model+'/'+event_string_sim+'/'+station+'.txt'
 
            if not file_test(file_sim_db) then begin
-              if station eq 'SNK' then file_sim_db  = mydir+'deltaB/'+model+'/'+event+'/PBQ.txt'
-              if not file_test(file_sim_db) then begin
+              if station ne 'PBQ' then begin
                  print,'For event=',event,' there is no result from model=',model,' for station=',station
                  continue
-              endif
+              endif else begin
+                 file_sim_db  = mydir+'deltaB/'+model+'/'+event_string_sim+'/SNK.txt'
+                 if not file_test(file_sim_db) then begin
+                    print,'For event=',event,' there is no result from model=',model,' for station=PBQ/SNK.'
+                    continue
+                 endif
+              endelse
            endif
 
            stations_used = stations_used +  station + ' '
@@ -410,11 +424,19 @@ pro predict, choice,                                                  $
            read_station, file_sim_db, t_db_sim, $
                       db_sim, date_sim, t_dbdt_sim, dbdt_sim, stencil
 
-           if date_obs ne date_sim then print, "Waring: the observation and simulation are not on the same day."
+           if date_obs ne date_sim then begin
+              print, "Waring: the observation and simulation are not on the same day for Event ", event
+              print, "adjust t_db_sim and t_dbdt_sim to align with observations."
+              t_db_sim   = t_db_sim   - (date_obs-date_sim)*24
+              t_dbdt_sim = t_dbdt_sim - (date_obs-date_sim)*24
+           endif
 
-           date = date_obs
+           ;; convert the Julday back to year, month, day
+           JUL2GREG, date_obs, mm_date, dd_date, yyyy_date
 
-           print, 'For event=',event, ' station =', station, ' date =', date
+           ;; set the date info
+           date = string(yyyy_date,format='(i4.4)')+string(mm_date,format='(i2.2)') $
+                  +       string(dd_date,format='(i2.2)')
 
            ; Station PBQ was replaced with SNK after 2007
            if date gt '2007' and station eq 'PBQ' then station = 'SNK'
