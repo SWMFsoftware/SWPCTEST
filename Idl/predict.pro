@@ -1746,8 +1746,7 @@ pro score_stat_nRun, mydir=mydir, ResDir=ResDir
   file_I = FILE_SEARCH('metric*txt', count=nFile)
 
   if nFile eq 0 then begin
-     print, ' nFile ='+string(nFile,format='(i2)')+' = 0'
-     print, ' skipping combining the skill score tables'
+     print, 'Warning: no metric*txt, skipping combining the skill score tables'
      return
   end
 
@@ -1756,107 +1755,51 @@ pro score_stat_nRun, mydir=mydir, ResDir=ResDir
 
   print, ' combining the skil score tables for ' + ResDir
 
-  ;; ALWAYS 5 lines of header
-  nHeader     = 5
-  StrHeader_I = strarr(nHeader)
-
-  line = ''
-
   for iFile = 0, nFile-1 do begin
      fileOut = mydir+'/deltaB/'+ResDir+'/'+file_I(iFile)
 
      for iRun=0, nRun-1 do begin
         fileIn = mydir+'/deltaB/'+ResDir+'/run'+string(iRun+1, format='(i1)')+'/'+file_I(iFile)
 
-        openr, lunRead, fileIn, /get_lun
+        get_log, fileIn, wlog, wlogname, headlines=headlines
 
-        for i = 0, nHeader-1 do begin
-           readf, lunRead, line
-           StrHeader_I(i) = line
-        endfor
+        table_II = wlog
 
-        ;; read the first line of data
-        readf, lunRead, line
-        DataTmp = float(STRSPLIT(line, ' ',/extract))
-        nData   = n_elements(DataTmp)
-
-        if (nData lt 1) then begin
-           print, ' nData < 1 ?????'
-           print, ' line = ', line
-           return
-        endif
-
-        ;; maximum 1000 thresholds
-        table_II = dblarr(nData, 1000)
-
-        iThreshold = 0
-        table_II(*,iThreshold) = DataTmp
-
-        while not eof(lunRead) do begin
-           readf, lunRead, line
-
-           DataTmp = float(STRSPLIT(line, ' ',/extract))
-
-           iThreshold = iThreshold + 1
-           table_II(*, iThreshold) = DataTmp
-        endwhile
-
-        close, lunRead
-        free_lun, lunRead
-
-        nThreshold = iThreshold + 1
-
-        table_II = table_II(*, 0:nThreshold-1)
+        siz = size(table_II)
+        nThreshold = siz[1]
+        nData      = siz[2]
 
         ;; create the 3D metric and the 2D output metric
         if iRun eq 0 then begin
-           table_III    = fltarr(nData,     nThreshold, nRun)
-           table_out_II = fltarr(nData*2-1, nThreshold)
+           table_III    = fltarr(nThreshold, nData,    nRun)
+           table_out_II = fltarr(nThreshold, nData*2-1)
         endif
 
         table_III(*,*,iRun) = table_II
      endfor
 
      for iThreshold = 0, nThreshold-1 do begin
-        table_local_II  = reform(table_III(*, iThreshold, *), nData, nRun)
+        table_local_II  = reform(table_III(iThreshold,*,*), nData, nRun)
 
         ;; the first element is the threshold, no need to calc the mean/stddev
-        table_out_II(0,iThreshold)    = table_local_II(0,0)
+        table_out_II(iThreshold)    = table_local_II(0,0)
 
         ;; calc the average and std with nRun
         for iData = 1, nData-1 do begin
-           table_out_II(iData,         iThreshold) = mean(  table_local_II(iData,*))
-           table_out_II(iData+nData-1, iThreshold) = stddev(table_local_II(iData,*))
+           table_out_II(iThreshold, iData)         = mean(  table_local_II(iData,*))
+           table_out_II(iThreshold, iData+nData-1) = stddev(table_local_II(iData,*))
         endfor
      endfor
 
      openw,  lunOut, fileOut, /get_lun
      ;; print the header info
-     printf, lunOut, 'model = ' + ResDir
-     for i = 1, nHeader-2 do begin
-        printf, lunOut, StrHeader_I(i)
+     printf, lunOut, 'model: '+ mydir + '/deltaB/'+ResDir
+     for i=1, n_elements(headlines)-1 do begin
+        printf, lunOut, headlines[i]
      endfor
-
-     VarNamesOrig  = StrHeader_I(nHeader-1)
-     VarNameOrig_I = strsplit(VarNamesOrig,' ',/extract)
-
-     if (n_elements(VarNameOrig_I) ne nData) then begin
-        print, ' number of var names /= nData ???'
-        exit
-     endif
-
-     VarName_I = strarr(nData*2-1)
-
-     VarName_I(0:nData-1) = VarNameOrig_I
-
-     for iData = 1, nData-1 do begin
-        VarName_I(nData+iData-1) = 'd'+VarNameOrig_I(iData)
-     endfor
-
-     printf, lunOut, strjoin(VarName_I,' ')
 
      for iThreshold = 0, nThreshold-1 do begin
-        printf, lunOut, table_out_II(*,iThreshold), format='(100f10.4)'
+        printf, lunOut, table_out_II(iThreshold,*), format='(100f10.4)'
      endfor
 
      close, lunOut
