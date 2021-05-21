@@ -46,12 +46,15 @@ pro download_supermag, str_start_time, str_end_time, userid=userid, $
         continue
      endif
 
+     print, "Try to download station: "+str_station
+
      ;; try to download the data
      iStatus=SuperMAGGetDataStruct(userid,yy_start,mm_start,dd_start,hh_start,$
                                    min_start, ss_start, 86400*diff_time,      $
                                    str_station, data_mag, error=errstr)
-     if (iStatus eq 0) then begin
-        print, 'Warning: '+str_station+" is not available, errstr = "+errstr
+
+     if (iStatus eq 0 or n_elements(data_mag) eq 0) then begin
+        print, 'Error: '+str_station+" could not be downloaded."
         continue
      endif
 
