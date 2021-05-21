@@ -32,21 +32,18 @@ pro download_supermag, str_start_time, str_end_time, userid=userid, $
      str_stations = str_all_stations
   endif
 
+  openw, lun_log, dir_out+'/log_download_supermag', /get_lun
+
   for i=0, n_elements(str_stations)-1 do begin
      str_station=str_stations[i]
 
-     if FILE_TEST(dir_out+'/'+str_station+'.csv') then begin
-        print, dir_out+'/'+str_station+'.csv' + ' already exists, skip downloading'
-        continue
-     endif
+     if FILE_TEST(dir_out+'/'+str_station+'.csv') then continue
 
      ;; see whether the str_station is in str_all_stations
      if total(strmatch(str_all_stations,str_station,/fold_case)) eq 0 then begin
-        print, 'Warning: '+str_station+" is not available"
+        printf, lun_log, 'Warning: '+str_station+" is not available"
         continue
      endif
-
-     print, "Try to download station: "+str_station
 
      ;; try to download the data
      iStatus=SuperMAGGetDataStruct(userid,yy_start,mm_start,dd_start,hh_start,$
@@ -54,7 +51,7 @@ pro download_supermag, str_start_time, str_end_time, userid=userid, $
                                    str_station, data_mag, error=errstr)
 
      if (iStatus eq 0 or n_elements(data_mag) eq 0) then begin
-        print, 'Error: '+str_station+" could not be downloaded."
+        printf, lun_log, 'Error: '+str_station+" could not be downloaded."
         continue
      endif
 
@@ -73,4 +70,6 @@ pro download_supermag, str_start_time, str_end_time, userid=userid, $
      endfor
      Free_Lun, lun
   end
+
+  Free_Lun, lun_log
 end
