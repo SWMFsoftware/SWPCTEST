@@ -5,7 +5,6 @@ import array
 import subprocess
 import argparse
 import re
-import get_data
 import os
 import shutil
 import pandas as pd
