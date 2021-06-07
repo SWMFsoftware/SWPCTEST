@@ -5,7 +5,8 @@ SHELL=/bin/bash
 -include ../Makefile.def
 
 MYDIR       = $(shell echo `pwd -P`)
-MYINPUTDIR  = ${MYDIR}/Inputs
+INPUTDIR    = Inputs
+MYINPUTDIR  = ${MYDIR}/${INPUTDIR}
 MYSCRIPTDIR = ${MYDIR}/Scripts
 MYIDLDIR    = ${MYDIR}/Idl
 IDLPATH     = ${COMMONDIR}/IDL/General:<IDL_DEFAULT>
@@ -47,6 +48,7 @@ help:
 	@echo "make test NRUN=5               (run events 1-6 five times (up to 9) on different number of cores)"
 	@echo "make test EVENTS=2-5,91-93     (run events 2,3,4,5,91,92,93 only)"
 	@echo 'make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2 dir. Default is Runs.)'
+	@echo 'make test INPUTDIR=Events      (do runs with inputs (IMF/Dst/deltaB) from the Events dir. Default is Inputs)'
 	@echo ""
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
@@ -107,39 +109,39 @@ propagate1d_rundir:
 
 propagate1d_run:
 	for e in ${EVENTLIST}; do 				\
-		cp ${MYINPUTDIR}/event$$e/[Lw]*.dat ${PROPDIR};	\
+		cp ${MYINPUTDIR}/IMF/event$$e/[Lw]*.dat ${PROPDIR};	\
 		cd ${PROPDIR}; 					\
 		${MYSCRIPTDIR}/change_param.pl; 		\
 		${PARALLEL} ${NPFLAG} 4 ./BATSRUS.exe > runlog; 	   \
 		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g' \
-			IO2/log*.log > ${MYINPUTDIR}/event$$e/IMF_mhd.dat; \
+			IO2/log*.log > ${MYINPUTDIR}/IMF/event$$e/IMF_mhd.dat; \
 	done
 
 propagate1d_plot:
 	for e in 02 03 04 05 06 91 92 93 94; do		\
-		cd ${MYINPUTDIR}/event$$e/;		\
+		cd ${MYINPUTDIR}/IMF/event$$e/;		\
 		idl ${MYDIR}/Idl/compare_imf.pro; 	\
 	done
 
 propagate1d_wind_plot:
 	for e in 91 92 93 94; do			\
-		cd ${MYINPUTDIR}/event$$e/;		\
+		cd ${MYINPUTDIR}/IMF/event$$e/;		\
 		idl ${MYDIR}/Idl/compare_wind.pro; 	\
 	done
 
 ballistic:
 	for e in 02 03 04 05 06 95 96 97 98; do		\
-		cd ${MYINPUTDIR}/event$$e/;		\
+		cd ${MYINPUTDIR}/IMF/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic.pro;		\
 	done
 	for e in 91 92 93 94; do			\
-		cd ${MYINPUTDIR}/event$$e/;		\
+		cd ${MYINPUTDIR}/IMF/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic_wind.pro;	\
 	done
 
 ballistic_limited:
 	for e in 02 03 04 05 06 95 96 97 98; do		\
-		cd ${MYINPUTDIR}/event$$e/;		\
+		cd ${MYINPUTDIR}/IMF/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic_limited.pro;	\
 	done
 
@@ -183,7 +185,7 @@ test_rundir:
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
-		cp -r ${MYINPUTDIR}/event$$e/*        ${QUEDIR}$${iRun}/Event$$e;           \
+		cp -r ${MYINPUTDIR}/IMF/event$$e/*    ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
@@ -444,10 +446,10 @@ check_calc:
 	for ResDir in ${FullResDirList}; do				\
 		echo "working on $$ResDir";				\
 		cd $${ResDir};						\
-		printf "${PREDICT}\n check_calc_all,  models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_check_calc_log.txt; \
+		printf "${PREDICT}\n check_calc_all,  models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_check_calc_log.txt; \
 	done;			\
 	cd ${FULLRESDIR};	\
-	printf "${PREDICT}\n stat_nRun, mydir='${MYDIR}', events='${EVENTS_EXPAND}',ResDir='${RESDIR}'\n"   | idl > idl_stat_log.txt; \
+	printf "${PREDICT}\n stat_nRun, mydir='${MYDIR}', events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}'\n"   | idl > idl_stat_log.txt; \
 	)
 
 check_dst:
@@ -457,7 +459,7 @@ check_dst:
 	    if([ -d $${ResDir}/Event${FIRSTEVENT0} ]); then              \
 		echo ' working on $${ResDir}';				\
 		cd $${ResDir};						\
-		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_dst_log.txt;     	\
+		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_dst_log.txt;     	\
 	    fi; \
 	done
 
@@ -469,9 +471,9 @@ check_compare:
 	@echo "Compare ${RES1DIR} and ${RES2DIR}"
 	export IDL_STARTUP=idlrc; export IDL_PATH='${IDLPATH}'; \
 	mkdir -p ${CompDir}; cd ${CompDir}; \
-	printf "${PREDICT}\n save_comp_dbdt_tables, '${FULLRES1DIR}','${FULLRES2DIR}', events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_log.txt; \
-	printf "${PREDICT}\n save_comp_db_tables,   '${FULLRES1DIR}','${FULLRES2DIR}', events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_log.txt; \
-	printf "${PREDICT}\n calc_dst_error,models=['${FULLRES1DIR}','${FULLRES2DIR}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}'\n" | idl > idl_log.txt
+	printf "${PREDICT}\n save_comp_dbdt_tables, '${FULLRES1DIR}','${FULLRES2DIR}', events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_log.txt; \
+	printf "${PREDICT}\n save_comp_db_tables,   '${FULLRES1DIR}','${FULLRES2DIR}', events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_log.txt; \
+	printf "${PREDICT}\n calc_dst_error,models=['${FULLRES1DIR}','${FULLRES2DIR}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_log.txt
 
 realtime_start_rundir:
 	cd ${DIR}; \
