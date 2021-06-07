@@ -5,11 +5,10 @@ import array
 import subprocess
 import argparse
 import re
-import get_data
+import get_omni_data
 import os
 import shutil
 import pandas as pd
-import extract_supermag
 
 if __name__ == '__main__':
     
@@ -104,7 +103,7 @@ if __name__ == '__main__':
                 # download the data if needed
                 if DoSaveFile:
                     print("Either the IMF.dat or dst file is missing. Download the files")
-                    get_data.download_omni(str_start_time=start_time,
+                    get_omni_data.download_omni(str_start_time=start_time,
                                            str_end_time  =end_time, 
                                            DoSaveFile=DoSaveFile, 
                                            str_time_filename=str_time_filename,
