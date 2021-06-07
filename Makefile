@@ -183,7 +183,7 @@ test_rundir:
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
-		cp -r ${MYDIR}/Inputs/event$$e/*      ${QUEDIR}$${iRun}/Event$$e;           \
+		cp -r ${MYINPUTDIR}/event$$e/*        ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
