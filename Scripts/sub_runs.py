@@ -84,7 +84,8 @@ if __name__ == '__main__':
                 start_time = params[1]
                 end_time   = params[2]
 
-                EventDir=os.getcwd()+'/Events/'+'event'+str(RunID).zfill(2)
+                EventIMFDir=os.getcwd()+'/Events/IMF/'+'event'+str(RunID).zfill(2)
+                EventDSTDir=os.getcwd()+'/Events/Dst/'
                 str_time_filename = start_time[0:10].replace('-','_')
 
                 # create the Events dir if needed
@@ -92,13 +93,23 @@ if __name__ == '__main__':
                     os.mkdir(os.getcwd()+'/Events')
                     print("Created dir:", os.getcwd()+'/Events')
 
-                # create the Events/event** dir if needed
-                if not os.path.isdir(EventDir):
-                    os.mkdir(EventDir)
-                    print("Created dir:", EventDir)
+                # create the Events/IMF dir if needed
+                if not os.path.isdir(os.getcwd()+'/Events/IMF'):
+                    os.mkdir(os.getcwd()+'/Events/IMF')
+                    print("Created dir:", os.getcwd()+'/Events/IMF')
 
-                DoSaveFile = (not os.path.isfile(EventDir+'/IMF.dat') or
-                              not os.path.isfile(EventDir+'/event_'+str(RunID).zfill(2)+'.txt'))
+                # create the Events/Dst dir if needed
+                if not os.path.isdir(os.getcwd()+'/Events/Dst'):
+                    os.mkdir(os.getcwd()+'/Events/Dst')
+                    print("Created dir:", os.getcwd()+'/Events/Dst')
+
+                # create the Events/IMF/event** dir if needed
+                if not os.path.isdir(EventIMFDir):
+                    os.mkdir(EventIMFDir)
+                    print("Created dir:", EventIMFDir)
+
+                DoSaveFile = (not os.path.isfile(EventIMFDir+'/IMF.dat') or
+                              not os.path.isfile(EventDstDir+'/event_'+str(RunID).zfill(2)+'.txt'))
 
                 # download the data if needed
                 if DoSaveFile:
@@ -107,6 +118,6 @@ if __name__ == '__main__':
                                            str_end_time  =end_time, 
                                            DoSaveFile=DoSaveFile, 
                                            str_time_filename=str_time_filename,
-                                           out_dir=EventDir, RunID=RunID)
+                                           out_dir=os.getcwd()+'/Events', RunID=RunID)
                 else:
                     print("Both IMF.dat and dst files exist for Event "+ str(RunID))

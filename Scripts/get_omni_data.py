@@ -42,8 +42,11 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
         data_sw_clean[key] = data_sw[key][index]
 
     if DoSaveFile:
+        EventIMFDir=out_dir+'/IMF/event'+str(RunID).zfill(2)
+        EventDSTDir=out_dir+'/Dst/'
+
         # write the header for the orig solar wind file.
-        sw_output = open(out_dir+'/'+str_time_filename+'_orig.dat','w')
+        sw_output = open(EventIMFDir+'/'+str_time_filename+'_orig.dat','w')
         sw_output.write("Initial OMNI file\n\n")
         sw_output.write("#COORDINATES\n")
         sw_output.write("GSE\n\n")
@@ -51,7 +54,7 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
         sw_output.write("#START\n")
 
         # write the header for the Sym-H and AL file.
-        kp_output = open(out_dir+'/event_'+str(RunID).zfill(2)+'.txt','w')
+        kp_output = open(EventDSTDir+'/event_'+str(RunID).zfill(2)+'.txt','w')
         kp_output.write('Sym-H and AL obtained from OMNI 1 min data. Units in nT.\n')
         kp_output.write('year mo dy hr mn sc msc dst_sm AL \n')
 
@@ -76,7 +79,7 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
 
         # write the header for the solar wind file that does not contain any 
         # bad data.
-        sw_output = open(out_dir + '/IMF.dat','w')
+        sw_output = open(EventIMFDir + '/IMF.dat','w')
         sw_output.write("Final OMNI file\n\n")
         sw_output.write("Initial number of points = "
                           +str(len(data_sw[keys_sw[0]]))+'\n')
