@@ -78,6 +78,10 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
         # bad data.
         sw_output = open(out_dir + '/IMF.dat','w')
         sw_output.write("Final OMNI file\n\n")
+        sw_output.write("Initial number of points = "
+                          +str(len(data_sw[keys_sw[0]]))+'\n')
+        sw_output.write("Final   number of points = "
+                          +str(len(data_sw_clean[keys_sw[0]]))+'\n\n')
         sw_output.write("#COORDINATES\n")
         sw_output.write("GSE\n\n")
         sw_output.write("year mo dy hr mn sc msc Bx By Bz Ux Uy Uz Rho T\n")
@@ -90,11 +94,4 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
                 sw_write += "{:13.2f}".format(data_sw_clean[key][iTime])
             sw_output.write(sw_write+'\n')
         sw_output.close()
-
-        info_output=open(out_dir+'/'+str_time_filename+'_info.txt','w')
-        info_output.write("Initial # of points ="
-                          +str(len(data_sw[keys_sw[0]]))+'\n')
-        info_output.write("Final   # of points ="
-                          +str(len(data_sw_clean[keys_sw[0]]))+'\n')
-        info_output.close()
 
