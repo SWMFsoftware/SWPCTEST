@@ -74,19 +74,19 @@ if __name__ == '__main__':
                 start_time = params[1]
                 end_time   = params[2]
 
-                EventDir=os.getcwd()+'/Events/deltaB/Event'+str(RunID).zfill(2)
+                EventDir=os.getcwd()+'/Events/event'+str(RunID).zfill(2)+'/deltaB'
 
                 # create the Events dir if needed
                 if not os.path.isdir(os.getcwd()+'/Events'):
                     os.mkdir(os.getcwd()+'/Events')
                     print("Created dir:", os.getcwd()+'/Events')
 
-                # create the Events/deltaB dir if needed
-                if not os.path.isdir(os.getcwd()+'/Events/deltaB'):
-                    os.mkdir(os.getcwd()+'/Events/deltaB')
-                    print('Created dir:', os.getcwd()+'/Events/deltaB')
+                # create the Events/event* dir if needed
+                if not os.path.isdir(os.getcwd()+'/Events/event'+str(RunID).zfill(2)):
+                    os.mkdir(os.getcwd()+'/Events/event'+str(RunID).zfill(2))
+                    print('Created dir:', os.getcwd()+'/Events/event'+str(RunID).zfill(2))
 
-                # create the Events/event** dir if needed
+                # create the Events/event**/deltaB dir if needed
                 if not os.path.isdir(EventDir):
                     os.mkdir(EventDir)
                     print("Created dir:", EventDir)
