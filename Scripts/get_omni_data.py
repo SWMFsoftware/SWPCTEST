@@ -9,7 +9,6 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
                   out_dir='./',RunID=1,DoSaveFile=True):
 
     from ai import cdas
-    from statistics import mean 
 
     start_time = datetime.strptime(str_start_time,'%Y-%m-%dT%H:%M:%S')
     end_time   = datetime.strptime(str_end_time,  '%Y-%m-%dT%H:%M:%S')
