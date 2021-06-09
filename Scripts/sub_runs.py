@@ -84,7 +84,7 @@ if __name__ == '__main__':
                 start_time = params[1]
                 end_time   = params[2]
 
-                EventDir=os.getcwd()+'/Events/'+'event'+str(RunID).zfill(2)
+                EventDir=os.getcwd()+'/Events/'+'Event'+str(RunID).zfill(2)
                 str_time_filename = start_time[0:10].replace('-','_')
 
                 # create the Events dir if needed
