@@ -300,9 +300,6 @@ pro predict, choice,                                                  $
   if not keyword_set(mydir)    then mydir='.'
   if strmid(mydir, mydir.strlen()-1)  ne '/' then mydir  = mydir+'/'
 
-  ;; the path to the magnetometer data
-  InputDir_deltaB = mydir + InputDir + '/deltaB/'
-
   ; well, use the first model....
   event_I = set_eventlist(events,mydir,models[0])
 
@@ -349,17 +346,20 @@ pro predict, choice,                                                  $
         event = event_I(iIndex)
 
         ;; check whether the format in Observations is two digits or not.
-        if file_test(InputDir_deltaB +'/Event'+string(event,format='(i2.2)')) then begin
+        if file_test(mydir + InputDir +'/Event'+string(event,format='(i2.2)')) then begin
            event_string_obs = 'Event'+string(event,format='(i2.2)')
         endif else begin
            event_string_obs = 'Event'+string(event,format='(i1.1)')
         endelse
 
+        ;; the path to the magnetometer data
+        InputDir_deltaB = mydir + InputDir + '/' + event_string_obs + '/deltaB/'
+
         ;; check whether the format in SIMDIR/RESDIR is two digits or not.
         if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')) then begin
-           event_string_sim = 'Event'+string(event,format='(i2.2)')
+           event_string_sim = 'event'+string(event,format='(i2.2)')
         endif else begin
-           event_string_sim = 'Event'+string(event,format='(i1.1)')
+           event_string_sim = 'event'+string(event,format='(i1.1)')
         endelse
 
         if verbose then print,' ievent, event=', event, '  Event'+string(event_I,format='(i2.2)')
@@ -383,20 +383,20 @@ pro predict, choice,                                                  $
 
            if verbose then print,' istation=', istation, ' ', station
 
-           if file_test(InputDir_deltaB + event_string_obs+'/'+station+'.txt') then begin
-              file_obs_db = InputDir_deltaB + event_string_obs+'/'+station+'.txt'
-           endif else if file_test(InputDir_deltaB + event_string_obs+'/'+station+'.csv') then begin
-              file_obs_db = InputDir_deltaB + event_string_obs+'/'+station+'.csv'
+           if file_test(InputDir_deltaB + '/'+station+'.txt') then begin
+              file_obs_db = InputDir_deltaB + '/'+station+'.txt'
+           endif else if file_test(InputDir_deltaB + '/'+station+'.csv') then begin
+              file_obs_db = InputDir_deltaB + '/'+station+'.csv'
            endif else begin
               if station ne 'PBQ' then begin
                  print,'For event=',event,' there is no observation for station=',station
                  continue
               endif else begin
                  ;; well, for PBQ, it might also be SNK...
-                 if file_test(InputDir_deltaB + event_string_obs+'/SNK.txt') then begin
-                    file_obs_db = InputDir_deltaB + event_string_obs+'/SNK.txt'
-                 endif else if file_test(InputDir_deltaB + event_string_obs+'/SNK.csv') then begin
-                    file_obs_db = InputDir_deltaB + event_string_obs+'/SNK.csv'
+                 if file_test(InputDir_deltaB + '/SNK.txt') then begin
+                    file_obs_db = InputDir_deltaB + '/SNK.txt'
+                 endif else if file_test(InputDir_deltaB + '/SNK.csv') then begin
+                    file_obs_db = InputDir_deltaB + '/SNK.csv'
                  endif else begin
                     print,'For event=',event,' there is no observation for station= PBQ/SNK'
                     continue
@@ -1555,7 +1555,7 @@ pro calc_dst_error, models=models, events=events, mydir=mydir, InputDir=InputDir
      event=event_I(iIndex)
      ;; read in measured values, well, event number is in 2 digits
      ;; form now. 
-     logfilename=mydir + InputDir + "Dst/event_"+string(event,format='(i2.2)')+".txt"
+     logfilename=mydir + InputDir + "/Event"+string(event,format='(i2.2)')+"/Dst.txt"
      logfilenameplot = logfilename
      legends = ['Observation']
      read_log_data
@@ -1716,7 +1716,7 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, events=events, InputDir=InputDir
   for iIndex = 0, n_elements(event_I)-1 do begin
      event = event_I(iIndex)
      ;; set the observed Dst file info
-     logfilename = mydir + InputDir + "Dst/event_"+string(event,format='(i2.2)')+".txt"
+     logfilename = mydir + InputDir + "/Event"+string(event,format='(i2.2)')+"/Dst.txt"
 
      logfilenameplot = logfilename
      legends = ['Observation']
