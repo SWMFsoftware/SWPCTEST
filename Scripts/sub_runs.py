@@ -27,6 +27,14 @@ if __name__ == '__main__':
                             + 'Use if you want to use the marker ^ for'
                             + 'changing the PARAM.in file.',
                             type=int, default=1)
+    ARG_PARSER.add_argument('--SimDir',
+                            help='(default: Runs)'
+                            + 'Use if you want to specify the SimDir'
+                            type=str, default='Runs')
+    ARG_PARSER.add_argument('--nRun',
+                            help='(default: 1)'
+                            + 'Use if you want to specify the nRun'
+                            type=str, default='1')
     ARGS = ARG_PARSER.parse_args()
 
     with open(ARGS.filename, 'rt') as events:
@@ -45,6 +53,15 @@ if __name__ == '__main__':
     # any character after = is considered to be the string containing
     # run IDs.
     StrRunIDs = lines[iSelectedID][iChar+1:]
+
+    # Set EVENTS in the Makefile
+    StrEvents = 'EVENTS='+StrRunIDs.strip()
+
+    # Set SIMDIR in the Makefile
+    StrSimDir = 'SIMDIR='+ARGS.SimDir.strip()
+
+    # Set SIMDIR in the Makefile
+    StrnRunr = 'NRUN='+ARGS.nRun.strip()
 
     # split the string
     List_StrRunIDs = StrRunIDs.split(',')
@@ -110,3 +127,8 @@ if __name__ == '__main__':
                                            out_dir=os.getcwd()+'/Events', RunID=RunID)
                 else:
                     print("Both IMF.dat and dst files exist for Event "+ str(RunID))
+
+    ## submit all the selected events.
+    strRun = ('make test INPUTDIR=Events ' + StrEvents + ' ' + StrSimDir + ' ' + StrnRunr)
+    print('strRun=', strRun)
+    subprocess.call(strRun, shell=True)
