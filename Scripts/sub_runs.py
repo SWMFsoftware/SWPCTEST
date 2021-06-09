@@ -29,11 +29,11 @@ if __name__ == '__main__':
                             type=int, default=1)
     ARG_PARSER.add_argument('--SimDir',
                             help='(default: Runs)'
-                            + 'Use if you want to specify the SimDir'
+                            + 'Use if you want to specify the SimDir',
                             type=str, default='Runs')
     ARG_PARSER.add_argument('--nRun',
                             help='(default: 1)'
-                            + 'Use if you want to specify the nRun'
+                            + 'Use if you want to specify the nRun',
                             type=str, default='1')
     ARGS = ARG_PARSER.parse_args()
 
