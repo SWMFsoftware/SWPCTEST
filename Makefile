@@ -109,39 +109,39 @@ propagate1d_rundir:
 
 propagate1d_run:
 	for e in ${EVENTLIST}; do 				\
-		cp ${MYINPUTDIR}/IMF/event$$e/[Lw]*.dat ${PROPDIR};	\
+		cp ${MYINPUTDIR}/event$$e/[Lw]*.dat ${PROPDIR};	\
 		cd ${PROPDIR}; 					\
 		${MYSCRIPTDIR}/change_param.pl; 		\
 		${PARALLEL} ${NPFLAG} 4 ./BATSRUS.exe > runlog; 	   \
 		perl -p -e 's/test point/Propagated from L1 to/; s/PNT//g' \
-			IO2/log*.log > ${MYINPUTDIR}/IMF/event$$e/IMF_mhd.dat; \
+			IO2/log*.log > ${MYINPUTDIR}/event$$e/IMF_mhd.dat; \
 	done
 
 propagate1d_plot:
 	for e in 02 03 04 05 06 91 92 93 94; do		\
-		cd ${MYINPUTDIR}/IMF/event$$e/;		\
+		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/compare_imf.pro; 	\
 	done
 
 propagate1d_wind_plot:
 	for e in 91 92 93 94; do			\
-		cd ${MYINPUTDIR}/IMF/event$$e/;		\
+		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/compare_wind.pro; 	\
 	done
 
 ballistic:
 	for e in 02 03 04 05 06 95 96 97 98; do		\
-		cd ${MYINPUTDIR}/IMF/event$$e/;		\
+		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic.pro;		\
 	done
 	for e in 91 92 93 94; do			\
-		cd ${MYINPUTDIR}/IMF/event$$e/;		\
+		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic_wind.pro;	\
 	done
 
 ballistic_limited:
 	for e in 02 03 04 05 06 95 96 97 98; do		\
-		cd ${MYINPUTDIR}/IMF/event$$e/;		\
+		cd ${MYINPUTDIR}/event$$e/;		\
 		idl ${MYDIR}/Idl/ballistic_limited.pro;	\
 	done
 
@@ -185,7 +185,7 @@ test_rundir:
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
-		cp -r ${MYINPUTDIR}/IMF/event$$e/*    ${QUEDIR}$${iRun}/Event$$e;           \
+		cp -r ${MYINPUTDIR}/event$$e/IMF.dat    ${QUEDIR}$${iRun}/Event$$e;         \
 		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
