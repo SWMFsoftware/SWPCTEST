@@ -42,7 +42,7 @@ def download_omni(str_start_time='2019-08-04T00:00:00',
         data_sw_clean[key] = data_sw[key][index]
 
     if DoSaveFile:
-        EventDir=out_dir+'/event'+str(RunID).zfill(2)
+        EventDir=out_dir+'/Event'+str(RunID).zfill(2)
 
         # write the header for the orig solar wind file.
         sw_output = open(EventDir+'/'+str_time_filename+'_orig.dat','w')
