@@ -357,9 +357,9 @@ pro predict, choice,                                                  $
 
         ;; check whether the format in SIMDIR/RESDIR is two digits or not.
         if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')) then begin
-           event_string_sim = 'event'+string(event,format='(i2.2)')
+           event_string_sim = 'Event'+string(event,format='(i2.2)')
         endif else begin
-           event_string_sim = 'event'+string(event,format='(i1.1)')
+           event_string_sim = 'Event'+string(event,format='(i1.1)')
         endelse
 
         if verbose then print,' ievent, event=', event, '  Event'+string(event_I,format='(i2.2)')
