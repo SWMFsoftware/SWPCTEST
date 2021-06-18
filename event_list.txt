@@ -1,6 +1,6 @@
 Selected Events = 7-15
 
-Event	Start Time		End Time		F10.7	L1[Re]
+Event	StartTime		EndTime		F10.7	L1[Re]
 #START
 1	2003-10-29T06:00:00	2003-10-30T06:00:00	275.4	231.6
 2	2006-12-14T12:00:00	2006-12-16T00:00:00	 90.5	227.5
