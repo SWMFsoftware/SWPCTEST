@@ -11,8 +11,8 @@ def extract_data(filename,filenameout,str_start_time,str_end_time):
 
     data_all = pd.read_csv(filename, parse_dates=[0])
 
-    index = (data_all['Date_UTC'] > start_time) & \
-        (data_all['Date_UTC'] < end_time)
+    index = (data_all['Date_UTC'] >= start_time) & \
+        (data_all['Date_UTC'] <= end_time)
 
     data_selected = data_all[index]
 
