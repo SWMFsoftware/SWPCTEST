@@ -74,7 +74,7 @@ if __name__ == '__main__':
                 start_time = params[1]
                 end_time   = params[2]
 
-                EventDir=os.getcwd()+'/Events/Event'+str(RunID).zfill(2)+'/deltaB'
+                EventDir=os.getcwd()+'/Events/Event'+str(RunID).zfill(3)+'/deltaB'
 
                 # create the Events dir if needed
                 if not os.path.isdir(os.getcwd()+'/Events'):
@@ -82,9 +82,9 @@ if __name__ == '__main__':
                     print("Created dir:", os.getcwd()+'/Events')
 
                 # create the Events/Event* dir if needed
-                if not os.path.isdir(os.getcwd()+'/Events/Event'+str(RunID).zfill(2)):
-                    os.mkdir(os.getcwd()+'/Events/Event'+str(RunID).zfill(2))
-                    print('Created dir:', os.getcwd()+'/Events/Event'+str(RunID).zfill(2))
+                if not os.path.isdir(os.getcwd()+'/Events/Event'+str(RunID).zfill(3)):
+                    os.mkdir(os.getcwd()+'/Events/Event'+str(RunID).zfill(3))
+                    print('Created dir:', os.getcwd()+'/Events/Event'+str(RunID).zfill(3))
 
                 # create the Events/Event**/deltaB dir if needed
                 if not os.path.isdir(EventDir):
@@ -102,7 +102,7 @@ if __name__ == '__main__':
                         filenameIn = os.getcwd()+ '/supermag_data/' + start_time[0:4] + '/' + iFile
                         filenameOut = EventDir + '/' + iFile
                  
-                        print('extracting data for Station:', iFile)
+                        print('extracting data for Event '+ str(RunID).zfill(3)) + ' at Station:', iFile)
                         extract_supermag.extract_data(filenameIn,filenameOut,
                                                       start_time,end_time)
 
