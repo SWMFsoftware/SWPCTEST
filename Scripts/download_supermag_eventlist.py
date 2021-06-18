@@ -26,7 +26,7 @@ if __name__ == '__main__':
         if re.match(r'Selected Events',line):
             iSelectedID=iLine
         if re.match('#START',line[0:6]):
-            iParamStart=iLine+2
+            iParamStart=iLine+1
             break
 
     # find the location of =
