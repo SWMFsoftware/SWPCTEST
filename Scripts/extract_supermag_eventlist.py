@@ -102,7 +102,7 @@ if __name__ == '__main__':
                         filenameIn = os.getcwd()+ '/supermag_data/' + start_time[0:4] + '/' + iFile
                         filenameOut = EventDir + '/' + iFile
                  
-                        print('extracting data for Event '+ str(RunID).zfill(3)) + ' at Station:', iFile)
+                        print('extracting data for Event '+ str(RunID).zfill(3) + ' at Station:', iFile)
                         extract_supermag.extract_data(filenameIn,filenameOut,
                                                       start_time,end_time)
 
