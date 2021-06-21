@@ -1,3 +1,0 @@
- nRun = 0 is less than 2
- skipping combining dst error tables
-/Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE

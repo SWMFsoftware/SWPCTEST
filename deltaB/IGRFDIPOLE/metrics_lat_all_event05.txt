@@ -1,9 +1,9 @@
 db/dt skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
-Stations used: frn frd fur wng new ott mea pbq abk ykc hrn iqa
 Event   =       5
+For Event  5, Stations used: FRN FRD FUR WNG NEW OTT MEA ABK YKC HRN IQA
 Deltat  =  20.00, threshold unit = [nT/s]
 threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind
-  0.3000   188   440    40   124   792   184   454    26   128   792  0.6026  0.0833  0.5449  0.5897  0.0542  0.5681
-  0.7000    72   615    29    76   792    80   629    15    68   792  0.4865  0.0450  0.5030  0.5405  0.0233  0.6000
-  1.1000    32   683    16    61   792    27   694     5    66   792  0.3441  0.0229  0.4064  0.2903  0.0072  0.3957
-  1.5000    17   723    11    41   792    12   731     3    46   792  0.2931  0.0150  0.3651  0.2069  0.0041  0.3079
+  0.3000   189   435    36   132   792   182   448    23   139   792  0.5888  0.0764  0.5380  0.5670  0.0488  0.5498
+  0.7000    65   609    32    86   792    72   622    19    79   792  0.4305  0.0499  0.4408  0.4768  0.0296  0.5273
+  1.1000    27   686    20    59   792    23   696    10    63   792  0.3140  0.0283  0.3566  0.2674  0.0142  0.3472
+  1.5000    11   730    15    36   792     7   741     4    40   792  0.2340  0.0201  0.2705  0.1489  0.0054  0.2239

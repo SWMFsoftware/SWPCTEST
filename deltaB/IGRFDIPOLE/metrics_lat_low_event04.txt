@@ -1,6 +1,6 @@
 db/dt skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
-Stations used: frd frn fur
 Event   =       4
+For Event  4, Stations used: FRD FRN FUR
 Deltat  =  20.00, threshold unit = [nT/s]
 threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind
   0.3000     0   232     1     1   234     0   226     7     1   234  0.0000  0.0043 -0.0043  0.0000  0.0300 -0.0075

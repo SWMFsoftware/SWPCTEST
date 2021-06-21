@@ -1,9 +1,14 @@
 model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
-Stations used: abk pbq ykc mea
-events =  1 ...  6
+Events = 1,2,3,4,5,6
+For Event  1, Stations used: ABK PBQ YKC MEA
+For Event  2, Stations used: ABK PBQ YKC MEA
+For Event  3, Stations used: ABK PBQ YKC MEA
+For Event  4, Stations used: ABK PBQ YKC MEA
+For Event  5, Stations used: ABK YKC MEA
+For Event  6, Stations used: ABK YKC MEA
 Deltat =  20.00, thresholds unit = [nT/s]
 threshold  pod  far  hss  pod_ind  far_ind  hss_ind
-  0.3000  0.7180  0.1479  0.5202  0.7978  0.1334  0.6256
-  0.7000  0.6110  0.1212  0.5040  0.7028  0.1135  0.6002
-  1.1000  0.5417  0.0975  0.4756  0.6141  0.0708  0.5799
-  1.5000  0.4904  0.0810  0.4465  0.5505  0.0540  0.5480
+  0.3000  0.7078  0.1505  0.5010  0.7845  0.1332  0.6046
+  0.7000  0.6029  0.1118  0.5052  0.6953  0.1118  0.5941
+  1.1000  0.5487  0.0903  0.4923  0.6255  0.0731  0.5866
+  1.5000  0.4975  0.0790  0.4561  0.5628  0.0547  0.5576
