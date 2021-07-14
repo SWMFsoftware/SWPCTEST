@@ -99,6 +99,13 @@ end
 ; ============================================================================
 pro read_station, file, t, data, date, tderiv, dataderiv, dn
 
+  common start_date
+
+  ;; reset common block data
+  start_year  = -1
+  start_month = -1
+  start_day   = -1
+
   ; read logfile, use hours for time unit
   get_log, file, wlog, wlogname, t, 'h'
 
