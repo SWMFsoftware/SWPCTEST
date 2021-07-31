@@ -659,6 +659,13 @@ pro predict, choice,                                                  $
         db_pof = f_ind/(f_ind+n_ind)
         db_hss = 2*(h_ind*n_ind-m_ind*f_ind)/((h_ind+m_ind)*(m_ind+n_ind) + (h_ind+f_ind)*(f_ind+n_ind))
 
+        if (~finite(dbdt_pod)) then dbdt_pod = -777.
+        if (~finite(dbdt_pof)) then dbdt_pof = -777.
+        if (~finite(dbdt_hss)) then dbdt_hss = -777.
+        if (~finite(db_pod))   then db_pod   = -777.
+        if (~finite(db_pof))   then db_pof   = -777.
+        if (~finite(db_hss))   then db_hss   = -777.
+
         if lunOut ne -1 and DoPrintHeader ne 0 then begin
            printf, lunOut, 'db/dt skill scores for models: ' + models
            for iIndex = 0,n_elements(event_I)-1 do begin
@@ -673,7 +680,7 @@ pro predict, choice,                                                  $
         if lunOut ne -1 then $
            printf, lunOut, threshold, h,n,f,m,h+n+f+m, h_ind,n_ind,f_ind,m_ind,h_ind+n_ind+f_ind+m_ind,    $
                    dbdt_pod, dbdt_pof, dbdt_hss, db_pod, db_pof, db_hss,       $
-                   format='(f8.4, 10i6, 6f8.4)'
+                   format='(f8.4, 10i6, 6f12.4)'
      endif
 
      if choice eq 'db' then begin
@@ -687,6 +694,10 @@ pro predict, choice,                                                  $
         db_pof = f/(f+n)
         db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
 
+        if (~finite(db_pod))   then db_pod   = -777.
+        if (~finite(db_pof))   then db_pof   = -777.
+        if (~finite(db_hss))   then db_hss   = -777.
+
         if lunOut ne -1 and DoPrintHeader ne 0 then begin
            printf, lunOut, 'db skill scores for models: ' + models
            for iIndex = 0,n_elements(event_I)-1 do begin
@@ -696,9 +707,9 @@ pro predict, choice,                                                  $
            printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
            printf, lunOut, 'threshold  TP  TN  FP  FN  total  pod  far  hss'
         endif
-     
+
         if lunOut ne -1 then $
-           printf, lunOut, threshold, h,n,f,m,h+n+f+m, db_pod, db_pof, db_hss, format='(f8.4,5i6, 3f8.4)'
+           printf, lunOut, threshold, h,n,f,m,h+n+f+m, db_pod, db_pof, db_hss, format='(f8.4,5i6, 3f12.4)'
      
      endif
 
@@ -1319,7 +1330,7 @@ end
 ;==============================================================================
 
 pro save_tables, model=model, events=events, mydir=mydir, InputDir=InputDir
-  
+
   ;; Create tables containing db/dt and db skill scores.
   ;; Defaults are 'Results'
   ;; Combine scores for all events from the event string
@@ -1341,95 +1352,104 @@ end
 
 pro save_table, stationlat, model, events=events, mydir=mydir, InputDir=InputDir
 
-;; Create tables containing db/dt and db skill scores.
-;; for the stationlat station group:
-;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low'. Default is all.
-;; If model1 is not given 'Results' is assumed. 
-;; Events starting from the events strng (default is 1 to 6).
-
+  ;; Create tables containing db/dt and db skill scores from
+  ;; individual event files.
+  ;; for the stationlat station group:
+  ;; stationlat = 'all', 'veryhigh', 'high', 'mid' or 'low'. Default is all.
+  ;; If model1 is not given 'Results' is assumed.
+  ;; Events starting from the events strng (default is 1 to 6).
+  
   if n_elements(stationlat) lt 1 then stationlat='all'
   if n_elements(model)      lt 1 then model = 'Results'
 
   event_I = set_eventlist(events,mydir,model)
 
-  thresholds=[101.6, 213.6, 317.5, 416.7]
-  deltat = 20.
+  ;; 4 threshols,  9 vars, nEvents for db
+  ;; 4 threshols, 17 vars, nEvents for db
+  db_scores_III   = fltarr(4, 9,n_elements(event_I))
+  dbdt_scores_III = fltarr(4,17,n_elements(event_I))
 
-  ; Size of results arrays:
-  nthresh = n_elements(thresholds)
-  nmetric = 3 ; POD, FAR, HSS
+  ;; for db scores....
+  filenameOut = "metric_table_db_" + stationlat + ".txt"
+  openw, lunlocal, filenameOut, /get_lun
+  printf,lunlocal, 'model: ' + model
+  printf,lunlocal, 'Events = ' + events
 
-  ; Arrays to store results:
-  directs    = fltarr(nmetric, nthresh)
-  indirects  = fltarr(nmetric, nthresh)
-  
-  stencil  = 1
-  scale    = 292
-  exponent = 1.14
-
-  for ithresh = 0, nthresh-1 do begin
-     threshold = thresholds[ithresh]
-
-     ; Results for model:
-     predict,'db',stationlat=stationlat,threshold=threshold,scale=scale, $
-             exponent=exponent,deltat=deltat, stencil=stencil, $
-             models=[model], $
-             events=events, $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof, $
-             mydir=mydir, stations_used=stations_used, InputDir=InputDir
-
-     directs[  *, ithresh] = [db_pod,   db_pof,   db_hss  ]
-  endfor
-
-  filename = "metric_table_db_" + stationlat + ".txt"
-  openw, lun, filename, /get_lun
-
-  printf, lun, 'model: ' + model
-  printf, lun, 'Events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
   for iIndex = 0,n_elements(event_I)-1 do begin
-     printf, lun, 'For Event '+string(event_I[iIndex],format='(i2)')+', Stations used: '+strtrim(stations_used[iIndex])
-  endfor
-  printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT]'
-  printf, lun, 'threshold  pod      far     hss'
-  for ithresh = 0, nthresh-1 do begin
-     printf, lun, thresholds[ithresh], directs[*,ithresh], format='(4f8.4)'
-  endfor
-  free_lun, lun
+     event = event_I(iIndex)
+     filename=string(stationlat, event, $
+                     format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
 
-  ; for db/dt skill scores
-  thresholds=[0.3, 0.7, 1.1, 1.5]
-  deltat = 20.
+     get_log, filename, wlog, wlogname, headlines=headlines
+     db_scores_III(*,*,iIndex) = wlog
 
-  for ithresh = 0, nthresh-1 do begin
-     threshold = thresholds[ithresh]
+     printf, lunlocal, headlines(2)
+  end
 
-     ; Results for model:
-     predict,'dbdt',stationlat=stationlat,threshold=threshold,scale=scale, $
-             exponent=exponent,deltat=deltat, stencil=stencil, $
-             models=[model], $
-             events=events, $
-             dbdt_hss=dbdt_hss, dbdt_pod=dbdt_pod, dbdt_pof=dbdt_pof,   $
-             db_hss  =db_hss,   db_pod  =db_pod,   db_pof  =db_pof,     $
-             mydir=mydir, stations_used=stations_used, InputDir=InputDir
+  printf, lunlocal,headlines(3)
+  printf, lunlocal, 'threshold  pod      far     hss'
 
-     directs[  *, ithresh] = [dbdt_pod, dbdt_pof, dbdt_hss]
-     indirects[*, ithresh] = [db_pod,   db_pof,   db_hss  ]
-  endfor
+  for i=0,3 do begin
+     ;; so stupid that the print out is not the same order as defined
+     ;; in predict
+     h = total(db_scores_III(i,1,*))
+     n = total(db_scores_III(i,2,*))
+     f = total(db_scores_III(i,3,*))
+     m = total(db_scores_III(i,4,*))
 
-  filename = "metric_table_" + stationlat + ".txt"
-  openw, lun, filename, /get_lun
-  printf, lun, 'model: '+ model
-  printf, lun, 'Events = ' + strjoin(strtrim(string(event_I,format='(i)'),2),',')
+     db_pod = h/(h+m)
+     db_pof = f/(f+n)
+     db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
+
+     printf, lunlocal, wlog(i,0), db_pod, db_pof, db_hss, format='(4f8.4)'
+  end
+  free_lun, lunlocal
+
+  ;; for dbdt scores....
+  filenameOut = "metric_table_" + stationlat + ".txt"
+  openw, lunlocal, filenameOut, /get_lun
+  printf,lunlocal, 'model: ' + model
+  printf,lunlocal, 'Events = ' + events
+
   for iIndex = 0,n_elements(event_I)-1 do begin
-     printf, lun, 'For Event '+string(event_I[iIndex],format='(i2)')+', Stations used: '+strtrim(stations_used[iIndex])
-  endfor
-  printf, lun, 'Deltat = ' + string(deltat, format='(f6.2)') + ', thresholds unit = [nT/s]'
-  printf, lun, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
-  for ithresh = 0, nthresh-1 do begin
-     printf, lun, thresholds[ithresh],  directs[*,ithresh], $
-             indirects[*,ithresh], format='(7f8.4)'
-  endfor
-  free_lun, lun
+     event = event_I(iIndex)
+     filename=string(stationlat, event, $
+                     format='("metrics_lat_",a3,"_event",i2.2,".txt")')
+
+     get_log, filename, wlog, wlogname, headlines=headlines
+     dbdt_scores_III(*,*,iIndex) = wlog
+
+     printf, lunlocal, headlines(2)
+  end
+
+  printf, lunlocal,headlines(3)
+  printf, lunlocal, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
+
+  for i=0,3 do begin
+     ;; so stupid that the print out is not the same order as defined
+     ;; in predict
+     h = total(dbdt_scores_III(i,1,*))
+     n = total(dbdt_scores_III(i,2,*))
+     f = total(dbdt_scores_III(i,3,*))
+     m = total(dbdt_scores_III(i,4,*))
+
+     h_ind = total(dbdt_scores_III(i,6,*))
+     n_ind = total(dbdt_scores_III(i,7,*))
+     f_ind = total(dbdt_scores_III(i,8,*))
+     m_ind = total(dbdt_scores_III(i,9,*))
+
+     dbdt_pod = h/(h+m)
+     dbdt_pof = f/(f+n)
+     dbdt_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
+
+     dbdt_pod_ind = h_ind/(h_ind+m_ind)
+     dbdt_pof_ind = f_ind/(f_ind+n_ind)
+     dbdt_hss_ind = 2*(h_ind*n_ind-m_ind*f_ind)/((h_ind+m_ind)*(m_ind+n_ind) + (h_ind+f_ind)*(f_ind+n_ind))
+
+     printf, lunlocal, wlog(i,0), dbdt_pod, dbdt_pof, dbdt_hss, $
+             dbdt_pod_ind, dbdt_pof_ind, dbdt_hss_ind, format='(7f8.4)'
+  end
+  free_lun, lunlocal
 end
 
 ;==============================================================================
