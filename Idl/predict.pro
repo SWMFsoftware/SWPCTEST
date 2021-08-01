@@ -97,6 +97,20 @@ function scale_exp, x, a
 end
 
 ; ============================================================================
+
+pro get_skill_scores,h,f,m,n,pod,pof,hss
+
+  pod = h/(h+m)
+  pof = f/(f+n)
+  hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
+
+  if (~finite(pod)) then pod = -777.
+  if (~finite(pof)) then pof = -777.
+  if (~finite(hss)) then hss = -777.
+end
+
+; ============================================================================
+
 pro read_station, file, t, data, date, tderiv, dataderiv, dn
 
   common start_date
@@ -490,7 +504,6 @@ pro predict, choice,                                                  $
                  db_score[  *,istation] = db_score[*,istation] + $
                                           [hit_db, false_db, miss_db, no_db]
 
-                 
                  if showplot then begin
                     title = strupcase(station) + ': H,F,M,N=' + $
                             string(hit_db, false_db, miss_db, no_db, $
@@ -646,25 +659,13 @@ pro predict, choice,                                                  $
         m = total(dbdt_score(2,*))
         n = total(dbdt_score(3,*))
 
-        dbdt_pod = h/(h+m)
-        dbdt_pof = f/(f+n)
-        dbdt_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
-
         h_ind = total(db_score(0,*))
         f_ind = total(db_score(1,*))
         m_ind = total(db_score(2,*))
         n_ind = total(db_score(3,*))
 
-        db_pod = h_ind/(h_ind+m_ind)
-        db_pof = f_ind/(f_ind+n_ind)
-        db_hss = 2*(h_ind*n_ind-m_ind*f_ind)/((h_ind+m_ind)*(m_ind+n_ind) + (h_ind+f_ind)*(f_ind+n_ind))
-
-        if (~finite(dbdt_pod)) then dbdt_pod = -777.
-        if (~finite(dbdt_pof)) then dbdt_pof = -777.
-        if (~finite(dbdt_hss)) then dbdt_hss = -777.
-        if (~finite(db_pod))   then db_pod   = -777.
-        if (~finite(db_pof))   then db_pof   = -777.
-        if (~finite(db_hss))   then db_hss   = -777.
+        get_skill_scores,h,f,m,n,dbdt_pod,dbdt_pof,dbdt_hss
+        get_skill_scores,h_ind,f_ind,m_ind,n_ind,db_pod,db_pof,db_hss
 
         if lunOut ne -1 and DoPrintHeader ne 0 then begin
            printf, lunOut, 'db/dt skill scores for models: ' + models
@@ -690,13 +691,7 @@ pro predict, choice,                                                  $
         m = total(db_score(2,*))
         n = total(db_score(3,*))
 
-        db_pod = h/(h+m)
-        db_pof = f/(f+n)
-        db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
-
-        if (~finite(db_pod))   then db_pod   = -777.
-        if (~finite(db_pof))   then db_pof   = -777.
-        if (~finite(db_hss))   then db_hss   = -777.
+        get_skill_scores,h,f,m,n,db_pod,db_pof,db_hss
 
         if lunOut ne -1 and DoPrintHeader ne 0 then begin
            printf, lunOut, 'db skill scores for models: ' + models
@@ -1397,9 +1392,7 @@ pro save_table, stationlat, model, events=events, mydir=mydir, InputDir=InputDir
      f = total(db_scores_III(i,3,*))
      m = total(db_scores_III(i,4,*))
 
-     db_pod = h/(h+m)
-     db_pof = f/(f+n)
-     db_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
+     get_skill_scores,h,f,m,n,db_pod,db_pof,db_hss
 
      printf, lunlocal, wlog(i,0), db_pod, db_pof, db_hss, format='(4f8.4)'
   end
@@ -1438,13 +1431,8 @@ pro save_table, stationlat, model, events=events, mydir=mydir, InputDir=InputDir
      f_ind = total(dbdt_scores_III(i,8,*))
      m_ind = total(dbdt_scores_III(i,9,*))
 
-     dbdt_pod = h/(h+m)
-     dbdt_pof = f/(f+n)
-     dbdt_hss = 2*(h*n-m*f)/((h+m)*(m+n) + (h+f)*(f+n))
-
-     dbdt_pod_ind = h_ind/(h_ind+m_ind)
-     dbdt_pof_ind = f_ind/(f_ind+n_ind)
-     dbdt_hss_ind = 2*(h_ind*n_ind-m_ind*f_ind)/((h_ind+m_ind)*(m_ind+n_ind) + (h_ind+f_ind)*(f_ind+n_ind))
+     get_skill_scores,h,f,m,n,dbdt_pod,dbdt_pof,dbdt_hss
+     get_skill_scores,h_ind,f_ind,m_ind,n_ind,dbdt_pod_ind,dbdt_pof_ind,dbdt_hss_ind
 
      printf, lunlocal, wlog(i,0), dbdt_pod, dbdt_pof, dbdt_hss, $
              dbdt_pod_ind, dbdt_pof_ind, dbdt_hss_ind, format='(7f8.4)'
