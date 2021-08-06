@@ -1,4 +1,4 @@
-model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+model: /Users/zghuang/SWMF/SWPCTEST/deltaB/IGRFDIPOLE/
 Events = 1,2,3,4,5,6
 For Event  1, Stations used: FRD FRN FUR
 For Event  2, Stations used: FRD FRN FUR
@@ -6,7 +6,7 @@ For Event  3, Stations used: FRD FRN FUR
 For Event  4, Stations used: FRD FRN FUR
 For Event  5, Stations used: FRD FRN FUR
 For Event  6, Stations used: FRD FRN FUR
-Deltat =  20.00, thresholds unit = [nT/s]
+Deltat  =  20.00, threshold unit = [nT/s]
 threshold  pod  far  hss  pod_ind  far_ind  hss_ind
   0.3000  0.8580  0.0806  0.6494  0.8639  0.1564  0.4904
   0.7000  0.6949  0.0536  0.4436  0.8136  0.0895  0.3811

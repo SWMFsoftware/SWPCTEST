@@ -1,9 +1,9 @@
-db skill scores for models: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+db skill scores for model: IGRFDIPOLE/
 Event   =       2
 For Event  2, Stations used: ABK PBQ YKC MEA
 Deltat  =  20.00, threshold unit = [nT]
 threshold  TP  TN  FP  FN  total  pod  far  hss
-101.6000   290    56    58    28   432  0.9119  0.5088  0.4403
-213.6000   165   140    65    62   432  0.7269  0.3171  0.4101
-317.5000    88   217    46    81   432  0.5207  0.1749  0.3591
-416.7000    52   256    25    99   432  0.3444  0.0890  0.2881
+101.6000   290    56    58    28   432      0.9119      0.5088      0.4403
+213.6000   165   140    65    62   432      0.7269      0.3171      0.4101
+317.5000    88   217    46    81   432      0.5207      0.1749      0.3591
+416.7000    52   256    25    99   432      0.3444      0.0890      0.2881

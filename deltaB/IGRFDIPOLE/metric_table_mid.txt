@@ -1,4 +1,4 @@
-model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+model: /Users/zghuang/SWMF/SWPCTEST/deltaB/IGRFDIPOLE/
 Events = 1,2,3,4,5,6
 For Event  1, Stations used: WNG NEW OTT
 For Event  2, Stations used: WNG NEW OTT
@@ -6,7 +6,7 @@ For Event  3, Stations used: WNG NEW OTT
 For Event  4, Stations used: WNG NEW OTT
 For Event  5, Stations used: WNG NEW OTT
 For Event  6, Stations used: WNG NEW OTT
-Deltat =  20.00, thresholds unit = [nT/s]
+Deltat  =  20.00, threshold unit = [nT/s]
 threshold  pod  far  hss  pod_ind  far_ind  hss_ind
   0.3000  0.7481  0.0690  0.6944  0.7048  0.0875  0.6303
   0.7000  0.7333  0.0338  0.7208  0.7524  0.0289  0.7486

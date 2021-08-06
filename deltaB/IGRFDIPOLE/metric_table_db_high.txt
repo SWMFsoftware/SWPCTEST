@@ -1,4 +1,4 @@
-model: /Users/gtoth/swmf/HEAD/SWPCTEST/deltaB/IGRFDIPOLE/
+model: /Users/zghuang/SWMF/SWPCTEST/deltaB/IGRFDIPOLE/
 Events = 1,2,3,4,5,6
 For Event  1, Stations used: ABK PBQ YKC MEA
 For Event  2, Stations used: ABK PBQ YKC MEA
@@ -6,7 +6,7 @@ For Event  3, Stations used: ABK PBQ YKC MEA
 For Event  4, Stations used: ABK PBQ YKC MEA
 For Event  5, Stations used: ABK YKC MEA
 For Event  6, Stations used: ABK YKC MEA
-Deltat =  20.00, thresholds unit = [nT]
+Deltat  =  20.00, threshold unit = [nT]
 threshold  pod      far     hss
 101.6000  0.8094  0.1833  0.6118
 213.6000  0.6988  0.1317  0.5767
