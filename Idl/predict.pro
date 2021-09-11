@@ -350,7 +350,8 @@ pro predict, choice,                                                  $
              showinfo=showinfo, verbose=verbose,                      $
              showplot=showplot, saveplot=saveplot, mydir=mydir,       $
              stations_used=stations_used, DoPrintHeader=DoPrintHeader,$
-             InputDir=InputDir
+             InputDir=InputDir,lunStation=lunStation,                 $
+             DoPrintStationHeader=DoPrintStationHeader
 
   ;; choice = 'db', 'dbdt', 'corr'
   ;; model: the directorys containing results (not an array anymore)
@@ -384,7 +385,9 @@ pro predict, choice,                                                  $
   if not keyword_set(showplot) then showplot=0
   if not keyword_set(saveplot) then saveplot=0
   if not keyword_set(lunOut)   then lunOut=-1 ; -1 is STDOUT
+  if not keyword_set(lunStation)    then lunStation=-1 ; -1 is STDOUT
   if not keyword_set(DoPrintHeader) then DoPrintHeader = 0
+  if not keyword_set(DoPrintStationHeader) then DoPrintStationHeader = 0
   if not keyword_set(InputDir) then InputDir='Inputs'
   if saveplot then showplot=1
 
@@ -605,6 +608,20 @@ pro predict, choice,                                                  $
 
               get_skill_scores,hit_db,false_db,miss_db,no_db,db_pod_local,db_pof_local,db_hss_local
               
+              if lunStation ne -1 and DoPrintStationHeader ne 0 then begin
+                 printf, lunStation, 'db skill scores for model: ' + model
+                 printf, lunStation, 'Event   =', event_I[iEvent]
+                 printf, lunStation, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
+                 printf, lunStation, $
+                         'name threshold  TP  TN  FP  FN  total   pod  far  hss'
+                 DoPrintStationHeader = 0
+              endif
+     
+              if lunStation ne -1 then $
+                 printf, lunStation, station, threshold, hit_db,no_db,false_db,miss_db,         $
+                         hit_db+no_db+false_db+miss_db, db_pod_local,db_pof_local,db_hss_local, $
+                         format='(a3,1x,f8.4, 5i6, 3f12.4)'
+              
               if showplot then begin
                  title = strupcase(station) + ': H,F,M,N=' + $
                          string(hit_db, false_db, miss_db, no_db, $
@@ -681,6 +698,22 @@ pro predict, choice,                                                  $
 
               get_skill_scores,hit_dbdt,false_dbdt,miss_dbdt,no_dbdt,dbdt_pod_local,dbdt_pof_local,dbdt_hss_local
               get_skill_scores,hit_db,false_db,miss_db,no_db,db_pod_local,db_pof_local,db_hss_local
+
+              if lunStation ne -1 and DoPrintStationHeader ne 0 then begin
+                 printf, lunStation, 'db/dt skill scores for model: ' + model
+                 printf, lunStation, 'Event   =', event_I[iEvent]
+                 printf, lunStation, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
+                 printf, lunStation, $
+                         'name threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
+                 DoPrintStationHeader = 0
+              endif
+     
+              if lunStation ne -1 then $
+                 printf, lunStation, station, threshold, hit_dbdt,no_dbdt,false_dbdt,miss_dbdt,$
+                         hit_dbdt+no_dbdt+false_dbdt+miss_dbdt, $
+                         hit_db,no_db,false_db,miss_db,hit_db+no_db+false_db+miss_db,      $
+                         dbdt_pod_local,dbdt_pof_local,dbdt_hss_local, db_pod_local,db_pof_local,db_hss_local,       $
+                         format='(a3,1x,f8.4, 10i6, 6f12.4)'
 
               if showplot then begin
                  if verbose then print,'plotting into p.multi=',!p.multi
@@ -780,8 +813,9 @@ pro predict, choice,                                                  $
         printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
         printf, lunOut, $
                 'threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
+        DoPrintHeader = 0
      endif
-
+     
      if lunOut ne -1 then $
         printf, lunOut, threshold, h,n,f,m,h+n+f+m, h_ind,n_ind,f_ind,m_ind,h_ind+n_ind+f_ind+m_ind,    $
                 dbdt_pod, dbdt_pof, dbdt_hss, db_pod, db_pof, db_hss,       $
@@ -805,6 +839,7 @@ pro predict, choice,                                                  $
         endfor
         printf, lunOut, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
         printf, lunOut, 'threshold  TP  TN  FP  FN  total  pod  far  hss'
+        DoPrintHeader = 0
      endif
 
      if lunOut ne -1 then $
@@ -1077,14 +1112,20 @@ pro calc_all_events, choice=choice, models=models, events=events, $
            stationIn_I = strsplit(station_I(istation),/extract)
            if choice eq 'dbdt' then begin
               filename=string(station_orig_I(istation), event, $
-                              format='("metrics_lat_",a3,"_event",i2.2,".txt")')
+                                 format='("metrics_lat_",a3,"_event",i2.2,".txt")')
+              filenameStation=string(station_orig_I(istation), event, $
+                                 format='("metrics_stations_lat_",a3,"_event",i2.2,".txt")')
            endif else if choice eq 'db' then begin
               filename=string(station_orig_I(istation), event, $
-                              format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
+                                 format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
+              filenameStation=string(station_orig_I(istation), event, $
+                                 format='("metrics_stations_db_lat_",a3,"_event",i2.2,".txt")')
            endif
 
-           openw,  lunOut, filename, append=ithresh, /get_lun
-           DoPrintHeader = 1
+           openw,  lunOut,     filename,        append=ithresh, /get_lun
+           openw,  lunStation, filenameStation, append=ithresh, /get_lun
+           DoPrintHeader        = 1
+           DoPrintStationHeader = 1
            for ithresh = 0, n_elements(thresholds)-1 do begin
               threshold = thresholds[ithresh]
               predict,choice,                                     $
@@ -1093,14 +1134,13 @@ pro calc_all_events, choice=choice, models=models, events=events, $
                       scale=scale, exponent=exponent,             $
                       events=string(event,format='(i2.2)'),       $
                       deltat=deltat, stencil=stencil,             $
-                      lunOut=lunOut,                              $
+                      lunOut=lunOut, lunStation=lunStation,       $
                       saveplot=(station_orig_I(istation) eq 'all_ccmc'),             $
                       mydir=mydir, DoPrintHeader=DoPrintHeader,   $
-                      InputDir=InputDir
-              DoPrintHeader = 0
+                      InputDir=InputDir,DoPrintStationHeader=DoPrintStationHeader
            endfor
-           close, lunOut
-           free_lun, lunOut
+           close, lunOut     & free_lun, lunOut
+           close, lunStation & free_lun, lunStation
         endfor
      endfor
   endfor
