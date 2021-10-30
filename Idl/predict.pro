@@ -190,7 +190,7 @@ end
 ; ============================================================================
 
 pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
-                    event=event,station_I, station_orig_I
+                    event=event,stations_I, station_orig_I
 
   ;; read the stationsFile containing the selected stations.
 
@@ -207,7 +207,10 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
 
   file_sim_I = FILE_SEARCH(patten_sim, count=nFileSim)
 
-  if nFileSim eq 0 then print, 'Error no simulation files!!!'
+  if nFileSim eq 0 then begin
+     print, 'Error no simulation files found for patten_sim: ' $
+            + patten_sim
+  endif
   
   str_stations_all = ''
   
@@ -233,7 +236,7 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
   line=''
   i = 0
   ;; up to 1000 lines...
-  station_I      = strarr(1000)
+  stations_I     = strarr(1000)
   station_orig_I = strarr(1000)
 
   while not eof(lun) do begin
@@ -241,62 +244,62 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
      if line eq 'IAGA' then continue
 
      if line eq 'all_ccmc' then begin
-        station_I[i] = 'frn frd fur wng new ott mea pbq abk ykc hrn iqa'
+        stations_I[i] = 'frn frd fur wng new ott mea pbq abk ykc hrn iqa'
      endif else if line eq 'veryhigh_ccmc' then begin
-        station_I[i] = 'hrn iqa'
+        stations_I[i] = 'hrn iqa'
      endif else if line eq 'high_ccmc' then begin
-        station_I[i] = 'abk pbq ykc mea'
+        stations_I[i] = 'abk pbq ykc mea'
      endif else if line eq 'mid_ccmc' then begin
-        station_I[i] = 'wng new ott'
+        stations_I[i] = 'wng new ott'
      endif else if line eq 'low_ccmc' then begin
-        station_I[i] = 'frd frn fur'
+        stations_I[i] = 'frd frn fur'
      endif else if line eq 'all_stations' then begin
-        station_I[i] = str_stations_all
+        stations_I[i] = str_stations_all
      endif else if line eq 'low_stations' then begin
-        str_station_I = strsplit(str_stations_all,/extract)
+        str_stations_I = strsplit(str_stations_all,/extract)
         str_stations_tmp = ''
-        for istation = 0, n_elements(str_station_I)-1 do begin
-           station_tmp = str_station_I(istation)
+        for istation = 0, n_elements(str_stations_I)-1 do begin
+           station_tmp = str_stations_I(istation)
            iloc = where(wlogrownames eq station_tmp)
            if iloc lt 0 then continue
            if (wlog(iloc, 2) le 50) then $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
-        station_I[i] = strtrim(str_stations_tmp)
+        stations_I[i] = strtrim(str_stations_tmp)
      endif else if line eq 'mid_stations' then begin
-        str_station_I = strsplit(str_stations_all,/extract)
+        str_stations_I = strsplit(str_stations_all,/extract)
         str_stations_tmp = ''
-        for istation = 0, n_elements(str_station_I)-1 do begin
-           station_tmp = str_station_I(istation)
+        for istation = 0, n_elements(str_stations_I)-1 do begin
+           station_tmp = str_stations_I(istation)
            iloc = where(wlogrownames eq station_tmp)
            if (wlog(iloc, 2) gt 50 and wlog(iloc, 2) le 60) then $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
-        station_I[i] = strtrim(str_stations_tmp)
+        stations_I[i] = strtrim(str_stations_tmp)
      endif else if line eq 'high_stations' then begin
-        str_station_I = strsplit(str_stations_all,/extract)
+        str_stations_I = strsplit(str_stations_all,/extract)
         str_stations_tmp = ''
-        for istation = 0, n_elements(str_station_I)-1 do begin
-           station_tmp = str_station_I(istation)
+        for istation = 0, n_elements(str_stations_I)-1 do begin
+           station_tmp = str_stations_I(istation)
            iloc = where(wlogrownames eq station_tmp)
            if (wlog(iloc, 2) gt 60 and wlog(iloc, 2) le 70) then $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
-        station_I[i] = strtrim(str_stations_tmp)
+        stations_I[i] = strtrim(str_stations_tmp)
      endif else if line eq 'veryhigh_stations' then begin
-        str_station_I = strsplit(str_stations_all,/extract)
+        str_stations_I = strsplit(str_stations_all,/extract)
         str_stations_tmp = ''
-        for istation = 0, n_elements(str_station_I)-1 do begin
-           station_tmp = str_station_I(istation)
+        for istation = 0, n_elements(str_stations_I)-1 do begin
+           station_tmp = str_stations_I(istation)
            iloc = where(wlogrownames eq station_tmp)
            if station_tmp eq 'IQA' then $
               print, 'IQA lat =', wlog(iloc, 2)
            if (wlog(iloc, 2) gt 70) then $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
-        station_I[i] = strtrim(str_stations_tmp)
+        stations_I[i] = strtrim(str_stations_tmp)
      endif else if line ne '' then begin
-        station_I[i] = line
+        stations_I[i] = line
      endif
 
      if line ne '' then station_orig_I(i) = line
@@ -306,7 +309,7 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
 
   close,lun & free_lun,lun
   
-  station_I      = strupcase(station_I[0:i-1])
+  stations_I     = strupcase(stations_I[0:i-1])
   station_orig_I = station_orig_I[0:i-1]
 end
 
@@ -551,8 +554,8 @@ pro predict, choice,                                                  $
                       db_sim, date_sim, t_dbdt_sim, dbdt_sim, stencil
 
         if date_obs ne date_sim then begin
-           print, "Waring: the observation and simulation are not on the same day for Event ", event
-           print, "adjust t_db_sim and t_dbdt_sim to align with observations."
+           print, "adjust t_db_sim and t_dbdt_sim to align with observations for Event " $
+                  + string(event,format='(i2.2)')
            t_db_sim   = t_db_sim   - (date_obs-date_sim)*24
            t_dbdt_sim = t_dbdt_sim - (date_obs-date_sim)*24
         endif
@@ -611,9 +614,9 @@ pro predict, choice,                                                  $
               if lunStation ne -1 and DoPrintStationHeader ne 0 then begin
                  printf, lunStation, 'db skill scores for model: ' + model
                  printf, lunStation, 'Event   =', event_I[iEvent]
-                 printf, lunStation, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
+                 printf, lunStation, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
                  printf, lunStation, $
-                         'name threshold  TP  TN  FP  FN  total   pod  far  hss'
+                         'name threshold  TP  TN  FP  FN  total  pod  far  hss'
                  DoPrintStationHeader = 0
               endif
      
@@ -1106,20 +1109,53 @@ pro calc_all_events, choice=choice, models=models, events=events, $
         event=event_I(iEvent)
         set_stationlist, mydir=mydir, stationsFile='stations.csv',$
                          model=model, event=event,                $
-                         station_I, station_orig_I
+                         stations_I, station_orig_I
 
-        for istation = 0, n_elements(station_I)-1 do begin
-           stationIn_I = strsplit(station_I(istation),/extract)
+        for istation = 0, n_elements(stations_I)-1 do begin
+           stationIn_I = strsplit(stations_I(istation),/extract)
            if choice eq 'dbdt' then begin
               filename=string(station_orig_I(istation), event, $
                                  format='("metrics_lat_",a3,"_event",i2.2,".txt")')
               filenameStation=string(station_orig_I(istation), event, $
                                  format='("metrics_stations_lat_",a3,"_event",i2.2,".txt")')
+
+              if strpos(station_orig_I(istation), 'all') ne 0 then begin
+                 filenameInLocal='metrics_stations_lat_all_event' $
+                                 +string(event,format='(i2.2)')+'.txt'
+
+                 if file_test(filenameInLocal) then begin
+                    print, filenameInLocal + ' exists, get socres from file.'
+                    get_scores_from_file, choice, filenameInLocal,  $
+                                          stations_I(istation),     $
+                                          filename, filenameStation,$
+                                          event,thresholds
+                    continue
+                 endif else begin
+                    print, filenameInLocal + ' does not exist, calculate the scores...'
+                 endelse
+
+              endif
            endif else if choice eq 'db' then begin
               filename=string(station_orig_I(istation), event, $
                                  format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
               filenameStation=string(station_orig_I(istation), event, $
                                  format='("metrics_stations_db_lat_",a3,"_event",i2.2,".txt")')
+
+              if strpos(station_orig_I(istation), 'all') ne 0 then begin
+                 filenameInLocal='metrics_stations_db_lat_all_event' $
+                                 +string(event,format='(i2.2)')+'.txt'
+
+                 if file_test(filenameInLocal) then begin
+                    print, filenameInLocal + ' exists, get socres from file.'
+                    get_scores_from_file, choice, filenameInLocal,    $
+                                          stations_I(istation),       $
+                                          filename, filenameStation,  $
+                                          event,thresholds
+                    continue
+                 endif else begin
+                    print, filenameInLocal + ' does not exist, calculate the scores...'
+                 endelse
+              endif
            endif
 
            openw,  lunOut,     filename,        append=ithresh, /get_lun
@@ -1145,6 +1181,101 @@ pro calc_all_events, choice=choice, models=models, events=events, $
      endfor
   endfor
 end
+;==============================================================================
+
+pro get_scores_from_file, choice, filenameInLocal, strStations, $
+                          filename, filenameStation, event,thresholds
+
+  get_log, filenameInLocal, wlog,  wlognames, logtime, 'h', $
+           wlogrownames,headlines=headlinesLocal
+
+  stationLocal_I = strsplit(strStations,/extract)
+
+  strStationsUsed = strStations
+
+  if choice eq 'dbdt' then begin
+     formatOut = '(a3,1x,f8.4, 10i6, 6f12.4)'
+  endif else if choice eq 'db' then begin
+     formatOut ='(a3,1x,f8.4, 5i6, 3f12.4)'
+  endif
+
+  ;; no idea why the new line char is missing???
+
+  openw, lunOut, filenameStation, /get_lun
+  for i=0,n_elements(headlinesLocal)-1 do begin
+     printf,lunOut, headlinesLocal(i)
+  endfor
+
+  for istationLocal = 0, n_elements(stationLocal_I)-1 do begin
+     index_local = where(wlogrownames eq stationLocal_I(istationLocal),nLocal)
+     if nLocal eq 0 then begin
+        ;; skip the station if not found in the file and removed it
+        ;; from strStationsUsed
+        strStationsUsed = strStationsUsed.replace(' '+stationLocal_I(istationLocal),'')
+        continue
+     endif
+     for iIndex=0,n_elements(index_local)-1 do begin
+        printf, lunOut, wlogrownames(index_local(iIndex)),     $
+                wlog(index_local(iIndex),*),format=formatOut
+     endfor
+  endfor
+
+  close, lunOut & free_lun, lunOut
+
+  openw, lunOut, filename, /get_lun
+  printf,lunOut, headlinesLocal(0)
+  printf,lunOut, headlinesLocal(1)
+  printf,lunOut, 'For Event '+string(event,format='(i2)')$
+         +', Stations used: '+strStationsUsed
+
+  for i=2,n_elements(headlinesLocal)-2 do begin
+     printf,lunOut, headlinesLocal(i)
+  endfor
+  printf,lunOut,headlinesLocal(n_elements(headlinesLocal)-1).replace('name ','')
+
+  for ithres=0,n_elements(thresholds)-1 do begin
+     threshold   = thresholds(ithres)
+     index_thres = where(abs(wlog(*,0)-threshold) le 1e-4)
+
+     ;; reset all counts
+     h=0     & f=0     & m=0     & n=0
+     h_ind=0 & f_ind=0 & m_ind=0 & n_ind=0
+
+     for istationLocal = 0, n_elements(stationLocal_I)-1 do begin
+        index_stat = where(wlogrownames(index_thres) eq stationLocal_I(istationLocal),nLocal)
+        if nLocal eq 0 then continue
+
+        h = h + wlog(index_thres(index_stat),1)
+        f = f + wlog(index_thres(index_stat),3)
+        m = m + wlog(index_thres(index_stat),4)
+        n = n + wlog(index_thres(index_stat),2)
+
+        if choice eq 'dbdt' then begin
+           h_ind = h_ind + wlog(index_thres(index_stat),6)
+           f_ind = f_ind + wlog(index_thres(index_stat),8)
+           m_ind = m_ind + wlog(index_thres(index_stat),9)
+           n_ind = n_ind + wlog(index_thres(index_stat),7)
+        endif
+     endfor
+
+     if choice eq 'dbdt' then begin
+        get_skill_scores,h,f,m,n,dbdt_pod,dbdt_pof,dbdt_hss
+        get_skill_scores,h_ind,f_ind,m_ind,n_ind,db_pod,db_pof,db_hss
+
+        printf,lunOut, threshold, h,n,f,m,h+n+f+m, h_ind,n_ind,f_ind,m_ind,h_ind+n_ind+f_ind+m_ind,    $
+               dbdt_pod, dbdt_pof, dbdt_hss, db_pod, db_pof, db_hss,       $
+               format='(f8.4, 10i6, 6f12.4)'
+     endif else if choice eq 'db' then begin
+        get_skill_scores,h,f,m,n,db_pod,db_pof,db_hss
+
+        printf, lunOut, threshold, h,n,f,m,h+n+f+m, db_pod, db_pof, db_hss, format='(f8.4,5i6, 3f12.4)'
+     endif
+  endfor
+
+  close, lunOut & free_lun, lunOut
+end
+
+
 ;==============================================================================
 
 pro save_comp_dbdt_table, $
