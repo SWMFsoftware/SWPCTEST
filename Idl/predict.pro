@@ -199,6 +199,7 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
 
   ;; default is not to not to obtain the list of stations from the simulation.
   if not keyword_set(IsFromSimIn) then IsFromSim = 0
+  if not keyword_set(event)       then event = 1
   
   ;; obtain the mag-latitude info from supermag.dat
   get_log, mydir+'/supermag.dat',wlog,  wlognames, logtime, 'h', wlogrownames
@@ -1711,7 +1712,7 @@ pro save_tables_station, model=model, events=events, mydir=mydir
   ;; low, mid, high, veryhigh, all.
 
   ; Set station groups
-  stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
+  stationlats = ['all']
 
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
@@ -1735,8 +1736,7 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
 
   ;; set te list of stations
   set_stationlist, mydir=mydir, stationsFile='stations.csv',  $
-                   model=model, event=event,                  $
-                   stations_I, station_orig_I
+                   model=model, stations_I, station_orig_I
 
   ;; find the corresponding string containing all the stations
   ;; and put it into an array.
