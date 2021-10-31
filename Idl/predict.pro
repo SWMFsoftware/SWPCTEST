@@ -2371,7 +2371,7 @@ pro check_calc_all, models=models, events=events, mydir=mydir, InputDir=InputDir
   print,'----------------------------------------------------'
 
   make_2d_map, 'dbdt', model=models, mydir=mydir
-  make_2d_map, 'db',   model=models, events=events, mydir=mydir
+  make_2d_map, 'db',   model=models, mydir=mydir
   print,'----------------------------------------------------'
   print,'plot_2d_map done.'
   print,'----------------------------------------------------'
