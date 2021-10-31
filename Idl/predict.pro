@@ -2303,7 +2303,7 @@ pro check_calc_all, models=models, events=events, mydir=mydir, InputDir=InputDir
   print,'save_tables done.'
   print,'----------------------------------------------------'
 
-  save_tables_station, model=model, events=events, mydir=mydir
+  save_tables_station, model=models, events=events, mydir=mydir
   print,'----------------------------------------------------'
   print,'save_tables_station done.'
   print,'----------------------------------------------------'
