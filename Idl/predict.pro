@@ -1863,6 +1863,68 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
 end
 
 ;==============================================================================
+
+pro make_2d_map, choice, model=models, mydir=mydir
+
+  get_log, mydir+'/supermag.dat',wlogMag,  wlognamesMag, logtimeMag,     $
+           'h', wlogrownamesMag
+  
+  if choice eq 'dbdt' then begin
+     thresholds  = [0.3, 0.7, 1.1, 1.5]
+     filenameScore = 'metric_table_stations_all.txt'
+  endif else if choice eq 'db' then begin
+     thresholds  = [101.6, 213.6, 317.5, 416.7]
+     filenameScore = 'metric_table_db_stations_all.txt'
+  endif
+
+  get_log, filenameScore, wlogScore,  wlognamesScore, logtimeScore, 'h', $
+           wlogrownamesScore
+
+  nVarScore = n_elements(wlognamesScore)
+  
+  for ithres=0,n_elements(thresholds)-1 do begin
+
+     threshold = thresholds(ithres)
+     indexThres = where(abs(wlogScore(*,0)-threshold) le 1e-4, nStationFound)
+
+     if nStationFound eq 0 then begin
+        print, ' no stations found, skip'
+        continue
+     endif
+
+     ;; coordinates and vars
+     x = dblarr(nStationFound,1,2)
+
+     if choice eq 'dbdt' then begin
+        w = dblarr(nStationFound, 1, 6)
+        nameVariables = 'GeoLon GeoLat pod far hss pod_ind far_ind hss_ind'
+        fileout = 'score_map_dbdt_thres_'+string(threshold,format='(f3.1)')+'.out'
+     endif else if choice eq 'db' then begin
+        w = dblarr(nStationFound, 1, 3)
+        nameVariables = 'GeoLon GeoLat pod far hss'
+        fileout = 'score_map_db_thres_'+string(threshold,format='(f5.1)')+'.out'
+     endif
+
+     for iStation=0,nStationFound-1 do begin
+        NameStation = wlogrownamesScore(indexThres(iStation))
+
+        ;; find the location in GEO of the station in SuperMag.dat
+        indexMag = where(wlogrownamesMag eq NameStation)
+
+        x(iStation,0,*) = wlogMag(indexMag,0:1)
+        if choice eq 'dbdt' then begin
+           w(iStation,0,*) = wlogScore(indexThres(iStation), nVarScore-6:*)
+        endif  else if choice eq 'db' then begin
+           w(iStation,0,*) = wlogScore(indexThres(iStation), nVarScore-3:*)
+        endif
+     endfor
+
+
+     save_pict,fileout, 'skill score map', nameVariables, w, x, ndim=2, $
+               gencoord=1
+  endfor
+end
+;==============================================================================
 pro calc_kp_error, mydir=mydir, resdir=resdir, $
                    events=events, $
                    const=const, slope=slope
@@ -2307,6 +2369,13 @@ pro check_calc_all, models=models, events=events, mydir=mydir, InputDir=InputDir
   print,'----------------------------------------------------'
   print,'save_tables_station done.'
   print,'----------------------------------------------------'
+
+  make_2d_map, 'dbdt', model=models, events=events, mydir=mydir
+  make_2d_map, 'db',   model=models, events=events, mydir=mydir
+  print,'----------------------------------------------------'
+  print,'plot_2d_map done.'
+  print,'----------------------------------------------------'
+  
 end
 
 ;==============================================================================
