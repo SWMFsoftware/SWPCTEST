@@ -1220,8 +1220,8 @@ pro get_scores_from_file, choice, filenameInLocal, strStations, $
      formatOut ='(a3,1x,f8.4, 5i6, 3f12.4)'
   endif
 
+  ;; saving the per station file
   ;; no idea why the new line char is missing???
-
   openw, lunOut, filenameStation, /get_lun
   for i=0,n_elements(headlinesLocal)-1 do begin
      printf,lunOut, headlinesLocal(i)
@@ -1243,6 +1243,7 @@ pro get_scores_from_file, choice, filenameInLocal, strStations, $
 
   close, lunOut & free_lun, lunOut
 
+  ;; saving the skill score file
   openw, lunOut, filename, /get_lun
   printf,lunOut, headlinesLocal(0)
   printf,lunOut, headlinesLocal(1)
