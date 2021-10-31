@@ -190,42 +190,16 @@ end
 ; ============================================================================
 
 pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
-                    event=event,stations_I, station_orig_I
+                    event=event,IsFromSim=IsFromSimIn,                 $
+                    stations_I, station_orig_I
 
   ;; read the stationsFile containing the selected stations.
-
-  ;; first check how many simulated magnetometer files there, event
+  ;; check how many simulated magnetometer files there if IsFromSim.
   ;; folder could be one or two digits
-  if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')) then begin
-     event_string_sim = 'Event'+string(event,format='(i2.2)')
-  endif else begin
-     event_string_sim = 'Event'+string(event,format='(i1.1)')
-  endelse
 
-  ;; set the patter for searching simulated magnetometer files
-  patten_sim  = mydir+'/deltaB/'+model+'/'+event_string_sim+'/*.txt'
-
-  file_sim_I = FILE_SEARCH(patten_sim, count=nFileSim)
-
-  if nFileSim eq 0 then begin
-     print, 'Error no simulation files found for patten_sim: ' $
-            + patten_sim
-  endif
+  ;; default is not to not to obtain the list of stations from the simulation.
+  if not keyword_set(IsFromSimIn) then IsFromSim = 0
   
-  str_stations_all = ''
-  
-  for ifile = 1, nFileSim do begin
-     filelocal = file_sim_I(ifile-1)
-     strlocal  = strmid(filelocal,strpos(filelocal,event_string_sim)+strlen(event_string_sim)+1)
-     strlocal  = strlocal.replace('.txt','')
-     ;; DST is not in the real observations...
-     if strlocal ne 'DST' then $
-        str_stations_all = str_stations_all + strlocal + ' '
-  endfor
-
-  ;; upper case for all station names
-  str_stations_all = strupcase(strtrim(str_stations_all))
-
   ;; obtain the mag-latitude info from supermag.dat
   get_log, mydir+'/supermag.dat',wlog,  wlognames, logtime, 'h', wlogrownames
 
@@ -236,27 +210,80 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
   line=''
   i = 0
   ;; up to 1000 lines...
-  stations_I     = strarr(1000)
   station_orig_I = strarr(1000)
 
   while not eof(lun) do begin
      readf,lun,line
      if line eq 'IAGA' then continue
+     if line ne '' then station_orig_I(i) = line
 
-     if line eq 'all_ccmc' then begin
+     ;; if any line contain this string, obtain the list of stations
+     ;; from simulation
+     if line eq 'all_stations'     or line eq 'mid_stations'      $
+        or line eq 'low_stations'  or line eq 'veryhigh_stations' $
+        or line eq 'high_stations' then IsFromSim = 1
+     i++
+  endwhile
+  close,lun & free_lun,lun
+
+  ;; adjust the size of station_orig_I
+  station_orig_I = station_orig_I[0:i-1]
+
+  if IsFromSim then begin
+     ;; first remove any characters before deltaB (including deltaB)
+     if(strpos(model,'deltaB/') ge 0) then model = strmid(model,    strpos(model,    'deltaB/')+7)
+
+     ;; check whether the foler of the Event is 1-digit or 2-digits
+     if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')) then begin
+        event_string_sim = 'Event'+string(event,format='(i2.2)')
+     endif else begin
+        event_string_sim = 'Event'+string(event,format='(i1.1)')
+     endelse
+
+     ;; set the patter for searching simulated magnetometer files
+     patten_sim  = mydir+'/deltaB/'+model+'/'+event_string_sim+'/*.txt'
+
+     file_sim_I = FILE_SEARCH(patten_sim, count=nFileSim)
+
+     if nFileSim eq 0 then begin
+        print, 'Error no simulation files found for patten_sim: ' $
+               + patten_sim
+        return
+     endif
+  
+     str_stations_sim_all = ''
+  
+     for ifile = 1, nFileSim do begin
+        filelocal = file_sim_I(ifile-1)
+        strlocal  = strmid(filelocal,strpos(filelocal,event_string_sim)+strlen(event_string_sim)+1)
+        strlocal  = strlocal.replace('.txt','')
+        ;; DST is not in the real observations...
+        if strlocal ne 'DST' then $
+           str_stations_sim_all = str_stations_sim_all + strlocal + ' '
+     endfor
+
+     ;; upper case for all station names
+     str_stations_sim_all = strupcase(strtrim(str_stations_sim_all))
+  endif
+
+  ;; the return list of stations.
+  stations_I     = strarr(i)
+
+  for i=0,n_elements(station_orig_I)-1 do begin
+     if station_orig_I(i) eq 'all_ccmc' then begin
         stations_I[i] = 'frn frd fur wng new ott mea pbq abk ykc hrn iqa'
-     endif else if line eq 'veryhigh_ccmc' then begin
+     endif else if station_orig_I(i) eq 'veryhigh_ccmc' then begin
         stations_I[i] = 'hrn iqa'
-     endif else if line eq 'high_ccmc' then begin
+     endif else if station_orig_I(i) eq 'high_ccmc' then begin
         stations_I[i] = 'abk pbq ykc mea'
-     endif else if line eq 'mid_ccmc' then begin
+     endif else if station_orig_I(i) eq 'mid_ccmc' then begin
         stations_I[i] = 'wng new ott'
-     endif else if line eq 'low_ccmc' then begin
+     endif else if station_orig_I(i) eq 'low_ccmc' then begin
         stations_I[i] = 'frd frn fur'
-     endif else if line eq 'all_stations' then begin
-        stations_I[i] = str_stations_all
-     endif else if line eq 'low_stations' then begin
-        str_stations_I = strsplit(str_stations_all,/extract)
+     endif else if station_orig_I(i) eq 'all_stations' then begin
+        stations_I[i] = str_stations_sim_all
+     endif else if station_orig_I(i) eq 'low_stations' then begin
+        str_stations_I = strsplit(str_stations_sim_all,/extract)
         str_stations_tmp = ''
         for istation = 0, n_elements(str_stations_I)-1 do begin
            station_tmp = str_stations_I(istation)
@@ -266,8 +293,8 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
         stations_I[i] = strtrim(str_stations_tmp)
-     endif else if line eq 'mid_stations' then begin
-        str_stations_I = strsplit(str_stations_all,/extract)
+     endif else if station_orig_I(i) eq 'mid_stations' then begin
+        str_stations_I = strsplit(str_stations_sim_all,/extract)
         str_stations_tmp = ''
         for istation = 0, n_elements(str_stations_I)-1 do begin
            station_tmp = str_stations_I(istation)
@@ -276,8 +303,8 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
         stations_I[i] = strtrim(str_stations_tmp)
-     endif else if line eq 'high_stations' then begin
-        str_stations_I = strsplit(str_stations_all,/extract)
+     endif else if station_orig_I(i) eq 'high_stations' then begin
+        str_stations_I = strsplit(str_stations_sim_all,/extract)
         str_stations_tmp = ''
         for istation = 0, n_elements(str_stations_I)-1 do begin
            station_tmp = str_stations_I(istation)
@@ -286,8 +313,8 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
         stations_I[i] = strtrim(str_stations_tmp)
-     endif else if line eq 'veryhigh_stations' then begin
-        str_stations_I = strsplit(str_stations_all,/extract)
+     endif else if station_orig_I(i) eq 'veryhigh_stations' then begin
+        str_stations_I = strsplit(str_stations_sim_all,/extract)
         str_stations_tmp = ''
         for istation = 0, n_elements(str_stations_I)-1 do begin
            station_tmp = str_stations_I(istation)
@@ -298,19 +325,12 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
               str_stations_tmp = str_stations_tmp + station_tmp + ' '
         endfor
         stations_I[i] = strtrim(str_stations_tmp)
-     endif else if line ne '' then begin
-        stations_I[i] = line
-     endif
+     endif else begin
+        stations_I[i] = station_orig_I(i)
+     endelse
+  end
 
-     if line ne '' then station_orig_I(i) = line
-
-     i++
-  endwhile
-
-  close,lun & free_lun,lun
-  
-  stations_I     = strupcase(stations_I[0:i-1])
-  station_orig_I = station_orig_I[0:i-1]
+  stations_I = strupcase(stations_I)
 end
 
 ; ============================================================================
@@ -1563,7 +1583,7 @@ end
 
 ;==============================================================================
 
-pro save_tables, model=model, events=events, mydir=mydir, InputDir=InputDir
+pro save_tables, model=model, events=events, mydir=mydir
 
   ;; Create tables containing db/dt and db skill scores.
   ;; Defaults are 'Results'
@@ -1578,13 +1598,13 @@ pro save_tables, model=model, events=events, mydir=mydir, InputDir=InputDir
   ; Create combined metrics for all events:
   for ilat=0, n_elements(stationlats)-1 do begin
      save_table, stationlats[ilat], model, $
-                 events=events, mydir=mydir, InputDir=InputDir
+                 events=events, mydir=mydir
   endfor
 end
 
 ;==============================================================================
 
-pro save_table, stationlat, model, events=events, mydir=mydir, InputDir=InputDir
+pro save_table, stationlat, model, events=events, mydir=mydir
 
   ;; Create tables containing db/dt and db skill scores from
   ;; individual event files.
@@ -1676,6 +1696,168 @@ pro save_table, stationlat, model, events=events, mydir=mydir, InputDir=InputDir
      printf, lunlocal, wlog(i,0), dbdt_pod, dbdt_pof, dbdt_hss, $
              dbdt_pod_ind, dbdt_pof_ind, dbdt_hss_ind, format='(7f8.4)'
   end
+  free_lun, lunlocal
+end
+
+;==============================================================================
+
+pro save_tables_station, model=model, events=events, mydir=mydir
+
+  ;; Create tables containing db/dt and db skill scores.
+  ;; Defaults are 'Results'
+  ;; Combine scores for all events from the event string
+  ;; (default is 1 to 6).
+  ;; Create a separate table for the various station groups:
+  ;; low, mid, high, veryhigh, all.
+
+  ; Set station groups
+  stationlats = ['all', 'veryhigh', 'high', 'mid', 'low']
+
+  ; Create combined metrics for all events:
+  for ilat=0, n_elements(stationlats)-1 do begin
+     save_table_station, stationlats[ilat], model, 'dbdt', $
+                         events=events, mydir=mydir
+     save_table_station, stationlats[ilat], model, 'db',   $
+                         events=events, mydir=mydir
+  endfor
+end
+
+;==============================================================================
+
+pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
+
+  if n_elements(stationlat) lt 1 then stationlat='all'
+  if n_elements(model)      lt 1 then model = 'Results'
+  if n_elements(choice)     lt 1 then model = 'dbdt'
+
+  ;; set the list of the event
+  event_I = set_eventlist(events,mydir,model)
+
+  ;; set te list of stations
+  set_stationlist, mydir=mydir, stationsFile='stations.csv',  $
+                   model=model, event=event,                  $
+                   stations_I, station_orig_I
+
+  ;; find the corresponding string containing all the stations
+  ;; and put it into an array.
+  strStationsLocal = stations_I(where(strmatch(station_orig_I,stationlat+'*')))
+  station_I = strsplit(strStationsLocal,/extract)
+
+  if choice eq 'dbdt' then begin
+     thresholds  = [0.3, 0.7, 1.1, 1.5]
+     dbdt_scores_stations_III = fltarr(4,n_elements(station_I),17)
+
+     filenameOut = "metric_table_stations_" + stationlat + ".txt"
+  endif else if choice eq 'db' then begin
+     thresholds  = [101.6, 213.6, 317.5, 416.7]
+     db_scores_stations_III = fltarr(4,n_elements(station_I),9)
+
+     filenameOut = "metric_table_db_stations_" + stationlat + ".txt"
+  endif
+
+  ;; the string containg the Events used for the station
+  strEventsUsed_I  = strarr(n_elements(station_I))
+
+  ;; loop through all the thresholds
+  for ithres=0,n_elements(thresholds)-1 do begin
+     threshold   = thresholds(ithres)
+
+     ;; loop through all the stations
+     for istation=0,n_elements(station_I)-1 do begin
+        ;; set the header
+        if ithres eq 0 then strEventsUsed_I(istation) = $
+           'For '+station_I(istation)+' Events used: '
+
+        ;; reset all counts
+        h=0     & f=0     & m=0     & n=0
+        h_ind=0 & f_ind=0 & m_ind=0 & n_ind=0
+
+        ;; loop through all the event files
+        for iEvent = 0,n_elements(event_I)-1 do begin
+           event = event_I(iEvent)
+
+           if choice eq 'dbdt' then begin
+              filenameInLocal=string(stationlat, event, $
+                                     format='("metrics_stations_lat_",a3,"_event",i2.2,".txt")')
+           endif else if choice eq 'db' then begin
+              filenameInLocal=string(stationlat, event, $
+                                     format='("metrics_stations_db_lat_",a3,"_event",i2.2,".txt")')
+           endif
+
+           get_log, filenameInLocal, wlog,  wlognames, logtime, 'h', $
+                    wlogrownames,headlines=headlinesLocal
+
+           ;; find the index for the threshold, for all stations
+           index_thres = where(abs(wlog(*,0)-threshold) le 1e-4)
+
+           ;; within the above index, find the index for the
+           ;; corresponding station
+           index_stat = where(wlogrownames(index_thres) eq station_I(istation),nLocal)
+
+           ;; if the count of index_stat, meaning that this file
+           ;; contains the skill scores for the station
+           if nLocal gt 0 then begin
+              h = h + wlog(index_thres(index_stat),1)
+              f = f + wlog(index_thres(index_stat),3)
+              m = m + wlog(index_thres(index_stat),4)
+              n = n + wlog(index_thres(index_stat),2)
+
+              if choice eq 'dbdt' then begin
+                 h_ind = h_ind + wlog(index_thres(index_stat),6)
+                 f_ind = f_ind + wlog(index_thres(index_stat),8)
+                 m_ind = m_ind + wlog(index_thres(index_stat),9)
+                 n_ind = n_ind + wlog(index_thres(index_stat),7)
+              endif
+
+              ;; put the event # into the header line
+              if ithres eq 0 then strEventsUsed_I(istation) = strEventsUsed_I(istation) $
+                 + string(event,format='(i3)')
+           endif
+        endfor
+
+        if choice eq 'dbdt' then begin
+           get_skill_scores,h,f,m,n,dbdt_pod,dbdt_pof,dbdt_hss
+           get_skill_scores,h_ind,f_ind,m_ind,n_ind,db_pod,db_pof,db_hss
+
+           dbdt_scores_stations_III(ithres,istation,*) = $
+              [threshold,h,n,f,m,h+n+f+m, h_ind,n_ind,f_ind,m_ind,h_ind+n_ind+f_ind+m_ind, $
+               dbdt_pod, dbdt_pof, dbdt_hss, db_pod, db_pof, db_hss]
+        endif else if choice eq 'db' then begin
+           get_skill_scores,h,f,m,n,db_pod,db_pof,db_hss
+
+           db_scores_stations_III(ithres,istation,*) =   $
+              [threshold,h,n,f,m,h+n+f+m,db_pod,db_pof,db_hss]
+        endif
+     endfor
+  endfor
+
+  openw, lunlocal, filenameOut, /get_lun
+  printf,lunlocal, 'model: ' + model
+  for istation=0,n_elements(station_I)-1 do begin
+     printf, lunlocal, strEventsUsed_I(istation)
+  endfor
+
+  if choice eq 'dbdt' then begin
+     printf,lunlocal, 'Deltat  =  20.00, threshold unit = [nT/s]'
+     printf,lunlocal, $
+            'name threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
+     for istation=0,n_elements(station_I)-1 do begin
+        for ithres=0,n_elements(thresholds)-1 do begin
+           printf, lunlocal, station_I(istation), dbdt_scores_stations_III(ithres,istation,*), $
+                   format='(a3,1x,f8.4, 10i6, 6f12.4)'
+        endfor
+     endfor
+  endif else if choice eq 'db' then begin
+     printf,lunlocal, 'Deltat  =  20.00, threshold unit = [nT]'
+     printf,lunlocal, 'name threshold  TP  TN  FP  FN  total  pod  far  hss'
+     for istation=0,n_elements(station_I)-1 do begin
+        for ithres=0,n_elements(thresholds)-1 do begin
+           printf, lunlocal, station_I(istation), db_scores_stations_III(ithres,istation,*), $
+                   format='(a3,1x,f8.4, 5i6, 3f12.4)'
+        endfor
+     endfor
+  endif
+
   free_lun, lunlocal
 end
 
@@ -2115,11 +2297,15 @@ pro check_calc_all, models=models, events=events, mydir=mydir, InputDir=InputDir
   print,'calc_dst_error done.'
   print,'----------------------------------------------------'
 
-  save_tables,        model =models, events=events, mydir=mydir, InputDir=InputDir
+  save_tables,        model =models, events=events, mydir=mydir
   print,'----------------------------------------------------'
   print,'save_tables done.'
   print,'----------------------------------------------------'
 
+  save_tables_station, model=model, events=events, mydir=mydir
+  print,'----------------------------------------------------'
+  print,'save_tables_station done.'
+  print,'----------------------------------------------------'
 end
 
 ;==============================================================================
