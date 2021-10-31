@@ -1911,7 +1911,8 @@ pro make_2d_map, choice, model=models, mydir=mydir
         ;; find the location in GEO of the station in SuperMag.dat
         indexMag = where(wlogrownamesMag eq NameStation)
 
-        x(iStation,0,*) = wlogMag(indexMag,0:1)
+        x(iStation,0,0) = wlogMag(indexMag,1)
+        x(iStation,0,1) = wlogMag(indexMag,0)
         if choice eq 'dbdt' then begin
            w(iStation,0,*) = wlogScore(indexThres(iStation), nVarScore-6:*)
         endif  else if choice eq 'db' then begin
