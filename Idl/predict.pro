@@ -640,6 +640,7 @@ pro predict, choice,                                                  $
                  printf, lunStation, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT]'
                  printf, lunStation, $
                          'name threshold  TP  TN  FP  FN  total  pod  far  hss'
+                 printf, lunStation, '#START'
                  DoPrintStationHeader = 0
               endif
      
@@ -731,6 +732,7 @@ pro predict, choice,                                                  $
                  printf, lunStation, 'Deltat  = ' + string(deltat,format='(f6.2)') + ', threshold unit = [nT/s]'
                  printf, lunStation, $
                          'name threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
+                 printf, lunStation, '#START'
                  DoPrintStationHeader = 0
               endif
      
@@ -1867,6 +1869,7 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
      printf,lunlocal, 'Deltat  =  20.00, threshold unit = [nT/s]'
      printf,lunlocal, $
             'name threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
+     printf,lunlocal, '#START'
      for istation=0,n_elements(station_I)-1 do begin
         for ithres=0,n_elements(thresholds)-1 do begin
            if nEventStation_I(istation) gt 0 then $
@@ -1877,6 +1880,7 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
   endif else if choice eq 'db' then begin
      printf,lunlocal, 'Deltat  =  20.00, threshold unit = [nT]'
      printf,lunlocal, 'name threshold  TP  TN  FP  FN  total  pod  far  hss'
+     printf,lunlocal, '#START'
      for istation=0,n_elements(station_I)-1 do begin
         for ithres=0,n_elements(thresholds)-1 do begin
            if nEventStation_I(istation) gt 0 then $
@@ -1893,6 +1897,7 @@ end
 
 pro make_2d_map, choice, model=models, mydir=mydir
 
+  print, mydir+'/supermag.dat'
   get_log, mydir+'/supermag.dat',wlogMag,  wlognamesMag, logtimeMag,     $
            'h', wlogrownamesMag
   
@@ -1907,29 +1912,38 @@ pro make_2d_map, choice, model=models, mydir=mydir
   get_log, filenameScore, wlogScore,  wlognamesScore, logtimeScore, 'h', $
            wlogrownamesScore
 
-  nVarScore = n_elements(wlognamesScore)
-  
-  for ithres=0,n_elements(thresholds)-1 do begin
+  nVarScore     = n_elements(wlognamesScore)
+  ;; each station is repeated 4 times
+  nStationScore = n_elements(wlogrownamesScore)/4
 
+  nThres = n_elements(thresholds)
+  
+  ;; coordinates and vars
+  x = dblarr(nStationScore,1,2)
+
+  if choice eq 'dbdt' then begin
+     w = dblarr(nStationScore, 1, 6*nThres)
+     nameVariables = 'GeoLon GeoLat pod_1 far_1 hss_1 pod_ind_1 far_ind_1 hss_ind_1' $
+                     + ' pod_2 far_2 hss_2 pod_ind_2 far_ind_2 hss_ind_2' $
+                     + ' pod_3 far_3 hss_3 pod_ind_3 far_ind_3 hss_ind_3' $
+                     + ' pod_4 far_4 hss_4 pod_ind_4 far_ind_4 hss_ind_4'
+     fileout = 'score_map_dbdt.out'
+  endif else if choice eq 'db' then begin
+     w = dblarr(nStationScore, 1, 3*nThres)
+     nameVariables = 'GeoLon GeoLat pod_1 far_1 hss_1 ' $
+                     + ' pod_2 far_2 hss_2' $
+                     + ' pod_3 far_3 hss_3' $
+                     + ' pod_4 far_4 hss_4'
+     fileout = 'score_map_db.out'
+  endif
+
+  for ithres=0,nThres-1 do begin
      threshold = thresholds(ithres)
      indexThres = where(abs(wlogScore(*,0)-threshold) le 1e-4, nStationFound)
 
      if nStationFound eq 0 then begin
         print, ' no stations found, skip'
         continue
-     endif
-
-     ;; coordinates and vars
-     x = dblarr(nStationFound,1,2)
-
-     if choice eq 'dbdt' then begin
-        w = dblarr(nStationFound, 1, 6)
-        nameVariables = 'GeoLon GeoLat pod far hss pod_ind far_ind hss_ind'
-        fileout = 'score_map_dbdt_thres_'+string(threshold,format='(f3.1)')+'.out'
-     endif else if choice eq 'db' then begin
-        w = dblarr(nStationFound, 1, 3)
-        nameVariables = 'GeoLon GeoLat pod far hss'
-        fileout = 'score_map_db_thres_'+string(threshold,format='(f5.1)')+'.out'
      endif
 
      for iStation=0,nStationFound-1 do begin
@@ -1941,16 +1955,18 @@ pro make_2d_map, choice, model=models, mydir=mydir
         x(iStation,0,0) = wlogMag(indexMag,1)
         x(iStation,0,1) = wlogMag(indexMag,0)
         if choice eq 'dbdt' then begin
-           w(iStation,0,*) = wlogScore(indexThres(iStation), nVarScore-6:*)
+           istart = 0+ithres*6
+           w(iStation,0,istart:istart+5) = wlogScore(indexThres(iStation), nVarScore-6:*)
         endif  else if choice eq 'db' then begin
-           w(iStation,0,*) = wlogScore(indexThres(iStation), nVarScore-3:*)
+           istart = 0+ithres*3
+           w(iStation,0,istart:istart+2) = wlogScore(indexThres(iStation), nVarScore-3:*)
         endif
      endfor
 
-
-     save_pict,fileout, 'skill score map', nameVariables, w, x, ndim=2, $
-               gencoord=1
   endfor
+
+  save_pict,fileout, 'skill score map', nameVariables, w, x, ndim=2, $
+            gencoord=1
 end
 ;==============================================================================
 pro calc_kp_error, mydir=mydir, resdir=resdir, $
