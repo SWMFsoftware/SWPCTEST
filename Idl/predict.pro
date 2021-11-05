@@ -200,6 +200,8 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
   ;; default is not to not to obtain the list of stations from the simulation.
   if not keyword_set(IsFromSimIn) then IsFromSim = 0
   if not keyword_set(event)       then event = 1
+
+  model_local = model
   
   ;; obtain the mag-latitude info from supermag.dat
   get_log, mydir+'/supermag.dat',wlog,  wlognames, logtime, 'h', wlogrownames
@@ -232,17 +234,18 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
 
   if IsFromSim then begin
      ;; first remove any characters before deltaB (including deltaB)
-     if(strpos(model,'deltaB/') ge 0) then model = strmid(model,    strpos(model,    'deltaB/')+7)
+     if(strpos(model_local,'deltaB/') ge 0) then $
+        model_local = strmid(model_local,strpos(model_local,'deltaB/')+7)
 
      ;; check whether the foler of the Event is 1-digit or 2-digits
-     if file_test(mydir+'deltaB/'+model+'/Event'+string(event,format='(i2.2)')) then begin
+     if file_test(mydir+'/deltaB/'+model_local+'/Event'+string(event,format='(i2.2)')) then begin
         event_string_sim = 'Event'+string(event,format='(i2.2)')
      endif else begin
         event_string_sim = 'Event'+string(event,format='(i1.1)')
      endelse
 
      ;; set the patter for searching simulated magnetometer files
-     patten_sim  = mydir+'/deltaB/'+model+'/'+event_string_sim+'/*.txt'
+     patten_sim  = mydir+'/deltaB/'+model_local+'/'+event_string_sim+'/*.txt'
 
      file_sim_I = FILE_SEARCH(patten_sim, count=nFileSim)
 
@@ -525,7 +528,6 @@ pro predict, choice,                                                  $
      endif
 
      for istation = 0, nstation-1 do begin
-
         station = strupcase(station_I[istation])
 
         if verbose then print,' istation=', istation, ' ', station
@@ -1626,79 +1628,97 @@ pro save_table, stationlat, model, events=events, mydir=mydir
   dbdt_scores_III = fltarr(4,17,n_elements(event_I))
 
   ;; for db scores....
-  filenameOut = "metric_table_db_" + stationlat + ".txt"
-  openw, lunlocal, filenameOut, /get_lun
-  printf,lunlocal, 'model: ' + model
-  printf,lunlocal, 'Events = ' + events
+  fileRead_I = file_search( $
+               "metrics_db_lat_"+strmid(stationlat,0,3)+"_event*.txt", count=nFileFound)
+
+  if nFileFound gt 0 then begin
+     filenameOut = "metric_table_db_" + stationlat + ".txt"
+     openw, lunlocal, filenameOut, /get_lun
+     printf,lunlocal, 'model: ' + model
+     printf,lunlocal, 'Events = ' + events
   
-  for iEvent = 0,n_elements(event_I)-1 do begin
-     event = event_I(iEvent)
-     filename=string(stationlat, event, $
-                     format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
+     for iEvent = 0,n_elements(event_I)-1 do begin
+        event = event_I(iEvent)
+        filename=string(stationlat, event, $
+                        format='("metrics_db_lat_",a3,"_event",i2.2,".txt")')
   
-     get_log, filename, wlog, wlogname, headlines=headlines
-     db_scores_III(*,*,iEvent) = wlog
+        if file_test(filename) then begin
+           get_log, filename, wlog, wlogname, headlines=headlines
+           db_scores_III(*,*,iEvent) = wlog
   
-     printf, lunlocal, headlines(2)
-  end
+           printf, lunlocal, headlines(2)
+        endif else begin
+           printf, lunlocal, ' no file is found'
+        endelse
+     end
   
-  printf, lunlocal,headlines(3)
-  printf, lunlocal, 'threshold  pod      far     hss'
+     printf, lunlocal,headlines(3)
+     printf, lunlocal, 'threshold  pod      far     hss'
   
-  for i=0,3 do begin
-     ;; so stupid that the print out is not the same order as defined
-     ;; in predict
-     h = total(db_scores_III(i,1,*))
-     n = total(db_scores_III(i,2,*))
-     f = total(db_scores_III(i,3,*))
-     m = total(db_scores_III(i,4,*))
+     for i=0,3 do begin
+        ;; so stupid that the print out is not the same order as defined
+        ;; in predict
+        h = total(db_scores_III(i,1,*))
+        n = total(db_scores_III(i,2,*))
+        f = total(db_scores_III(i,3,*))
+        m = total(db_scores_III(i,4,*))
   
-     get_skill_scores,h,f,m,n,db_pod,db_pof,db_hss
-  
-     printf, lunlocal, wlog(i,0), db_pod, db_pof, db_hss, format='(4f8.4)'
-  end
-  free_lun, lunlocal
+        get_skill_scores,h,f,m,n,db_pod,db_pof,db_hss
+
+        printf, lunlocal, wlog(i,0), db_pod, db_pof, db_hss, format='(4f8.4)'
+     end
+     free_lun, lunlocal
+  endif
 
   ;; for dbdt scores....
-  filenameOut = "metric_table_" + stationlat + ".txt"
-  openw, lunlocal, filenameOut, /get_lun
-  printf,lunlocal, 'model: ' + model
-  printf,lunlocal, 'Events = ' + events
+  fileRead_I = file_search( $
+               "metrics_lat_"+strmid(stationlat,0,3)+"_event*.txt", count=nFileFound)
 
-  for iEvent = 0,n_elements(event_I)-1 do begin
-     event = event_I(iEvent)
-     filename=string(stationlat, event, $
-                     format='("metrics_lat_",a3,"_event",i2.2,".txt")')
+  if nFileFound gt 0 then begin
+     filenameOut = "metric_table_" + stationlat + ".txt"
+     openw, lunlocal, filenameOut, /get_lun
+     printf,lunlocal, 'model: ' + model
+     printf,lunlocal, 'Events = ' + events
 
-     get_log, filename, wlog, wlogname, headlines=headlines
-     dbdt_scores_III(*,*,iEvent) = wlog
+     for iEvent = 0,n_elements(event_I)-1 do begin
+        event = event_I(iEvent)
+        filename=string(stationlat, event, $
+                        format='("metrics_lat_",a3,"_event",i2.2,".txt")')
 
-     printf, lunlocal, headlines(2)
-  end
+        if file_test(filename) then begin
+           get_log, filename, wlog, wlogname, headlines=headlines
+           dbdt_scores_III(*,*,iEvent) = wlog
 
-  printf, lunlocal,headlines(3)
-  printf, lunlocal, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
+           printf, lunlocal, headlines(2)
+        endif else begin
+           printf, lunlocal, 'no event is found'
+        endelse
+     end
 
-  for i=0,3 do begin
-     ;; so stupid that the print out is not the same order as defined
-     ;; in predict
-     h = total(dbdt_scores_III(i,1,*))
-     n = total(dbdt_scores_III(i,2,*))
-     f = total(dbdt_scores_III(i,3,*))
-     m = total(dbdt_scores_III(i,4,*))
+     printf, lunlocal,headlines(3)
+     printf, lunlocal, 'threshold  pod  far  hss  pod_ind  far_ind  hss_ind'
 
-     h_ind = total(dbdt_scores_III(i,6,*))
-     n_ind = total(dbdt_scores_III(i,7,*))
-     f_ind = total(dbdt_scores_III(i,8,*))
-     m_ind = total(dbdt_scores_III(i,9,*))
+     for i=0,3 do begin
+        ;; so stupid that the print out is not the same order as defined
+        ;; in predict
+        h = total(dbdt_scores_III(i,1,*))
+        n = total(dbdt_scores_III(i,2,*))
+        f = total(dbdt_scores_III(i,3,*))
+        m = total(dbdt_scores_III(i,4,*))
 
-     get_skill_scores,h,f,m,n,dbdt_pod,dbdt_pof,dbdt_hss
-     get_skill_scores,h_ind,f_ind,m_ind,n_ind,dbdt_pod_ind,dbdt_pof_ind,dbdt_hss_ind
+        h_ind = total(dbdt_scores_III(i,6,*))
+        n_ind = total(dbdt_scores_III(i,7,*))
+        f_ind = total(dbdt_scores_III(i,8,*))
+        m_ind = total(dbdt_scores_III(i,9,*))
 
-     printf, lunlocal, wlog(i,0), dbdt_pod, dbdt_pof, dbdt_hss, $
-             dbdt_pod_ind, dbdt_pof_ind, dbdt_hss_ind, format='(7f8.4)'
-  end
-  free_lun, lunlocal
+        get_skill_scores,h,f,m,n,dbdt_pod,dbdt_pof,dbdt_hss
+        get_skill_scores,h_ind,f_ind,m_ind,n_ind,dbdt_pod_ind,dbdt_pof_ind,dbdt_hss_ind
+
+        printf, lunlocal, wlog(i,0), dbdt_pod, dbdt_pof, dbdt_hss, $
+                dbdt_pod_ind, dbdt_pof_ind, dbdt_hss_ind, format='(7f8.4)'
+     end
+     free_lun, lunlocal
+  endif
 end
 
 ;==============================================================================
@@ -1743,6 +1763,8 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
   ;; and put it into an array.
   strStationsLocal = stations_I(where(strmatch(station_orig_I,stationlat+'*')))
   station_I = strsplit(strStationsLocal,/extract)
+
+  nEventStation_I = intarr(n_elements(station_I))
 
   if choice eq 'dbdt' then begin
      thresholds  = [0.3, 0.7, 1.1, 1.5]
@@ -1813,6 +1835,9 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
               ;; put the event # into the header line
               if ithres eq 0 then strEventsUsed_I(istation) = strEventsUsed_I(istation) $
                  + string(event,format='(i3)')
+
+              ;; if at least one threshold/event has this station
+              nEventStation_I(istation) = nEventStation_I(istation) + 1
            endif
         endfor
 
@@ -1844,8 +1869,9 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
             'name threshold  TP  TN  FP  FN  total  TP_ind  TN_ind  FP_ind  FN_ind  total_ind  pod  far  hss  pod_ind  far_ind  hss_ind'
      for istation=0,n_elements(station_I)-1 do begin
         for ithres=0,n_elements(thresholds)-1 do begin
-           printf, lunlocal, station_I(istation), dbdt_scores_stations_III(ithres,istation,*), $
-                   format='(a3,1x,f8.4, 10i6, 6f12.4)'
+           if nEventStation_I(istation) gt 0 then $
+              printf, lunlocal, station_I(istation), dbdt_scores_stations_III(ithres,istation,*), $
+                      format='(a3,1x,f8.4, 10i6, 6f12.4)'
         endfor
      endfor
   endif else if choice eq 'db' then begin
@@ -1853,8 +1879,9 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
      printf,lunlocal, 'name threshold  TP  TN  FP  FN  total  pod  far  hss'
      for istation=0,n_elements(station_I)-1 do begin
         for ithres=0,n_elements(thresholds)-1 do begin
-           printf, lunlocal, station_I(istation), db_scores_stations_III(ithres,istation,*), $
-                   format='(a3,1x,f8.4, 5i6, 3f12.4)'
+           if nEventStation_I(istation) gt 0 then $
+              printf, lunlocal, station_I(istation), db_scores_stations_III(ithres,istation,*), $
+                      format='(a3,1x,f8.4, 5i6, 3f12.4)'
         endfor
      endfor
   endif
