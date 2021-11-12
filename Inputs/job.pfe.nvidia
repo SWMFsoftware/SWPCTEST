@@ -1,0 +1,37 @@
+#!/bin/csh
+#PBS -S /bin/csh
+#PBS -N SWPCsky
+#PBS -q v100@pbspl4
+
+# To run on v100 GPU (up to 4)
+#PBS -lselect=1:ncpus=2:ngpus=1:model=sky_gpu
+### PBS -lselect=1:ncpus=2:ngpus=1:model=cas_gpu
+
+# Set maximum walltime
+#PBS -l walltime=24:00:00
+
+# Combine STDOUT and STDERR
+#PBS -j oe
+
+# Send email if something happens
+#PBS -m abe
+
+# Specify group (account charged) if necessary
+### PBS -W group_list=...
+
+# Load nvidia runtime libraries (should be the same as used for compilation)
+module purge
+module use -a /nasa/nvidia/hpc_sdk/modulefiles
+module load nvhpc/20.9
+# module load nvhpc/21.2
+
+echo `which nvfortran`
+echo `which mpiexec`
+
+# cd into the run directory
+cd $PBS_O_WORKDIR
+
+# Run it.
+mpiexec -n 2 ./SWMF.exe > runlog.`date +%y%m%d`
+
+exit

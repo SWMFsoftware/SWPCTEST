@@ -3,6 +3,7 @@
 #PBS -N SWPC
 #PBS -q long
 
+# To run on different type and number of CPU cores
 ### PBS -l select=20:ncpus=16:model=san
 ### PBS -l select=16:ncpus=20:model=ivy
 ### PBS -l select=14:ncpus=24:model=has
@@ -11,6 +12,7 @@
 ### PBS -l select=9:ncpus=40:model=sky_ele
 ### PBS -l select=9:ncpus=40:model=cas_ait
 
+# Set maximum walltime
 #PBS -l walltime=48:00:00
 
 # Combine STDOUT and STDERR
@@ -24,11 +26,6 @@
 
 # cd into the run directory
 cd $PBS_O_WORKDIR
-
-# These settings were found useful for large runs 
-#setenv MPI_MSGS_PER_HOST 100000
-#setenv MPI_MSGS_PER_PROC 100000
-#setenv MPI_MSGS_MAX      100000
 
 # Run it.
 mpiexec SWMF.exe > runlog.`date +%y%m%d`
