@@ -200,7 +200,7 @@ test_run:
 		cd ${QUEDIR}$${iRun}/Event$$e;				\
 		if [[ "${MACHINE}" == "frontera" ]]; then               \
 		   sed -i "s/sub1/ev$$e.$${iRun}/g" job.frontera;       \
-		   sbatch job.long;                        		\
+		   sbatch job.frontera;                        		\
 		fi;                                                     \
 		if [[ "${MACHINE}" == "pfe" ]]; then                    \
 		   ./qsub.pfe.pl job.pfe ev$$e.$${iRun};		\
