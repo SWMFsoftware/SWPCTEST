@@ -74,7 +74,8 @@ help:
 	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with the Young BC)"
 	@echo "test_cimi                      (run with anisotropic MHD and IM/CIMI)"
 	@echo "test_cimi_v2                   (run with anisotropic MHD v2 and IM/CIMI)"
-	@echo "test_SWPC_Young_v2             (run with SWPC v2 model with the Young BC)"
+	@echo "test_SWPC_Young_v2             (run with the Young boundary condition)"
+	@echo "test_gpu                       (run the GPU version of SWPC V2)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2-6,95-98)"
 	@echo "make ballistic_limited         (limiting+ballistic propagation for events 2-6,95-98)"
@@ -185,9 +186,9 @@ test_rundir:
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
-		cp -r ${MYINPUTDIR}/Event$$e/IMF.dat    ${QUEDIR}$${iRun}/Event$$e;         \
+		cp -r ${MYINPUTDIR}/Event$$e/IMF.dat  ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
-		cp ${MYDIR}/Inputs/job.${MACHINE}     ${QUEDIR}$${iRun}/Event$$e/job.long;  \
+		cp -f ${MYDIR}/Inputs/job.${MACHINE}* ${QUEDIR}$${iRun}/Event$$e/;          \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
 		cd ${QUEDIR}$${iRun}/Event$$e;				     		    \
 	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};  \
@@ -197,12 +198,12 @@ test_run:
 	@echo "Submitting jobs"
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do		\
 		cd ${QUEDIR}$${iRun}/Event$$e;				\
-		if [[ "${MACHINE}" == "frontera" ]];                    \
-		   then sed -i "s/sub1/ev$$e.$${iRun}/g" job.long; 	\
+		if [[ "${MACHINE}" == "frontera" ]]; then               \
+		   sed -i "s/sub1/ev$$e.$${iRun}/g" job.frontera;       \
 		   sbatch job.long;                        		\
 		fi;                                                     \
-		if [[ "${MACHINE}" == "pfe" ]];                         \
-		   then ./qsub.pfe.pl job.long ev$$e.$${iRun};     	\
+		if [[ "${MACHINE}" == "pfe" ]]; then                    \
+		   ./qsub.pfe.pl job.pfe ev$$e.$${iRun};		\
 		fi;                                                     \
 	done; done
 
@@ -404,6 +405,41 @@ test_SWPC_Young_v2_run: test_run
 
 ##############################################################################
 
+test_gpu:
+	@echo "Testing SWPC on GPU"
+	make test_gpu_compile
+	make test_gpu_rundir
+	make test_gpu_run
+	@echo "Test_cimi_v2 started.  make check when complete."
+
+test_gpu_compile:
+	-@(cd ${DIR}; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
+	./Config.pl -o=GM:u=Default,e=Mhd,ng=2,g=8,8,8,opt=none,IE:g=91,181; \
+	./Config.pl -acc; \
+	make SWMF PIDL; \
+	)
+
+
+test_gpu_rundir:
+	make test_rundir PARAMINIT=PARAM.in_SWPC_gpu_init
+
+test_gpu_run:
+	@echo "Submitting GPU jobs"
+	for e in ${EVENTLIST}; do			\
+	   cd ${QUEDIR}1/Event$$e;			\
+	   if [[ "${MACHINE}" == "longhorn" ]]; then	\
+	      sed -i "s/sub1/ev$$e/g" job.longhorn; 	\
+	      sbatch job.longhorn;			\
+	   fi;						\
+	   if [[ "${MACHINE}" == "pfe" ]]; then		\
+	      ssh pbspl4 "cd ${QUEDIR}1/Event$$e; ./qsub.pfe.pl job.pfe.nvidia ev$$e sky_gpu cas_gpu"; \
+	   fi;						\
+	done
+
+
+##############################################################################
+
 FULLSIMDIR  = $(MYDIR)/${SIMDIR}
 FULLRESDIR  = ${MYDIR}/deltaB/${RESDIR}
 FULLRES1DIR = ${MYDIR}/deltaB/${RES1DIR}
@@ -478,7 +514,7 @@ check_compare:
 realtime_start_rundir:
 	cd ${DIR}; \
 	make rundir MACHINE=${MACHINE} RUNDIR=${RTDIR}; \
-	cp ${MYDIR}/Inputs/job.long  ${RTDIR}; \
+	cp ${MYDIR}/Inputs/job.${MACHINE} ${RTDIR}; \
 	cp Param/SWPC/${PARAMINIT}    ${RTDIR}/PARAM.in
 	cd ${RTDIR}; rm -rf Param; mkdir Param; cd Param; \
 	ln -s ${DIR}/Param/SWPC .; cd ../; ${MYSCRIPTDIR}/DSCOVR.py; \
