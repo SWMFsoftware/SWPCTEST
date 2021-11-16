@@ -5,7 +5,7 @@ my $NoPlot = $noplot;
 my $IMF    = ($imf or "L1.dat");
 my $iRun   = $irun;
 
-# Allow in-place editing of the PARAM.in and job.long files
+# Allow in-place editing of the PARAM.in and job.* files
 $^I = "";
 
 use strict;
@@ -116,7 +116,7 @@ while(<>){
 }
 
 if($iRun){
-    @ARGV = glob("job.long");
+    @ARGV = glob("job.*");
     print "Editing @ARGV with iRun=$iRun\n";
     while(<>){
 	s/(PBS -l select=|SBATCH \-N )(\d\d)/$1.($2+$iRun)/e;
@@ -133,7 +133,7 @@ Change the #STARTTIME and #ENDTIME commands in the PARAM.in*
 files in the run directory based on the first and last time
 shown in the IMF.dat or L1.dat file.
 
-Also change the number of nodes in job.long by adding IRUN if present.
+Also change the number of nodes in job.* by adding IRUN if present.
 
 Usage: ./change_param.pl [-noplot] [-imf=IMFFILE] [-irun=IRUN]
 
