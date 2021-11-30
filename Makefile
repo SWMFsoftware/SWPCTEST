@@ -44,15 +44,15 @@ help:
 	@echo "simulations; see README for more information."
 	@echo ""
 	@echo "Examples:"
-	@echo "make test                      (run events 1-6 in run1 directory)"
+	@echo "make test                      (run events 1-6 in Runs/run1 directory)"
 	@echo "make test NRUN=5               (run events 1-6 five times (up to 9) on different number of cores)"
 	@echo "make test EVENTS=2-5,91-93     (run events 2,3,4,5,91,92,93 only)"
 	@echo 'make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2 dir. Default is Runs.)'
-	@echo 'make test INPUTDIR=Events      (do runs with inputs (IMF/Dst/deltaB) from the Events dir. Default is Inputs)'
+	@echo 'make test INPUTDIR=Events      (do runs with inputs from the Events dir. Default is Inputs)'
 	@echo ""
 	@echo "make test PLOT=''              (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
-	@echo "make test PARAMINIT=PARAM.in   (use PARAM.in for the PARAM file)" 
+	@echo "make test PARAMINIT=PARAM_2.in (use SWMF/Param/SWPF/PARAM_2.in as PARAM.in)"
 	@echo "make test_compile              (compile SWMF)"
 	@echo "make test_rundir EVENTS=2-5    (create run directories for events 2-5)"
 	@echo "make test_run                  (submit runs to queue)"
@@ -74,7 +74,8 @@ help:
 	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with the Young BC)"
 	@echo "test_cimi                      (run with anisotropic MHD and IM/CIMI)"
 	@echo "test_cimi_v2                   (run with anisotropic MHD v2 and IM/CIMI)"
-	@echo "test_SWPC_Young_v2             (run with the Young boundary condition)"
+	@echo "test_Young_v2                  (run with the Young boundary condition)"
+	@echo "test_pwom                      (run with PW/PWOM model)"
 	@echo "test_gpu                       (run the GPU version of SWPC V2)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2-6,95-98)"
@@ -176,6 +177,9 @@ test_compile:
 # Default PARAM.in file for the tests
 PARAMINIT = PARAM.in_SWPC_v2_init
 
+# Default number of circles for PWOM initial field lines
+NCIRCLE = 6
+
 test_rundir:
 	@echo "Creating rundirs"
 	if([ -d ${QUEDIR}1 ]); then  		\
@@ -185,7 +189,7 @@ test_rundir:
 	fi;							\
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
-		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e;           \
+		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e NCIRCLE=${NCIRCLE}; \
 		cp -r ${MYINPUTDIR}/Event$$e/IMF.dat  ${QUEDIR}$${iRun}/Event$$e;           \
 		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp -f ${MYDIR}/Inputs/job.${MACHINE}* ${QUEDIR}$${iRun}/Event$$e/;          \
@@ -389,19 +393,40 @@ test_cimi_v2_run: test_run
 
 ##############################################################################
 
-test_SWPC_Young_v2:
+test_Young_v2:
 	@echo "Testing the SWPC v2 with the Young BC."
-	make test_SWPC_Young_v2_compile
-	make test_SWPC_Young_v2_rundir
-	make test_SWPC_Young_v2_run
+	make test_Young_v2_compile
+	make test_Young_v2_rundir
+	make test_Young_v2_run
 	@echo "Test_cimi_v2 started.  make check when complete."
 
-test_SWPC_Young_v2_compile: test_compile
+test_Young_v2_compile: test_compile
 
-test_SWPC_Young_v2_rundir:
+test_Young_v2_rundir:
 	make test_rundir PARAMINIT=PARAM.in_SWPC_v2_Young_init
 
-test_SWPC_Young_v2_run: test_run
+test_Young_v2_run: test_run
+
+##############################################################################
+
+test_pwom:
+	@echo "Testing the Geospace model with PW/PWOM"
+	make test_pwom_compile
+	make test_pwom_rundir
+	make test_pwom_run
+	@echo "Test_pwom started.  make check when complete."
+
+test_pwom_compile:
+	-@(cd ${DIR}; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,PW/PWOM; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=91,181,PW:Earth; \
+	make SWMF PIDL; \
+	)
+
+test_pwom_rundir:
+	make test_rundir PARAMINIT=PARAM.in_pwom_init 
+
+test_pwom_run: test_run
 
 ##############################################################################
 
