@@ -171,6 +171,7 @@ test_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=91,181; \
+	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
 
@@ -224,6 +225,7 @@ test_order5_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=3,IE:g=91,181; \
+	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
 
@@ -245,6 +247,7 @@ test_rbe_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=91,181; \
+	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
 
@@ -266,6 +269,7 @@ test_multiion_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	./Config.pl -o=GM:u=Default,e=MultiIon,g=8,8,8,ng=2,IE:g=91,181; \
+	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
 
@@ -312,6 +316,7 @@ test_multispecies_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	./Config.pl -o=GM:u=Default,e=MhdHpOp,g=8,8,8,ng=2,IE:g=91,181; \
+	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
 
@@ -367,6 +372,7 @@ test_cimi_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI2; \
 	./Config.pl -o=GM:u=Default,e=MhdAnisoP,g=8,8,8,ng=2,IE:g=91,181,IM:EarthHO,GridExpanded; \
+	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
 
@@ -420,6 +426,7 @@ test_pwom_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,PW/PWOM; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=91,181,PW:Earth; \
+	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
 
