@@ -448,9 +448,6 @@ pro predict, choice,                                                  $
      namemodel = 'SWMF_new'
   endif
 
-  tmins = [0.0,   6.0,       12.0,        0.0,       10.0,        0.0,        9.0]
-  tmaxs = [96.0,  30.0,      48.0,       24.0,       36.0,       24.0,       33.0]
-
   if not keyword_set(mydir)    then mydir='.'
   if strmid(mydir, mydir.strlen()-1)  ne '/' then mydir  = mydir+'/'
 
@@ -601,13 +598,8 @@ pro predict, choice,                                                  $
               ;; artificial scaling
               db_sim = coeff*db_sim^power
 
-              if event ge 0 and event le 6 then begin
-                 tmin = tmins(event)    ;; min(t_db_sim) > min(t_db_obs)
-                 tmax = tmaxs(event)    ;; max(t_db_sim) < max(t_db_obs)
-              endif else begin
-                 tmin = 1.0
-                 tmax = 96.0
-              endelse
+              tmin = float(floor(t_db_obs(0)))
+              tmax = float(ceil(t_db_obs(-1)))
 
               exc_obs  = $
                  exceeds(t_db_obs, db_obs, tmin, tmax, dt, threshold, mincount)
@@ -671,13 +663,8 @@ pro predict, choice,                                                  $
               ;; artificial scaling
               dbdt_sim = coeff*dbdt_sim^power
 
-              if event ge 0 and event le 6 then begin
-                 tmin = tmins(event)    ;; min(t_db_sim) > min(t_db_obs)
-                 tmax = tmaxs(event)    ;; max(t_db_sim) < max(t_db_obs)
-              endif else begin
-                 tmin = 1.0
-                 tmax = 96.0
-              endelse
+              tmin = float(floor(t_db_obs(0)))
+              tmax = float(ceil(t_db_obs(-1)))
 
               proxy_sim = (db_sim/scale)^exponent
 
