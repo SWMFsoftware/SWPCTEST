@@ -34,4 +34,21 @@ cd $PBS_O_WORKDIR
 # Run it.
 mpiexec -n 2 ./SWMF.exe > runlog.`date +%y%m%d`
 
-exit
+# Use the #CPUTIMEMAX and #CHECKSTOP commands in PARAM.in
+# so the code stops before the wall clock time is exceeded.
+
+# Do not continue unless the job finished successfully
+if(! -f SWMF.SUCCESS) exit
+
+# Do not continue if the whole run is done
+if(-f SWMF.DONE) exit
+
+# Link latest restart files
+./Restart.pl
+
+# Provide a PARAM.in.restart file if you wish and uncomment these lines:
+if(! -f PARAM.in.start) cp PARAM.in PARAM.in.start
+if(-f PARAM.in.restart) cp PARAM.in.restart PARAM.in
+
+# Resubmit job
+qsub job.pfe.nvidia
