@@ -20,8 +20,9 @@ QUEDIR      = $(MYDIR)/${SIMDIR}/run
 PREDICT     = .r ${MYIDLDIR}/predict.pro
 NRUN        = 1
 
-# Toggle saving all outputs to file (defaults is to not save plots.)
+# Toggle saving all outputs to file (defaults is to not save plots and restart)
 PLOT='-noplot'
+RESTART='-norestart'
 
 # Comma separated list of event indexes, can also use - to indicate a range. 
 EVENTS=1-6
@@ -50,7 +51,7 @@ help:
 	@echo 'make test SIMDIR=Cimi_Bc2.2    (do runs in Cimi_Bc2.2 dir. Default is Runs.)'
 	@echo 'make test INPUTDIR=Events      (do runs with inputs from the Events dir. Default is Inputs)'
 	@echo ""
-	@echo "make test PLOT=''              (run all test events and save all outputs)"
+	@echo "make test PLOT='' RESTART=''   (run all test events and save all outputs)"
 	@echo "make test IMF=IMF_mhd.dat      (use IMF_mhd.dat for IMF file)"
 	@echo "make test PARAMINIT=PARAM_2.in (use SWMF/Param/SWPF/PARAM_2.in as PARAM.in)"
 	@echo "make test_compile              (compile SWMF)"
@@ -177,6 +178,7 @@ test_compile:
 
 # Default PARAM.in file for the tests
 PARAMINIT = PARAM.in_SWPC_v2_init
+PARAMRESTART = PARAM.in_SWPC_v2_restart
 
 # Default number of circles for PWOM initial field lines
 NCIRCLE = 6
@@ -195,8 +197,9 @@ test_rundir:
 		cp ${MYDIR}/Inputs/magin_GEM.dat      ${QUEDIR}$${iRun}/Event$$e;           \
 		cp -f ${MYDIR}/Inputs/job.${MACHINE}* ${QUEDIR}$${iRun}/Event$$e/;          \
 		cp Param/SWPC/${PARAMINIT}            ${QUEDIR}$${iRun}/Event$$e/PARAM.in;  \
+		cp Param/SWPC/${PARAMRESTART}         ${QUEDIR}$${iRun}/Event$$e/PARAM.in.restart; \
 		cd ${QUEDIR}$${iRun}/Event$$e;				     		    \
-	  		${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF} -irun=$${iRun};  \
+	  	   ${MYSCRIPTDIR}/change_param.pl ${PLOT} ${RESTART} -imf=${IMF} -irun=$${iRun};  \
 	done; done
 
 test_run:
@@ -454,7 +457,8 @@ test_gpu_compile:
 
 
 test_gpu_rundir:
-	make test_rundir PARAMINIT=PARAM.in_SWPC_gpu_init
+	make test_rundir PARAMINIT=PARAM.in_SWPC_gpu_init \
+		PARAMRESTART=PARAM.in_SWPC_gpu_restart RESTART=''
 
 test_gpu_run:
 	@echo "Submitting GPU jobs"
@@ -467,8 +471,10 @@ test_gpu_run:
 	   if [[ "${MACHINE}" == "pfe" ]]; then		\
 	      ssh pbspl4 "cd ${QUEDIR}1/Event$$e; ./qsub.pfe.pl job.pfe.nvidia ev$$e sky_gpu cas_gpu"; \
 	   fi;						\
+	   if [[ "${MACHINE}" == "pbspl" ]]; then       \
+	      cd ${QUEDIR}1/Event$$e; ./qsub.pbspl.pl job.pbspl.nvidia; \
+	   fi;                                          \
 	done
-
 
 ##############################################################################
 
@@ -551,7 +557,7 @@ realtime_start_rundir:
 	cd ${RTDIR}; rm -rf Param; mkdir Param; cd Param; \
 	ln -s ${DIR}/Param/SWPC .; cd ../; ${MYSCRIPTDIR}/DSCOVR.py; \
 	${MYSCRIPTDIR}/magnetometer.py; \
-	${MYSCRIPTDIR}/change_param.pl ${PLOT} -imf=${IMF}
+	${MYSCRIPTDIR}/change_param.pl ${PLOT} ${RESTART} -imf=${IMF}
 
 clean_calc:
 	@echo "Cleaning calculated files for SIMDIR=${RESDIR}"
