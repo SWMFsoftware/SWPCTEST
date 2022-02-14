@@ -2,6 +2,7 @@
 &print_help if $h or $help;
 
 my $NoPlot = $noplot;
+my $NoRestart = $norestart;
 my $IMF    = ($imf or "L1.dat");
 my $iRun   = $irun;
 
@@ -99,7 +100,7 @@ while(<>){
 
     # Switch off saving large plots and restart files
     s/^\#((?:SAVEPLOT)|(?:MAGNETOMETERGRID))\b/$1/ if $NoPlot;
-    s/^T(\s+DoSaveRestart)/F$1/ if $NoPlot;
+    s/^T(\s+DoSaveRestart)/F$1/ if $NoRestart;
 
     # Change the name of the IMF file
     s/^IMF.dat/$IMF/;
