@@ -211,7 +211,7 @@ test_run:
 		   sbatch job.frontera;                        		\
 		fi;                                                     \
 		if [[ "${MACHINE}" == "pfe" ]]; then                    \
-		   ./qsub.pfe.pl job.pfe ev$$e.$${iRun};		\
+		   ./qsub.pfe.pbspl.pl job.pfe ev$$e.$${iRun};		\
 		fi;                                                     \
 	done; done
 
@@ -303,7 +303,7 @@ test_multiion_v2_run:
 	@echo "Submitting jobs"
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
 		cd ${QUEDIR}$${iRun}/Event$$e;		\
-		./qsub.pfe.pl job_more.long ev$$e;	    	\
+		./qsub.pfe.pbspl.pl job_more.long ev$$e;	    	\
 	done; done
 
 ##############################################################################
@@ -469,10 +469,10 @@ test_gpu_run:
 	      sbatch job.longhorn;			\
 	   fi;						\
 	   if [[ "${MACHINE}" == "pfe" ]]; then		\
-	      ssh pbspl4 "cd ${QUEDIR}1/Event$$e; ./qsub.pfe.pl job.pfe.nvidia ev$$e sky_gpu cas_gpu"; \
+	      ssh pbspl4 "cd ${QUEDIR}1/Event$$e; ./qsub.pfe.pbspl.pl job.pfe.pbspl.nvidia ev$$e"; \
 	   fi;						\
 	   if [[ "${MACHINE}" == "pbspl" ]]; then       \
-	      cd ${QUEDIR}1/Event$$e; ./qsub.pbspl.pl job.pbspl.nvidia; \
+	      cd ${QUEDIR}1/Event$$e; ./qsub.pfe.pbspl.pl job.pfe.pbspl.nvidia ev$$e; \
 	   fi;                                          \
 	done
 
