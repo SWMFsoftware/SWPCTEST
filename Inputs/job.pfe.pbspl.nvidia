@@ -51,4 +51,4 @@ if(! -f PARAM.in.start) cp PARAM.in PARAM.in.start
 if(-f PARAM.in.restart) cp PARAM.in.restart PARAM.in
 
 # Resubmit job
-qsub job.pfe.nvidia
+qsub job.pfe.pbspl.nvidia
