@@ -501,7 +501,7 @@ check_postproc:
 	     echo "processing RunDir=${FULLSIMDIR}/$${RunDir}";		\
 	     cd ${FULLSIMDIR}/$${RunDir};				\
 	     if([ -f SWMF.SUCCESS ]); then				\
-		if([ ! -d RESULTS ]); then ./PostProc.pl RESULTS; fi;   \
+		if([ ! -d RESULTS ]); then ./PostProc.pl -cat RESULTS; fi;   \
 		mkdir -p ${FULLRESDIR}/$$RunDir;			\
 		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log      \
 			${FULLRESDIR}/$$RunDir;				\
