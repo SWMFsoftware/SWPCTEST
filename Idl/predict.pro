@@ -204,7 +204,7 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
   model_local = model
   
   ;; obtain the mag-latitude info from supermag.dat
-  get_log, mydir+'/supermag.dat',wlog,  wlognames, logtime, 'h', wlogrownames
+  get_log, mydir+'/SWMF/Param/supermag.dat',wlog,  wlognames, logtime, 'h', wlogrownames
 
   ;; start reading the station file...
   filename = mydir+'/'+stationsFile
@@ -1884,8 +1884,7 @@ end
 
 pro make_2d_map, choice, model=models, mydir=mydir
 
-  print, mydir+'/supermag.dat'
-  get_log, mydir+'/supermag.dat',wlogMag,  wlognamesMag, logtimeMag,     $
+  get_log, mydir+'/SWMF/Param/supermag.dat',wlogMag,  wlognamesMag, logtimeMag,     $
            'h', wlogrownamesMag
   
   if choice eq 'dbdt' then begin
@@ -1936,7 +1935,7 @@ pro make_2d_map, choice, model=models, mydir=mydir
      for iStation=0,nStationFound-1 do begin
         NameStation = wlogrownamesScore(indexThres(iStation))
 
-        ;; find the location in GEO of the station in SuperMag.dat
+        ;; find the location in GEO of the station in supermag.dat
         indexMag = where(wlogrownamesMag eq NameStation)
 
         x(iStation,0,0) = wlogMag(indexMag,1)
