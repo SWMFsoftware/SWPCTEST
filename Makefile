@@ -490,11 +490,17 @@ RunDirList = $(subst ${FULLSIMDIR},,${FullRunDirList})
 
 CompDir = COMPARE_$(shell echo ${RES1DIR} | sed 's/\//_/')_vs_$(shell echo ${RES2DIR} | sed 's/\//_/')
 
-check_postproc:
+
+show_dir:
 	@echo "MYDIR          = ${MYDIR}"
+	@echo "CompDir        = ${CompDir}"
+	@echo "RunDirList     = ${RunDirList}"
 	@echo "FullRunDirList = ${FullRunDirList}"
 	@echo "FULLRESDIR     = ${FULLRESDIR}"
+	@echo "FullResDirList = ${FullResDirList}"
 	@echo ""
+
+check_postproc: show_dir
 	@if([ ! -d ${MYDIR}/deltaB/${RESDIR} ]); then  			\
 	  echo "Post processing simulation results to deltaB/${RESDIR}";\
 	  for RunDir in ${RunDirList};  do				\
