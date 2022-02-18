@@ -121,7 +121,7 @@ if($iRun){
     if(@ARGV){
 	print "Editing @ARGV with iRun=$iRun\n";
 	while(<>){
-	    s/(PBS -l select=|SBATCH \-N )(\d\d)/$1.($2+$iRun)/e;
+	    s/(PBS -l select=|SBATCH \-N )(\d+)/$1.($2+$iRun)/e;
 	    print;
 	}
     }
