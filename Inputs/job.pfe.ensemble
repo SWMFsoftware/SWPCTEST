@@ -1,0 +1,55 @@
+#!/bin/csh
+#PBS -S /bin/csh
+#PBS -N SWPC
+#PBS -q long
+
+# To run on different type of CPU cores. 1200 cores together
+### PBS -l select=75:ncpus=16:model=san
+#PBS -l select=60:ncpus=20:model=ivy
+### PBS -l select=50:ncpus=24:model=has
+### PBS -l select=30:ncpus=40:model=sky_ele
+### PBS -l select=30:ncpus=40:model=cas_ait
+
+# Set maximum walltime
+#PBS -l walltime=48:00:00
+
+# Combine STDOUT and STDERR
+#PBS -j oe
+
+# Send email if something happens
+#PBS -m abe
+
+# Specify group (uses default group if not specified):
+#PBS -W group_list=s6176
+
+# cd into the run directory above the run*/Event* directories
+cd $PBS_O_WORKDIR
+
+# Split the node file
+
+# This works for 1200 cores total (easy to read)
+cat $PBS_NODEFILE > hosts
+head -240 hosts > run1/Event01/hosts
+tail -960 hosts > run2/Event01/hosts
+tail -720 hosts > run3/Event01/hosts
+tail -480 hosts > run4/Event01/hosts
+tail -240 hosts > run5/Event01/hosts
+
+# Split the node file among the 5 events
+#perl -e '@d=@ARGV; $d=@d-1; @n=<>; $n=@n; \\
+# for $i (1..$d){$t=int(($d-$i+1)*$n/$d); `tail -$t $d[0] > $d[$i]/hosts`}' \\
+#    $PBS_NODEFILE run?/Event01
+
+setenv PBS_NODEFILE ./hosts
+
+# Run it.
+(cd run1/Event01; mpiexec -n 240 SWMF.exe > runlog.`date +%y%m%d`) &
+(cd run2/Event01; mpiexec -n 240 SWMF.exe > runlog.`date +%y%m%d`) &
+(cd run3/Event01; mpiexec -n 240 SWMF.exe > runlog.`date +%y%m%d`) &
+(cd run4/Event01; mpiexec -n 240 SWMF.exe > runlog.`date +%y%m%d`) &
+(cd run5/Event01; mpiexec -n 240 SWMF.exe > runlog.`date +%y%m%d`) &
+
+wait
+
+
+exit
