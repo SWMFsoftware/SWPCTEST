@@ -1,14 +1,18 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
+
+# Allow in-place editing
+$^I = "~";
 
 # Assimilate real-time Dst into ensemble simulation
-
+my $Help = ($h or $help);
+my $Verbose = ($v or $verbose);
 
 use strict;
 
-my $ImfFile = "IMF.dat";
-my $DstFile = "DstHourly.txt";
+my $Event = ($ARGV[0] or "Event01");
+my $DoneFile = "$Event.DONE";
 
-my $L1  = 250*6830; # distance in km
+die "$DoneFile is present\n" if -f $DoneFile;
 
 my $year;
 my $month;
@@ -17,6 +21,107 @@ my $hour;
 my $min;
 my $sec;
 my $msc;
+
+my @Dir = glob("run?");
+
+print "Event = $Event, Ensemble = @Dir\n";
+
+my $EventDir = "$Dir[0]/$Event";
+die "Missing event directory $EventDir\n" unless -d $EventDir;
+
+my $ParamFile = "$EventDir/PARAM.in";
+die "Missing param file $ParamFile\n" unless -f $ParamFile;
+
+my $EndFile = "$Event\.end";
+my $endtime;     # actual end time of the even
+my $oldendtime;  # time of previous assimilation
+my $newendtime;  # time to the next assimilation
+
+if(-f $EndFile){
+    # Previous assimilation time
+    $oldendtime = `grep -A6 '#ENDTIME' $ParamFile`;
+}else{
+    # Save original #ENDTIME from the PARAM.in file
+    `grep -A7 '#ENDTIME' $ParamFile > $EndFile`;
+
+    # Use the start time as the previous assimilation time
+    $oldendtime = `grep -A6 '#STARTTIME' $ParamFile`;
+    die "No #STARTTME found in $ParamFile\n" unless $oldendtime;
+}
+$oldendtime =~ s/\#ENDTIME\n//;
+$oldendtime =~ s/\s+[a-zA-Z]+\n/ /g;
+$oldendtime =~ s/ $//;
+print "Old end time=$oldendtime\n";
+
+# Find the next end time in the hourly Dst file
+my $DstFile = "../Inputs/$Event/DstHourly.txt";
+
+open(DST, $DstFile) or die "Could not open Dst file $DstFile\n";
+while(<DST>){
+    chop;
+    next unless s/(\d\d\d\d \d\d).*(\d\d \d\d \d\d \d\d)/$1 $2/;
+    $newendtime = $_;
+    last if $newendtime gt $oldendtime;
+}
+close(DST);
+
+# Final end time
+$endtime = `grep -A6 '#ENDTIME' $EndFile`;
+$endtime =~ s/\#ENDTIME\n//; $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
+
+if($oldendtime eq $newendtime or $newendtime gt $endtime){
+    print "End of $DstFile or exceeded end time: use final end time\n";
+    $newendtime = $endtime;
+    print "This is the last run: touch $DoneFile\n";
+    `touch $DoneFile`;
+}
+
+($day, $hour, $min, $sec) =
+    ($newendtime =~ /^\d+ \d+ (\d+) (\d+) (\d+) (\d+)/);
+print "New end time=$newendtime\n";
+print "day=$day hour=$hour min=$min sec=$sec\n" if $Verbose;
+
+# Put in new end time into all the PARAM.in files
+@ARGV = glob("run?/$Event/PARAM.in");
+print "All input files: @ARGV\n" if $Verbose;
+my $end;
+while(<>){
+    $end=1 if /^#ENDTIME/;
+    if($end){
+	s/\d+(\s+iDay)/$day$1/;
+	s/\d+(\s+iHour)/$hour$1/;
+	s/\d+(\s+iMinute)/$min$1/;
+	s/\d+(\s+iSecond)/$sec$1/;
+	$end=0 if /iSecond/;
+    }
+    print;
+}
+
+exit 0;
+
+    open(PARAM, $ParamFile)
+	or die "Could not open parameter file $ParamFile\n";
+    while(<PARAM>){
+	if(/^#ENDTIME/){
+	    $endtime = $_.
+		<PARAM>.<PARAM>.<PARAM>.<PARAM>.<PARAM>.<PARAM>.<PARAM>;
+	    last;
+	}
+    }
+    die "Could not find #ENDTIME in $ParamFile\n" unless $endtime;
+
+    print "Saving ENDTIME into $EndFile\n";
+    open(OUT, ">$EndFile") or die "Could not open $EndFile\n";
+    print OUT $endtime;
+    close(OUT);
+    $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
+    print "End time=$endtime\n";
+
+
+my $ImfFile;
+my $start;
+my $L1  = 250*6830; # distance in km
+
 
 my $starttime; # Start time: "year month day hour"
 
