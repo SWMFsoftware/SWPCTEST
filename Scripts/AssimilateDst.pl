@@ -51,7 +51,7 @@ if($Restart){
     $oldendtime = `grep -A6 '#STARTTIME' $ParamFile`;
     die "No #STARTTME found in $ParamFile\n" unless $oldendtime;
 }
-$oldendtime =~ s/\#ENDTIME\n//;
+$oldendtime =~ s/\#(START|END)TIME\n//;
 $oldendtime =~ s/\s+[a-zA-Z]+\n/ /g;
 $oldendtime =~ s/ $//;
 print "Old end time=$oldendtime\n";
