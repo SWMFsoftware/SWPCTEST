@@ -14,31 +14,49 @@ my $DoneFile = "$Event.DONE";
 
 die "$DoneFile is present\n" if -f $DoneFile;
 
-my $year;
-my $month;
-my $day;
-my $hour;
-my $min;
-my $sec;
-my $msc;
-
 my @Dir = glob("run?");
 my $nDir = @Dir;
 
+die "There are not enough run directories: @Dir\n" unless $nDir > 1;
+
 print "Event=$Event, nDir=$nDir, Ensemble=@Dir\n";
 
-my $EventDir = "$Dir[0]/$Event";
-die "Missing event directory $EventDir\n" unless -d $EventDir;
+# Composition parameters for the different run
+my $FractionH = 0.7;
+my $dFraction = (1 - $FractionH)/$nDir;
 
-my $ParamFile = "$EventDir/PARAM.in";
-die "Missing param file $ParamFile\n" unless -f $ParamFile;
-
-my $EndFile = "$Event\.end";
-my $endtime;     # actual end time of the even
+my $EventDir;    # e.g. run2/Event04
+my $ParamFile;   # e.g. run2/Event04/PARAM.in
 my $oldendtime;  # time of previous assimilation
 my $newendtime;  # time to the next assimilation
+my $endtime;     # actual end time of the event
+my $EndFile = "$Event\.end";  # File storing the end time of event
 
 my $Restart = (-f $EndFile);
+
+# Perform restart related manipulations of PARAM.in files
+foreach my $Dir (@Dir){
+    $EventDir = "$Dir/$Event";
+    die "Missing event directory $EventDir\n" unless -d $EventDir;
+    $ParamFile = "$EventDir/PARAM.in";
+    die "Missing param file $ParamFile\n" unless -f $ParamFile;
+    my $ParamStart = "$ParamFile.start";
+    if($Restart){
+	`cd $EventDir; ./Restart.pl`; # Create restart tree
+	# Replace PARAM.in with PARAM.in.restart if needed
+	next if -f $ParamStart; # already using restart PARAM file
+	my $ParamRestart = "$ParamFile.restart";
+	die "Missing restart param $ParamRestart\n" unless -f $ParamRestart;
+	# Activate PARAM.in.restart
+	print "mv $ParamFile $ParamStart; cp $ParamRestart $ParamFile\n"
+	    if $Verbose;
+	`mv $ParamFile $ParamStart; cp $ParamRestart $ParamFile`;
+    }else{
+	# Restore original param file if redoing the run
+	print "mv $ParamStart $ParamFile\n" if $Verbose and -f $ParamStart;
+	`mv $ParamStart $ParamFile` if -f $ParamStart;
+    }
+}
 
 if($Restart){
     # Previous assimilation time
@@ -79,30 +97,10 @@ if($oldendtime eq $newendtime or $newendtime gt $endtime){
     `touch $DoneFile`;
 }
 
-($day, $hour, $min, $sec) =
+my ($day, $hour, $min, $sec) =
     ($newendtime =~ /^\d+ \d+ (\d+) (\d+) (\d+) (\d+)/);
 print "New end time=$newendtime\n";
 print "day=$day hour=$hour min=$min sec=$sec\n" if $Verbose;
-
-# Perform restart
-if($Restart){
-    foreach my $Dir (@Dir){
-	$EventDir = "$Dir/$Event";
-	die "Missing event directory $EventDir\n" unless -d $EventDir;
-	`cd $EventDir; ./Restart.pl`; # Create restart tree
-	# Replace PARAM.in with PARAM.in.restart if needed
-	$ParamFile = "$EventDir/PARAM.in";
-	die "Missing param file $ParamFile\n" unless -f $ParamFile;
-	my $ParamStart = "$ParamFile.start";
-	next if -f $ParamStart; # already using restart PARAM file
-	my $ParamRestart = "$ParamFile.restart";
-	die "Missing restart param $ParamRestart\n" unless -f $ParamRestart;
-	# Activate PARAM.in.restart
-	print "mv $ParamFile $ParamStart; cp $ParamRestart $ParamFile\n"
-	    if $Verbose;
-	`mv $ParamFile $ParamStart; cp $ParamRestart $ParamFile`;
-    }
-}
 
 # Put in new end time into all the PARAM.in files
 @ARGV = glob("run?/$Event/PARAM.in");
@@ -117,90 +115,23 @@ while(<>){
 	s/\d+(\s+iSecond)/$sec$1/;
 	$end=0 if /iSecond/;
     }
+
+    # Make sure normal restart is saved at the end of the run
+    s/^#RESTARTOUTDIR\b/RESTARTOUTDIR/;
+    s/^SAVERESTART\b/\#SAVERESTART/;
+    $_ = "T\t\t\tDoSaveRestart\n"      if /DoSaveRestart/;
+    $_ = "-1\t\t\tDnSaveRestart\n"     if /DnSaveRestart/;
+    $_ = "1 hour\t\t\tDtSaveRestart\n" if /DtSaveRestart/;
+
+    # Set the FractionH and FractionO in the COMPOSITION command
+    $_ = sprintf("%5.3f\t\t\tFractionH\n", $FractionH) if /FractionH/;
+    if(/FractionO/){
+	$_ = sprintf("%5.3f\t\t\tFractionO\n", 1-$FractionH);
+	$FractionH += $dFraction; $FractionH = 1 if $FractionH > 1.0;
+    }
+    
     print;
 }
 
 exit 0;
-
-    open(PARAM, $ParamFile)
-	or die "Could not open parameter file $ParamFile\n";
-    while(<PARAM>){
-	if(/^#ENDTIME/){
-	    $endtime = $_.
-		<PARAM>.<PARAM>.<PARAM>.<PARAM>.<PARAM>.<PARAM>.<PARAM>;
-	    last;
-	}
-    }
-    die "Could not find #ENDTIME in $ParamFile\n" unless $endtime;
-
-    print "Saving ENDTIME into $EndFile\n";
-    open(OUT, ">$EndFile") or die "Could not open $EndFile\n";
-    print OUT $endtime;
-    close(OUT);
-    $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
-    print "End time=$endtime\n";
-
-
-my $ImfFile;
-my $start;
-my $L1  = 250*6830; # distance in km
-
-
-my $starttime; # Start time: "year month day hour"
-
-my $dst;  # Dst (hourly resolution)
-my $ux;   # solar wind speed
-
-my $hour0 = -1; # starting hour
-my $hours = -1; # number of hours since first day 00UT
-my @dst;        # Dst as a function of $hours
-
-open(DST, $DstFile) or die "Could not open DST file $DstFile\n";
-while(<DST>){
-    ($year, $month, $day, $hour, $dst) =
-	/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)/;
-    next unless $dst;
-    $starttime = "$year $month $day $hour" if not $starttime;
-    if($hours < 0){
-	$hour0 = $hour;
-	$hours = $hour;
-    }else{
-	$hours++;
-    }
-    $dst[$hours] = $dst;
-}
-close(DST);
-
-my $hour1 = $hours;
-
-print "Dst read:\n";
-for $hour ($hour0..$hour1){
-    print "$hour $dst[$hour]\n";
-}
-
-$hours = $hour0;
-
-open(IMF, $ImfFile) or die "Could not open IMF file $ImfFile\n";
-while(<IMF>){
-    ($year, $month, $day, $hour, $min, $sec, $msc, $ux) =
-	/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)/;
-
-    $start = 1 if "$year $month $day $hour" eq $starttime;
-    next unless $start;
-    
-    $ux = abs($ux);
-    
-    my $propagate = ($L1/$ux); # propagation time in seconds
-    my $hourpast = (60*$min + $sec + $msc/1000); # number of seconds since last round hour
-    my $diff = ($hourpast-$propagate)/3600;
-
-    print "date=$year $month $day T $hour:$min:$sec, $msc, ux=$ux\n";
-    print "hourpast = $hourpast, propagate=$propagate, difference [hr]=$diff\n";
-
-    next if $diff < 0 and $diff > -1;
-    
-    print "Assimilate Dst\n";
-    
-}
-close(IMF);
 
