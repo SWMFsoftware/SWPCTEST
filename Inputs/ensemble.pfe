@@ -1,0 +1,47 @@
+#!/bin/csh
+#PBS -S /bin/csh
+#PBS -N ENSEMBLE
+
+#PBS -q long
+#PBS -l walltime=48:00:00
+
+#! PBS -q devel
+#! PBS -l walltime=2:00:00
+
+# To run on different type of CPU cores. 1200 cores together
+### PBS -l select=75:ncpus=16:model=san
+#PBS -l select=60:ncpus=20:model=ivy
+### PBS -l select=50:ncpus=24:model=has
+### PBS -l select=30:ncpus=40:model=sky_ele
+### PBS -l select=30:ncpus=40:model=cas_ait
+
+# Combine STDOUT and STDERR
+#PBS -j oe
+
+# Send email if something happens
+#PBS -m abe
+
+# Specify group (uses default group if not specified):
+#PBS -W group_list=s6176
+
+# cd into the directory above the run?/Event* directories
+cd $PBS_O_WORKDIR
+
+# Split the node file among the ensemble members
+../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/Event01 > Event01.log
+setenv PBS_NODEFILE ./hosts
+
+# Run the ensemble until fully done
+while (! -f Event01.DONE)
+    ../Scripts/AssimilateDst.pl -v Event01 >> Event01.log
+    (cd run1/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run2/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run3/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run4/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run5/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
+    wait
+end
+
+echo "Finished" >> Event01.log
+
+exit
