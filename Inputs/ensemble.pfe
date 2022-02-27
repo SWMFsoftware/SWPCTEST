@@ -1,6 +1,6 @@
 #!/bin/csh
 #PBS -S /bin/csh
-#PBS -N ENSEMBLE
+#PBS -N Event01
 
 #PBS -q long
 #PBS -l walltime=48:00:00
