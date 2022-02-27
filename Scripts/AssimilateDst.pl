@@ -23,8 +23,9 @@ my $sec;
 my $msc;
 
 my @Dir = glob("run?");
+my $nDir = @Dir;
 
-print "Event = $Event, Ensemble = @Dir\n";
+print "Event=$Event, nDir=$nDir, Ensemble=@Dir\n";
 
 my $EventDir = "$Dir[0]/$Event";
 die "Missing event directory $EventDir\n" unless -d $EventDir;
@@ -37,7 +38,9 @@ my $endtime;     # actual end time of the even
 my $oldendtime;  # time of previous assimilation
 my $newendtime;  # time to the next assimilation
 
-if(-f $EndFile){
+my $Restart = (-f $EndFile);
+
+if($Restart){
     # Previous assimilation time
     $oldendtime = `grep -A6 '#ENDTIME' $ParamFile`;
 }else{
@@ -80,6 +83,26 @@ if($oldendtime eq $newendtime or $newendtime gt $endtime){
     ($newendtime =~ /^\d+ \d+ (\d+) (\d+) (\d+) (\d+)/);
 print "New end time=$newendtime\n";
 print "day=$day hour=$hour min=$min sec=$sec\n" if $Verbose;
+
+# Perform restart
+if($Restart){
+    foreach my $Dir (@Dir){
+	$EventDir = "$Dir/$Event";
+	die "Missing event directory $EventDir\n" unless -d $EventDir;
+	`cd $EventDir; ./Restart.pl`; # Create restart tree
+	# Replace PARAM.in with PARAM.in.restart if needed
+	$ParamFile = "$EventDir/PARAM.in";
+	die "Missing param file $ParamFile\n" unless -f $ParamFile;
+	my $ParamStart = "$ParamFile.start";
+	next if -f $ParamStart; # already using restart PARAM file
+	my $ParamRestart = "$ParamFile.restart";
+	die "Missing restart param $ParamRestart\n" unless -f $ParamRestart;
+	# Activate PARAM.in.restart
+	print "mv $ParamFile $ParamStart; cp $ParamRestart $ParamFile\n"
+	    if $Verbose;
+	`mv $ParamFile $ParamStart; cp $ParamRestart $ParamFile`;
+    }
+}
 
 # Put in new end time into all the PARAM.in files
 @ARGV = glob("run?/$Event/PARAM.in");
