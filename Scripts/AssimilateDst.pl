@@ -44,7 +44,7 @@ foreach my $Dir (@Dir){
     if($Restart){
 	my $RestartOutFile = "$EventDir/RESTART.out";
 	if(not -f $RestartOutFile){
-	    touch $DoneFile;
+	    `touch $DoneFile`;
 	    die "Could not find $RestartOutFile\n";
 	}
 	my $RestartDir = "RESTART_$oldendtime"; $RestartDir =~ s/ /_/g;
