@@ -28,17 +28,17 @@
 cd $PBS_O_WORKDIR
 
 # Split the node file among the ensemble members
-../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/Event01 > Event01.log
+../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/Event01 >& Event01.log
 setenv PBS_NODEFILE ./hosts
 
 # Run the ensemble until fully done
 while (! -f Event01.DONE)
-    ../Scripts/AssimilateDst.pl -v Event01 >> Event01.log
-    (cd run1/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run2/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run3/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run4/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run5/Event01; mpiexec SWMF.exe > runlog.`date +%y%m%d_%H%M%S`) &
+    ../Scripts/AssimilateDst.pl -v Event01 >>& Event01.log
+    (cd run1/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run2/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run3/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run4/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run5/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     wait
 end
 
