@@ -42,7 +42,13 @@ foreach my $Dir (@Dir){
     die "Missing param file $ParamFile\n" unless -f $ParamFile;
     my $ParamStart = "$ParamFile.start";
     if($Restart){
-	`cd $EventDir; ./Restart.pl`; # Create restart tree
+	my $RestartOutFile = "$EventDir/RESTART.out";
+	if(not -f $RestartOutFile){
+	    touch $DoneFile;
+	    die "Could not find $RestartOutFile\n";
+	}
+	my $RestartDir = "RESTART_$oldendtime"; $RestartDir =~ s/ /_/g;
+	`cd $EventDir; ./Restart.pl $RestartDir`; # Create restart tree
 	# Replace PARAM.in with PARAM.in.restart if needed
 	next if -f $ParamStart; # already using restart PARAM file
 	my $ParamRestart = "$ParamFile.restart";
@@ -72,7 +78,7 @@ if($Restart){
 $oldendtime =~ s/\#(START|END)TIME\n//;
 $oldendtime =~ s/\s+[a-zA-Z]+\n/ /g;
 $oldendtime =~ s/ $//;
-print "Old end time=$oldendtime\n";
+print "Old DA time=$oldendtime\n";
 
 # Find the next end time in the hourly Dst file
 my $DstFile = "../Inputs/$Event/DstHourly.txt";
@@ -99,7 +105,7 @@ if($oldendtime eq $newendtime or $newendtime gt $endtime){
 
 my ($day, $hour, $min, $sec) =
     ($newendtime =~ /^\d+ \d+ (\d+) (\d+) (\d+) (\d+)/);
-print "New end time=$newendtime\n";
+print "New DA time=$newendtime\n";
 print "day=$day hour=$hour min=$min sec=$sec\n" if $Verbose;
 
 # Put in new end time into all the PARAM.in files
@@ -121,7 +127,7 @@ while(<>){
     s/^SAVERESTART\b/\#SAVERESTART/;
     $_ = "T\t\t\tDoSaveRestart\n"      if /DoSaveRestart/;
     $_ = "-1\t\t\tDnSaveRestart\n"     if /DnSaveRestart/;
-    $_ = "1 hour\t\t\tDtSaveRestart\n" if /DtSaveRestart/;
+    $_ = "10 hour\t\t\tDtSaveRestart\n" if /DtSaveRestart/;
 
     # Set the FractionH and FractionO in the COMPOSITION command
     $_ = sprintf("%5.3f\t\t\tFractionH\n", $FractionH) if /FractionH/;
