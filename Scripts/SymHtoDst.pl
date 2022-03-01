@@ -71,7 +71,7 @@ close(IMF);
 open(SYMH, $SymhFile) or die "Could not open input SYMH file $SymhFile\n";
 open(DST, ">$DstFile") or die "Could not open output Dst file $DstFile\n";
 print DST "Hourly Dst obtained from minute resolution SYMH and corresponding simulation time\n";
-print DST "year mo dy hr dst hours_sim dy_sim hr_sim mn_sim sc_sim\n";
+print DST "year mo dy hr dst_sm hours_sim dy_sim hr_sim mn_sim sc_sim\n";
 while(<SYMH>){
     ($year, $month, $day, $hour, $min, $symh) =
 	/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\d+\s+\d+\s+(\S+)/;

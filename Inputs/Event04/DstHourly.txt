@@ -1,5 +1,5 @@
 Hourly Dst obtained from minute resolution SYMH and corresponding simulation time
-year mo dy hr dst hours_sim dy_sim hr_sim mn_sim sc_sim
+year mo dy hr dst_sm hours_sim dy_sim hr_sim mn_sim sc_sim
 2005 08 31 05    13.00     6.27 31 06 16 00
 2005 08 31 06    11.72     7.27 31 07 16 00
 2005 08 31 07    12.65     8.27 31 08 16 00
