@@ -11,14 +11,17 @@ my $Reset = ($r or $reset);
 use strict;
 
 my $Event = ($ARGV[0] or "Event01");
+
+die "Incorrect event name $Event\n" unless $Event =~ /^Event\d+$/;
+
 my @Dir = glob("run[1-9]");
 my $nDir = @Dir;
 die "There are not enough run directories: @Dir\n" unless $nDir > 1;
 
 print "Event=$Event, nDir=$nDir, Ensemble=@Dir\n";
 
-my $ParamOrig = "$Event\.PARAM.in";   # File storing the original PARAM.in
-my $DoneFile = "$Event.DONE";
+my $ParamOrig = "$Event/PARAM.in";   # File storing the original PARAM.in
+my $LastFile = "$Event/LAST";
 
 if($Reset){
     die "Could not find $ParamOrig\n" unless -f $ParamOrig;
@@ -26,16 +29,19 @@ if($Reset){
 	print "cp $ParamOrig $Dir/$Event/PARAM.in\n";
 	`cp $ParamOrig $Dir/$Event/PARAM.in`;
     }
-    print "rm $DoneFile $ParamOrig\n";
-    unlink($DoneFile, $ParamOrig);
+    print "rm -rf $Event/\n";
+    `rm -rf $Event`;
     print "Finished resetting $Event\n";
     exit 0;
 }
 
-die "$DoneFile is present\n" if -f $DoneFile;
+die "$LastFile is present\n" if -f $LastFile;
 
+# Create directory for the ensemble
+my $PlotDir = "$Event/GM/IO2/";
+`mkdir -p $PlotDir` unless -d $PlotDir;
 
-# Composition parameters for the different run
+# Composition parameters for the different runs
 my $FractionH = 0.7;
 my $dFraction = (1 - $FractionH)/$nDir;
 
@@ -43,7 +49,7 @@ my $EventDir  = "$Dir[0]/$Event";     # e.g. run1/Event04
 my $ParamFile = "$EventDir/PARAM.in"; # e.g. run1/Event04/PARAM.in
 my $olddatime;  # time of previous assimilation
 my $newdatime;  # time to the next assimilation
-my $endtime;     # actual end time of the event
+my $endtime;    # end time of the event
 
 # If ParamOrig exists, we are doing a restart
 my $Restart = (-f $ParamOrig);
@@ -65,6 +71,9 @@ $olddatime =~ s/\s+[a-zA-Z]+\n/ /g;
 $olddatime =~ s/ $//;
 print "Old DA time=$olddatime\n";
 
+# Name of the restart directory is based on the old DA time
+my $RestartDir = "RESTART_$olddatime"; $RestartDir =~ s/ /_/g;
+
 # Perform restart related manipulations of PARAM.in files
 foreach my $Dir (@Dir){
     $EventDir = "$Dir/$Event";
@@ -74,11 +83,11 @@ foreach my $Dir (@Dir){
     if($Restart){
 	my $RestartOutFile = "$EventDir/RESTART.out";
 	if(not -f $RestartOutFile){
-	    `touch $DoneFile`;
-	    die "Could not find $RestartOutFile\n";
+	    warn "Could not find $RestartOutFile\n";
+	    next;
 	}
-	my $RestartDir = "RESTART_$olddatime"; $RestartDir =~ s/ /_/g;
-	`cd $EventDir; ./Restart.pl $RestartDir`; # Create restart tree
+        # Create restart tree
+	`cd $EventDir; ./Restart.pl $RestartDir`; 
 	# Replace PARAM.in with PARAM.in.restart if needed
 	next if `grep restartIN $ParamFile`; # already using restart PARAM file
 	my $ParamRestart = "$ParamFile.restart";
@@ -92,14 +101,85 @@ foreach my $Dir (@Dir){
 # Find the next end time in the hourly Dst file
 my $DstFile = "../Inputs/$Event/DstHourly.txt";
 
+my $obstime; # observation time
+my $ObsDst;  # observed hourly Dst
 open(DST, $DstFile) or die "Could not open Dst file $DstFile\n";
 while(<DST>){
-    chop;
-    next unless s/(\d\d\d\d \d\d).*(\d\d \d\d \d\d \d\d)/$1 $2/;
-    $newdatime = $_;
-    last if $newdatime gt $olddatime;
+    # Match: year mo dy hr dst_sm hours_sim dy_sim hr_sim mn_sim sc_sim
+    next unless 
+	/^(\d\d\d\d \d\d) (\d\d \d\d)\s+(\S+)\s+\S+ (\d\d \d\d \d\d \d\d)$/;
+    $newdatime = "$1 $4";
+    if($newdatime gt $olddatime){
+	print "olddatime=$olddatime,\n";
+	print "newdatime=$newdatime,\n";
+	# Found new DA possibility
+	$ObsDst  = $3;
+	print "obstime=$obstime, ObsDst=$ObsDst\n";
+	last;
+    }
+    # The observation time is from the previous hour
+    $obstime = "$1 $2";
 }
 close(DST);
+
+# Perform data assimilation: select the run with best simulated Dst
+# The run in $BestEventDir has the best Dst $BestDst (closest to $ObsDst)
+# Only the last log file contributes, the rest is coming from the ensemble
+my $BestEventDir;
+my $BestLog;
+my $BestDst = 1e6;
+if($ObsDst){
+    # Read Dst from log files
+    my @EnsembleDst = `grep "$obstime" $PlotDir/log*`;
+    my $nEnsembleDst = @EnsembleDst;
+    my $EnsembleDst;
+    foreach (@EnsembleDst){
+	/(\S+)\s+\S+$/ or die "Could not read line from $PlotDir/log*\n$.:$_";
+	$EnsembleDst += $1;
+    }
+    print 
+	"nEnsembleDst=$nEnsembleDst, EnsembleDst=", 
+	$EnsembleDst/$nEnsembleDst,"\n";
+    for my $Dir (@Dir){
+	my $RunPlotDir = "$Dir/$PlotDir";
+	my @LogFile = glob("$RunPlotDir/log*.log");
+	my $LogFile = @LogFile[-1];
+	my @SimDst = `grep "$obstime" $LogFile`;
+	my $nSimDst = @SimDst;
+	my $SimDst;
+	foreach (@SimDst){
+	    /(\S+)\s+\S+$/ or 
+		die "Could not read line from $RunPlotDir/log*\n$.:$_";
+	    $SimDst += $1;
+	}
+	my $Dst = ($EnsembleDst + $SimDst)/($nEnsembleDst + $nSimDst);
+	print 
+	    "$LogFile: nSimDst=$nSimDst SimDst=", $SimDst/$nSimDst, 
+	    ", Dst=$Dst\n";
+	if(abs($Dst - $ObsDst) < abs($BestDst - $ObsDst)){
+	    # Store this run as best
+	    $BestEventDir = "$Dir/$Event";
+	    $BestLog = $LogFile;
+	    $BestDst = $Dst;
+	}
+    }
+    die "Could not identify BestEventDir\n" if not $BestEventDir;
+
+    # Copy the best log file into the ensemble
+    # !!! should copy all output created in the last run !!!
+    print "cp $BestLog $PlotDir/ # BestDst=$BestDst\n";
+    `cp $BestLog $PlotDir`;
+
+    # Link all the restarts to the best one
+    for my $Dir (@Dir){
+	my $EventDir = "$Dir/$Event";
+	print 
+	    "cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir\n";
+	`cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir`;
+    }
+}
+
+exit 0; ###
 
 # Final end time
 $endtime = `grep -A6 '#ENDTIME' $ParamOrig`;
@@ -108,8 +188,8 @@ $endtime =~ s/\#ENDTIME\n//; $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
 if($olddatime eq $newdatime or $newdatime gt $endtime){
     print "End of $DstFile or exceeded end time: use end time\n";
     $newdatime = $endtime;
-    print "This is the last run: touch $DoneFile\n";
-    `touch $DoneFile`;
+    print "This is the last run: touch $LastFile\n";
+    `touch $LastFile`;
 }
 
 my ($day, $hour, $min, $sec) =
