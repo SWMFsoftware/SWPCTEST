@@ -28,12 +28,13 @@
 cd $PBS_O_WORKDIR
 
 # Split the node file among the ensemble members
-../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/Event01 >& Event01.log
+mkdir -p Event01
+../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/Event01 >& Event01/runlog
 setenv PBS_NODEFILE ./hosts
 
 # Run the ensemble until fully done
-while (! -f Event01.DONE)
-    ../Scripts/AssimilateDst.pl -v Event01 >>& Event01.log
+while (! -f Event01/LAST)
+    ../Scripts/AssimilateDst.pl -v Event01 >>& Event01/runlog
     (cd run1/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     (cd run2/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     (cd run3/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
@@ -42,6 +43,8 @@ while (! -f Event01.DONE)
     wait
 end
 
-echo "Finished" >> Event01.log
+touch Event01/DONE
+
+echo "Finished" >> Event01/runlog
 
 exit
