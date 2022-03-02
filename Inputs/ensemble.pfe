@@ -1,6 +1,7 @@
 #!/bin/csh
+
 #PBS -S /bin/csh
-#PBS -N Event01
+#PBS -N ENSEMBLE
 
 #PBS -q long
 #PBS -l walltime=48:00:00
@@ -24,27 +25,29 @@
 # Specify group (uses default group if not specified):
 #PBS -W group_list=s6176
 
+setenv EVENT Event01
+
 # cd into the directory above the run?/Event* directories
 cd $PBS_O_WORKDIR
 
 # Split the node file among the ensemble members
-mkdir -p Event01
-../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/Event01 >& Event01/runlog
+mkdir -p ${EVENT}
+../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/${EVENT} >& ${EVENT}/runlog
 setenv PBS_NODEFILE ./hosts
 
 # Run the ensemble until fully done
-while (! -f Event01/LAST)
-    ../Scripts/AssimilateDst.pl -v Event01 >>& Event01/runlog
-    (cd run1/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run2/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run3/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run4/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
-    (cd run5/Event01; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+while (! -f ${EVENT}/LAST)
+    ../Scripts/AssimilateDst.pl -v ${EVENT} >>& ${EVENT}/runlog
+    (cd run1/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run2/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run3/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run4/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+    (cd run5/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     wait
 end
 
-touch Event01/DONE
+touch ${EVENT}/DONE
 
-echo "Finished" >> Event01/runlog
+echo "Finished" >> ${EVENT}/runlog
 
 exit
