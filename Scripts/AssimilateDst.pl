@@ -22,12 +22,16 @@ print "Event=$Event, nDir=$nDir, Ensemble=@Dir\n";
 
 my $ParamOrig = "$Event/PARAM.in";   # File storing the original PARAM.in
 my $LastFile = "$Event/LAST";
+my $PlotDir = "$Event/GM/IO2";
 
 if($Reset){
     die "Could not find $ParamOrig\n" unless -f $ParamOrig;
     foreach my $Dir (@Dir){
-	print "cp $ParamOrig $Dir/$Event/PARAM.in\n";
-	`cp $ParamOrig $Dir/$Event/PARAM.in`;
+	my $EventDir = "$Dir/$Event";
+	print "cp $ParamOrig $EventDir/PARAM.in\n";
+	`cp $ParamOrig $EventDir/PARAM.in`;
+	print "rm -rf $EventDir/RESTART* $Dir/$PlotDir/*\n";
+	`rm -rf $EventDir/RESTART* $Dir/$PlotDir/*`;
     }
     print "rm -rf $Event/\n";
     `rm -rf $Event`;
@@ -38,7 +42,6 @@ if($Reset){
 die "$LastFile is present\n" if -f $LastFile;
 
 # Create directory for the ensemble
-my $PlotDir = "$Event/GM/IO2/";
 `mkdir -p $PlotDir` unless -d $PlotDir;
 
 # Composition parameters for the different runs
@@ -74,6 +77,8 @@ print "Old DA time=$olddatime\n";
 # Name of the restart directory is based on the old DA time
 my $RestartDir = "RESTART_$olddatime"; $RestartDir =~ s/ /_/g;
 
+sleep 60;
+
 # Perform restart related manipulations of PARAM.in files
 foreach my $Dir (@Dir){
     $EventDir = "$Dir/$Event";
@@ -101,7 +106,7 @@ foreach my $Dir (@Dir){
 # Find the next end time in the hourly Dst file
 my $DstFile = "../Inputs/$Event/DstHourly.txt";
 
-my $obstime; # observation time
+my $ObsTime; # observation time
 my $ObsDst;  # observed hourly Dst
 open(DST, $DstFile) or die "Could not open Dst file $DstFile\n";
 while(<DST>){
@@ -114,38 +119,48 @@ while(<DST>){
 	print "newdatime=$newdatime,\n";
 	# Found new DA possibility
 	$ObsDst  = $3;
-	print "obstime=$obstime, ObsDst=$ObsDst\n";
+	print "ObsTime=$ObsTime, ObsDst=$ObsDst\n";
 	last;
     }
     # The observation time is from the previous hour
-    $obstime = "$1 $2";
+    $ObsTime = "$1 $2";
 }
 close(DST);
 
-# Perform data assimilation: select the run with best simulated Dst
-# The run in $BestEventDir has the best Dst $BestDst (closest to $ObsDst)
-# Only the last log file contributes, the rest is coming from the ensemble
-my $BestEventDir;
-my $BestLog;
-my $BestDst = 1e6;
-if($ObsDst){
-    # Read Dst from log files
-    my @EnsembleDst = `grep "$obstime" $PlotDir/log*`;
-    my $nEnsembleDst = @EnsembleDst;
-    my $EnsembleDst;
-    foreach (@EnsembleDst){
-	/(\S+)\s+\S+$/ or die "Could not read line from $PlotDir/log*\n$.:$_";
-	$EnsembleDst += $1;
+if($ObsTime){
+    # Perform data assimilation: select the run with best simulated Dst
+    # The run in $BestEventDir has the best Dst $BestDst (closest to $ObsDst)
+    # Only the last log file contributes, the rest is coming from the ensemble
+    my $BestEventDir;
+    my $BestLog;
+    my $BestDst = 1e6;
+
+    # Read SYM-H from log files in the assimilated directory
+    my $nEnsembleDst; # number of SYM-H values used for Dst
+    my $EnsembleDst;  # total of SYM-H used for Dst
+    my @LogFile = glob("$PlotDir/log*.log");
+    if(@LogFile){
+	my @EnsembleDst = `grep "$ObsTime" $PlotDir/log*`;
+	$nEnsembleDst = @EnsembleDst;
+	foreach (@EnsembleDst){
+	    /(\S+)\s+\S+$/
+		or die "Could not read line from $PlotDir/log*\n$.:$_";
+	    $EnsembleDst += $1;
+	}
+	print 
+	    "nEnsembleDst=$nEnsembleDst, EnsembleDst=", 
+	    $EnsembleDst/$nEnsembleDst,"\n"
+	    if $nEnsembleDst;
     }
-    print 
-	"nEnsembleDst=$nEnsembleDst, EnsembleDst=", 
-	$EnsembleDst/$nEnsembleDst,"\n";
+    # Read SYM-H from the last log file of each ensemble member
     for my $Dir (@Dir){
 	my $RunPlotDir = "$Dir/$PlotDir";
 	my @LogFile = glob("$RunPlotDir/log*.log");
+	next unless @LogFile; # possibly failed run
 	my $LogFile = @LogFile[-1];
-	my @SimDst = `grep "$obstime" $LogFile`;
+	my @SimDst = `grep "$ObsTime" $LogFile`;
 	my $nSimDst = @SimDst;
+	next unless $nSimDst; # possibly failed run
 	my $SimDst;
 	foreach (@SimDst){
 	    /(\S+)\s+\S+$/ or 
@@ -178,8 +193,6 @@ if($ObsDst){
 	`cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir`;
     }
 }
-
-exit 0; ###
 
 # Final end time
 $endtime = `grep -A6 '#ENDTIME' $ParamOrig`;
