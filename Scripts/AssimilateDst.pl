@@ -106,8 +106,10 @@ foreach my $Dir (@Dir){
 # Find the next end time in the hourly Dst file
 my $DstFile = "../Inputs/$Event/DstHourly.txt";
 
-my $ObsTime; # observation time
-my $ObsDst;  # observed hourly Dst
+my $ObsTimeNew; # new observation time
+my $ObsTime;    # old observation time
+my $ObsDstNew;  # new observed hourly Dst
+my $ObsDst;     # old observed hourly Dst
 open(DST, $DstFile) or die "Could not open Dst file $DstFile\n";
 while(<DST>){
     # Match: year mo dy hr dst_sm hours_sim dy_sim hr_sim mn_sim sc_sim
@@ -118,12 +120,14 @@ while(<DST>){
 	print "olddatime=$olddatime,\n";
 	print "newdatime=$newdatime,\n";
 	# Found new DA possibility
-	$ObsDst  = $3;
-	print "ObsTime=$ObsTime, ObsDst=$ObsDst\n";
+	print "ObsTime=$ObsTime, $ObsTimeNew, ObsDst=$ObsDst, $ObsDstNew\n";
 	last;
     }
     # The observation time is from the previous hour
-    $ObsTime = "$1 $2";
+    $ObsTime    = $ObsTimeNew;
+    $ObsDst     = $ObsDstNew;
+    $ObsDstNew  = $3;
+    $ObsTimeNew = "$1 $2";
 }
 close(DST);
 
@@ -138,18 +142,19 @@ if($ObsTime){
     # Read SYM-H from log files in the assimilated directory
     my $nEnsembleDst; # number of SYM-H values used for Dst
     my $EnsembleDst;  # total of SYM-H used for Dst
-    my @LogFile = glob("$PlotDir/log*.log");
+    my @LogFile;
+    @LogFile = glob("$PlotDir/log*.log");
     if(@LogFile){
-	my @EnsembleDst = `grep "$ObsTime" $PlotDir/log*`;
+	my $LogFile = @LogFile[-1];
+	my @EnsembleDst = `grep \"$ObsTime\" $LogFile`;
 	$nEnsembleDst = @EnsembleDst;
 	foreach (@EnsembleDst){
 	    /(\S+)\s+\S+$/
 		or die "Could not read line from $PlotDir/log*\n$.:$_";
 	    $EnsembleDst += $1;
 	}
-	print 
-	    "nEnsembleDst=$nEnsembleDst, EnsembleDst=", 
-	    $EnsembleDst/$nEnsembleDst,"\n"
+	print "nEnsembleDst=$nEnsembleDst in $LogFile\n";
+	print "EnsembleDst=", $EnsembleDst/$nEnsembleDst,"\n"
 	    if $nEnsembleDst;
     }
     # Read SYM-H from the last log file of each ensemble member
@@ -184,6 +189,11 @@ if($ObsTime){
     # !!! should copy all output created in the last run !!!
     print "cp $BestLog $PlotDir/ # BestDst=$BestDst\n";
     `cp $BestLog $PlotDir`;
+    my $BestIndex = $BestLog; $BestIndex =~ s/log_/geoindex_/;
+    `cp $BestIndex $PlotDir` if -f $BestIndex;
+    my $BestMag = $BestLog; 
+    $BestMag =~ s/log_/magnetometers_/; $BestMag =~ s/log$/mag/;
+    `cp $BestMag $PlotDir` if -f $BestMag;
 
     # Link all the restarts to the best one
     for my $Dir (@Dir){
@@ -198,7 +208,7 @@ if($ObsTime){
 $endtime = `grep -A6 '#ENDTIME' $ParamOrig`;
 $endtime =~ s/\#ENDTIME\n//; $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
 
-if($olddatime eq $newdatime or $newdatime gt $endtime){
+if($olddatime eq $newdatime or $newdatime ge $endtime){
     print "End of $DstFile or exceeded end time: use end time\n";
     $newdatime = $endtime;
     print "This is the last run: touch $LastFile\n";
@@ -230,7 +240,7 @@ while(<>){
     $_ = "-1\t\t\tDnSaveRestart\n"     if /DnSaveRestart/;
     $_ = "10 hour\t\t\tDtSaveRestart\n" if /DtSaveRestart/;
 
-    $_ = "#MAKEDIR\nF\t\t\tDoMakeDir\n\n$1\n" if /(RESTARTOUTDIR)/;
+    $_ = "#MAKEDIR\nF\t\t\tDoMakeDir\n\n$1\n" if /^\#(RESTARTOUTDIR)/;
 
     # Set the FractionH and FractionO in the COMPOSITION command
     $_ = sprintf("%5.3f\t\t\tFractionH\n", $FractionH) if /FractionH/;
