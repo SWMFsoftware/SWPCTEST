@@ -7,6 +7,7 @@ $^I = "~";
 my $Help = ($h or $help);
 my $Verbose = ($v or $verbose);
 my $Reset = ($r or $reset);
+my $Sleep = ($s or $sleep or 60);
 
 use strict;
 
@@ -77,7 +78,7 @@ print "Old DA time=$olddatime\n";
 # Name of the restart directory is based on the old DA time
 my $RestartDir = "RESTART_$olddatime"; $RestartDir =~ s/ /_/g;
 
-sleep 60;
+sleep $Sleep;
 
 # Perform restart related manipulations of PARAM.in files
 foreach my $Dir (@Dir){
@@ -215,10 +216,11 @@ if($olddatime eq $newdatime or $newdatime ge $endtime){
     `touch $LastFile`;
 }
 
-my ($day, $hour, $min, $sec) =
-    ($newdatime =~ /^\d+ \d+ (\d+) (\d+) (\d+) (\d+)/);
+my ($year, $month, $day, $hour, $min, $sec) =
+    ($newdatime =~ /^(\d+) (\d+) (\d+) (\d+) (\d+) (\d+)/);
 print "New DA time=$newdatime\n";
-print "day=$day hour=$hour min=$min sec=$sec\n" if $Verbose;
+print "year=$year month=$month day=$day hour=$hour min=$min sec=$sec\n" 
+    if $Verbose;
 
 # Put in new end time into all the PARAM.in files
 @ARGV = glob("run?/$Event/PARAM.in");
@@ -227,6 +229,8 @@ my $end;
 while(<>){
     $end=1 if /^#ENDTIME/;
     if($end){
+	s/\d+(\s+iYear)/$year$1/;
+	s/\d+(\s+iMonth)/$month$1/;
 	s/\d+(\s+iDay)/$day$1/;
 	s/\d+(\s+iHour)/$hour$1/;
 	s/\d+(\s+iMinute)/$min$1/;
