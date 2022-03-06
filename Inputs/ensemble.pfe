@@ -25,6 +25,9 @@
 # Specify group (uses default group if not specified):
 #PBS -W group_list=s6176
 
+# Make sure other jobs submitted with qsub.*.pl get killed before doing much
+sleep 20
+
 setenv EVENT Event01
 
 # cd into the directory above the run?/Event* directories
@@ -37,7 +40,7 @@ setenv PBS_NODEFILE ./hosts
 
 # Run the ensemble until fully done
 while (! -f ${EVENT}/LAST)
-    ../Scripts/AssimilateDst.pl -v ${EVENT} >>& ${EVENT}/runlog
+    ../Scripts/AssimilateDst.pl -s=60 -v ${EVENT} >>& ${EVENT}/runlog
     (cd run1/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     (cd run2/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     (cd run3/${EVENT}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
