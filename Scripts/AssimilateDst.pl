@@ -7,7 +7,7 @@ $^I = "~";
 my $Help = ($h or $help);
 my $Verbose = ($v or $verbose);
 my $Reset = ($r or $reset);
-my $Sleep = ($s or $sleep or 60);
+my $Sleep = ($s or $sleep);
 
 use strict;
 
@@ -162,9 +162,8 @@ if($ObsTime){
     for my $Dir (@Dir){
 	my $RunPlotDir = "$Dir/$PlotDir";
 	my @LogFile = glob("$RunPlotDir/log*.log");
-	next unless @LogFile; # possibly failed run
 	my $LogFile = @LogFile[-1];
-	my @SimDst = `grep "$ObsTime" $LogFile`;
+	my @SimDst = `grep "$ObsTime" $RunPlotDir/log*.log`;
 	my $nSimDst = @SimDst;
 	next unless $nSimDst; # possibly failed run
 	my $SimDst;
