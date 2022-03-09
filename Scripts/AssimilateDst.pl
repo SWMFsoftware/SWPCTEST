@@ -8,8 +8,11 @@ my $Help = ($h or $help);
 my $Verbose = ($v or $verbose);
 my $Reset = ($r or $reset);
 my $Sleep = ($s or $sleep);
+my $Collect = ($c or $collect);
 
 use strict;
+
+&print_help if $Help;
 
 my $Event = ($ARGV[0] or "Event01");
 
@@ -20,6 +23,8 @@ my $nDir = @Dir;
 die "There are not enough run directories: @Dir\n" unless $nDir > 1;
 
 print "Event=$Event, nDir=$nDir, Ensemble=@Dir\n";
+
+&collect_data if $Collect;
 
 my $ParamOrig = "$Event/PARAM.in";   # File storing the original PARAM.in
 my $LastFile = "$Event/LAST";
@@ -257,3 +262,119 @@ while(<>){
 
 exit 0;
 
+###############################################################################
+sub collect_data{
+
+    my $EnsembleDir = "Ensemble/$Event";
+    my $Runlog      = "$EnsembleDir/runlog";
+    die "Could not find $Runlog\n" unless -f $Runlog;
+    my @BestDst = `grep BestDst $Runlog`;
+
+    my $Run1 = $Dir[0];
+    my $EventDir = "$Run1/$Event";
+###    my @Results = glob("$EventDir/???.txt $EventDir/*.log");
+    my @Results = glob("$EventDir/log*.log");
+    
+    print "Results=@Results\n" if $Verbose;
+
+    my %Result; # Results from each run
+    my %Index;  # index inside the results for each run
+
+    foreach my $Result (@Results){
+
+	my $EnsembleResult = $Result;
+	$EnsembleResult =~ s/$Run1/Ensemble/;
+	open(OUT,">$EnsembleResult") or die "Could not open $EnsembleResult\n";
+
+	# Read in all results into the Result hash indexed by the run directory
+	foreach my $Run (@Dir){
+	    my $SimResult = $Result;
+	    $SimResult =~ s/$Run1/$Run/;
+	    open(IN,$SimResult);
+	    my @Result = <IN>;
+	    close(IN);
+	    $Result{$Run} = [@Result];
+	    $Index{$Run} = 0;
+	}
+
+	my $nAssim;  # Assimilation index
+	my $BestRun; # Run directory that should be assimilated
+	my $Line;    # A single line of simulation output
+	foreach (@BestDst){
+	    /(run\d)/ or die "Did not match runN: $_\n";
+	    $BestRun = $1;
+	    $nAssim++;
+	    next if $nAssim == 1; # Only need to set $BestRun now
+	    /log_e(\d\d\d\d)(\d\d)(\d\d)\-(\d\d)(\d\d)(\d\d)/
+		or die "Did not match date: $_\n";
+	    my $nextdatime = "$1 $2 $3 $4 $5 $6";
+	    
+	    print "$nextdatime: BestRun=$BestRun\n" if $Verbose;
+	    # Advance to this time in each simulation
+	    foreach my $Run (@Dir){
+		LINE: {
+		    $Line = $Result{$Run}[$Index{$Run}];
+		    last LINE unless $Line; # exit if not more data
+		    print OUT $Line if $Run eq $BestRun;
+		    $Line =~ s/\s+/ /g; # Replace multiple spaces with one
+		    $Line =~ s/ (\d) / 0$1 /g; # Replace single digit with 0N
+		    if($Line =~
+		       /(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d)/){
+			my $time = "$1 $2 $3 $4 $5 $6";
+			if($time gt $nextdatime){
+			    print "$Run: time=$time, nextdatime=$nextdatime\n";
+			    last LINE if "$1 $2 $3 $4 $5 $6" gt $nextdatime;
+			}
+		    }
+		    $Index{$Run}++;
+		}
+	    }
+	}
+	if($Verbose){
+	    foreach my $Run (@Dir){
+		print "Lines in $Run:", scalar @{$Result{$Run}},
+		    " Index($Run)= $Index{$Run}\n";
+	    }
+	}
+	
+	close(OUT);
+	
+	last;
+    }
+    
+    exit 0;
+}
+
+###############################################################################
+sub print_help{
+
+    print
+"AssimilateDst.pl can be used to run multiple Geospace simulations
+with different paramters and assimilate hourly Dst observations 
+to select the best performing simulation, which is then used for
+restart for all ensemble members. This is typically called from
+the ensemble job script. In addition, it can collect
+the output from multiple runs into the assimilated results.
+
+Usage: 
+    AssimilateDst.pl [-h] [-c|-r|-s N] [-v] [EventNN]
+
+EventNN is the name of the event to be simulated. Here NN represents two
+    digits from 01 to 99. The default is Event01.
+	
+-c       - collect data from multiple runs into the assimilated optimal
+-collect   result. This is a post processing step.
+-r       - reset the ensemble by copying back the original EventNN/PARAM.in
+-reset     file into each run directory. Then EventNN and output file in are
+           the runs are all removed.
+-s N     - sleep N seconds before processing restart files. This may
+-sleep N   reduce number of failures on slow LUSTRE disks. 
+-h       - print out help message and exit.
+-help
+-v       - provide more verbose output. 
+-verbose
+
+";
+    exit 0;
+
+}
