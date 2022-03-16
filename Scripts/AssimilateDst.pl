@@ -190,15 +190,17 @@ if($ObsTime){
     }
     die "Could not identify BestEventDir\n" if not $BestEventDir;
 
-    # Copy the best log file into the ensemble
-    # !!! should copy all output created in the last run !!!
+    # Copy the best log file and all output files into the ensemble
     print "cp $BestLog $PlotDir/ # BestDst=$BestDst\n";
-    `cp $BestLog $PlotDir`;
-    my $BestIndex = $BestLog; $BestIndex =~ s/log_/geoindex_/;
-    `cp $BestIndex $PlotDir` if -f $BestIndex;
-    my $BestMag = $BestLog; 
-    $BestMag =~ s/log_/magnetometers_/; $BestMag =~ s/log$/mag/;
-    `cp $BestMag $PlotDir` if -f $BestMag;
+    `cp $BestLog $PlotDir/`;
+    my @Output = glob("$BestEventDir/GM/IO2/*");
+    foreach my $Output (@Output){
+	my $Name = $Output;
+	$Name =~ s/\w+(_e\d+\-\d+\.)\w+/log$1log/;
+	# print "compare $Name with $BestLog\n";
+	"cp  $Output $PlotDir\n" if $Verbose and $Name ge $BestLog;
+	`cp $Output $PlotDir` if $Name ge $BestLog;
+    }
 
     # Link all the restarts to the best one
     for my $Dir (@Dir){
