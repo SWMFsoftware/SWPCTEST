@@ -77,7 +77,8 @@ if($Restart){
 }
 $olddatime =~ s/\#(START|END)TIME\n//;
 $olddatime =~ s/\s+[a-zA-Z]+\n/ /g;
-$olddatime =~ s/ $//;
+$olddatime =~ 
+    s/(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d).*/$1$2$3\-$4$5$6/;
 print "Old DA time=$olddatime\n";
 
 # Name of the restart directory is based on the old DA time
@@ -120,8 +121,8 @@ open(DST, $DstFile) or die "Could not open Dst file $DstFile\n";
 while(<DST>){
     # Match: year mo dy hr dst_sm hours_sim dy_sim hr_sim mn_sim sc_sim
     next unless 
-	/^(\d\d\d\d \d\d) (\d\d \d\d)\s+(\S+)\s+\S+ (\d\d \d\d \d\d \d\d)$/;
-    $newdatime = "$1 $4";
+	/^(\d\d\d\d) (\d\d) (\d\d) (\d\d)\s+(\S+)\s+\S+ (\d\d) (\d\d) (\d\d) (\d\d)$/;
+    $newdatime = "$1$2$6-$7$8$9";
     if($newdatime gt $olddatime){
 	print "olddatime=$olddatime,\n";
 	print "newdatime=$newdatime,\n";
@@ -132,8 +133,8 @@ while(<DST>){
     # The observation time is from the previous hour
     $ObsTime    = $ObsTimeNew;
     $ObsDst     = $ObsDstNew;
-    $ObsDstNew  = $3;
-    $ObsTimeNew = "$1 $2";
+    $ObsDstNew  = $5;
+    $ObsTimeNew = "$1 $2 $3 $4";
 }
 close(DST);
 
@@ -145,61 +146,43 @@ if($ObsTime){
     my $BestLog;
     my $BestDst = 1e6;
 
-    # Read SYM-H from log files in the assimilated directory
-    my $nEnsembleDst; # number of SYM-H values used for Dst
-    my $EnsembleDst;  # total of SYM-H used for Dst
-    my @LogFile;
-    @LogFile = glob("$PlotDir/log*.log");
-    if(@LogFile){
-	my $LogFile = @LogFile[-1];
-	my @EnsembleDst = `grep \"$ObsTime\" $LogFile`;
-	$nEnsembleDst = @EnsembleDst;
-	foreach (@EnsembleDst){
-	    /(\S+)\s+\S+$/
-		or die "Could not read line from $PlotDir/log*\n$.:$_";
-	    $EnsembleDst += $1;
-	}
-	print "nEnsembleDst=$nEnsembleDst in $LogFile\n";
-	print "EnsembleDst=", $EnsembleDst/$nEnsembleDst,"\n"
-	    if $nEnsembleDst;
-    }
-    # Read SYM-H from the last log file of each ensemble member
+    # Read SYM-H from the log files of each ensemble member
     for my $Dir (@Dir){
 	my $RunPlotDir = "$Dir/$PlotDir";
-	my @LogFile = glob("$RunPlotDir/log*.log");
-	my $LogFile = @LogFile[-1];
 	my @SimDst = `grep "$ObsTime" $RunPlotDir/log*.log`;
 	my $nSimDst = @SimDst;
 	next unless $nSimDst; # possibly failed run
+	# Add up SYM-H values for the hour of observations
 	my $SimDst;
 	foreach (@SimDst){
 	    /(\S+)\s+\S+$/ or 
 		die "Could not read line from $RunPlotDir/log*\n$.:$_";
 	    $SimDst += $1;
 	}
-	my $Dst = ($EnsembleDst + $SimDst)/($nEnsembleDst + $nSimDst);
-	print 
-	    "$LogFile: nSimDst=$nSimDst SimDst=", $SimDst/$nSimDst, 
-	    ", Dst=$Dst\n";
+	my $Dst = $SimDst/$nSimDst;
+	print "$Dir: nSimDst=$nSimDst, Dst=$Dst\n";
 	if(abs($Dst - $ObsDst) < abs($BestDst - $ObsDst)){
 	    # Store this run as best
 	    $BestEventDir = "$Dir/$Event";
-	    $BestLog = $LogFile;
 	    $BestDst = $Dst;
 	}
     }
     die "Could not identify BestEventDir\n" if not $BestEventDir;
 
-    # Copy the best log file and all output files into the ensemble
-    print "cp $BestLog $PlotDir/ # BestDst=$BestDst\n";
-    `cp $BestLog $PlotDir/`;
+    # Copy all output files from BestEventDir into the ensemble
+    print "BestEventDir=$BestEventDir, BestDst=$BestDst\n";
     my @Output = glob("$BestEventDir/GM/IO2/*");
     foreach my $Output (@Output){
-	my $Name = $Output;
-	$Name =~ s/\w+(_e\d+\-\d+\.)\w+/log$1log/;
-	# print "compare $Name with $BestLog\n";
-	"cp  $Output $PlotDir\n" if $Verbose and $Name ge $BestLog;
-	`cp $Output $PlotDir` if $Name ge $BestLog;
+	# Check if this file has been assimilated already
+	my $File = $Output; $File =~ s/run\d\///;
+	next if -f $File;
+	# Extract the time from the file name
+	my $Time = $Output; $Time =~ s/.*_e(\d+\-\d+)\..*/$1/;
+	# Don't copy files from the future:
+	# olddatime is the end of the current run
+	next if $Time ge $olddatime;
+	print "cp $Output $PlotDir\n" if $Verbose;
+	`cp $Output $PlotDir`;
     }
 
     # Link all the restarts to the best one
@@ -214,6 +197,10 @@ if($ObsTime){
 # Final end time
 $endtime = `grep -A6 '#ENDTIME' $ParamOrig`;
 $endtime =~ s/\#ENDTIME\n//; $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
+$endtime =~ 
+    s/(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d).*/$1$2$3\-$4$5$6/;
+
+#exit 0;
 
 if($olddatime eq $newdatime or $newdatime ge $endtime){
     print "End of $DstFile or exceeded end time: use end time\n";
@@ -223,7 +210,7 @@ if($olddatime eq $newdatime or $newdatime ge $endtime){
 }
 
 my ($year, $month, $day, $hour, $min, $sec) =
-    ($newdatime =~ /^(\d+) (\d+) (\d+) (\d+) (\d+) (\d+)/);
+    ($newdatime =~ /^(\d\d\d\d)(\d\d)(\d\d)\-(\d\d)(\d\d)(\d\d)/);
 print "New DA time=$newdatime\n";
 print "year=$year month=$month day=$day hour=$hour min=$min sec=$sec\n" 
     if $Verbose;
