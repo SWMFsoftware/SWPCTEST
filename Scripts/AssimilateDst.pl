@@ -76,7 +76,7 @@ if($Restart){
     die "No #STARTTME found in $ParamFile\n" unless $olddatime;
 }
 $olddatime =~ s/\#(START|END)TIME\n//;
-$olddatime =~ s/\s+[a-zA-Z]+\n/ /g;
+$olddatime =~ s/\s+[a-zA-Z]+[\s\n]+/ /g;
 $olddatime =~ 
     s/(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d).*/$1$2$3\-$4$5$6/;
 print "Old DA time=$olddatime\n";
@@ -170,7 +170,7 @@ if($ObsTime){
     die "Could not identify BestEventDir\n" if not $BestEventDir;
 
     # Copy all output files from BestEventDir into the ensemble
-    print "BestEventDir=$BestEventDir, BestDst=$BestDst\n";
+    print "BestEventDir=$BestEventDir, BestDst=$BestDst, ObsDst=$ObsDst, ObsTime=$ObsTime\n";
     my @Output = glob("$BestEventDir/GM/IO2/*");
     foreach my $Output (@Output){
 	# Check if this file has been assimilated already
