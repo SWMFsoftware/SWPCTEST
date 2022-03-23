@@ -506,10 +506,10 @@ check_postproc: show_dir
 	  for RunDir in ${RunDirList};  do				\
 	     echo "processing RunDir=${FULLSIMDIR}/$${RunDir}";		\
 	     cd ${FULLSIMDIR}/$${RunDir};				\
-	     if([ -f SWMF.SUCCESS ]); then				\
-		if([ ! -d RESULTS ]); then ./PostProc.pl -cat RESULTS; fi;   \
+	     if([ -f SWMF.SUCCESS -o -f DONE ]); then			\
+		if([ ! -d RESULTS ]); then ${SCRIPTDIR}/PostProc.pl -cat RESULTS; fi;   \
 		mkdir -p ${FULLRESDIR}/$$RunDir;			\
-		cp PARAM.in *log.* RESULTS/GM/* RESULTS/IE/IE*.log      \
+		cd RESULTS; cp PARAM.in runlog* GM/* IE/IE*.log 	\
 			${FULLRESDIR}/$$RunDir;				\
 		cd ${FULLRESDIR}/$$RunDir;				\
 		${MYSCRIPTDIR}/convert_mags.py; 			\
