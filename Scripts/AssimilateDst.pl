@@ -81,8 +81,8 @@ $olddatime =~
     s/(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d).*/$1$2$3\-$4$5$6/;
 print "Old DA time=$olddatime\n";
 
-# Name of the restart directory is based on the old DA time
-my $RestartDir = "RESTART_$olddatime"; $RestartDir =~ s/ /_/g;
+# Name of the restart directory tree
+my $RestartDir = "RESTART";
 
 sleep $Sleep;
 
@@ -98,8 +98,8 @@ foreach my $Dir (@Dir){
 	    warn "Could not find $RestartOutFile\n";
 	    next;
 	}
-        # Create restart tree
-	`cd $EventDir; ./Restart.pl $RestartDir`; 
+        # Create restart tree (-W allows overwriting previous tree)
+	`cd $EventDir; ./Restart.pl -W $RestartDir`; 
 	# Replace PARAM.in with PARAM.in.restart if needed
 	next if `grep restartIN $ParamFile`; # already using restart PARAM file
 	my $ParamRestart = "$ParamFile.restart";
@@ -124,10 +124,11 @@ while(<DST>){
 	/^(\d\d\d\d) (\d\d) (\d\d) (\d\d)\s+(\S+)\s+\S+ (\d\d) (\d\d) (\d\d) (\d\d)$/;
     $newdatime = "$1$2$6-$7$8$9";
     if($newdatime gt $olddatime){
-	print "olddatime=$olddatime,\n";
-	print "newdatime=$newdatime,\n";
+	print "olddatime=$olddatime,\n" if $Verbose;
+	print "newdatime=$newdatime,\n" if $Verbose;
 	# Found new DA possibility
-	print "ObsTime=$ObsTime, $ObsTimeNew, ObsDst=$ObsDst, $ObsDstNew\n";
+	print "ObsTime=$ObsTime, $ObsTimeNew, ObsDst=$ObsDst, $ObsDstNew\n" 
+	    if $Verbose;
 	last;
     }
     # The observation time is from the previous hour
@@ -189,7 +190,8 @@ if($ObsTime){
     for my $Dir (@Dir){
 	my $EventDir = "$Dir/$Event";
 	print 
-	    "cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir\n";
+	    "cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir\n"
+	    if $Verbose;
 	`cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir`;
     }
 }
