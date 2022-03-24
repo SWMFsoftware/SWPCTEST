@@ -4,10 +4,11 @@
 $^I = "~";
 
 # Assimilate real-time Dst into ensemble simulation
-my $Help = ($h or $help);
+my $Help    = ($h or $help);
 my $Verbose = ($v or $verbose);
-my $Reset = ($r or $reset);
-my $Sleep = ($s or $sleep);
+my $Reset   = ($r or $reset);
+my $Sleep   = ($s or $sleep);
+my $Predict = ($p or $predict);
 my $Collect = ($c or $collect);
 
 use strict;
@@ -122,7 +123,11 @@ while(<DST>){
     # Match: year mo dy hr dst_sm hours_sim dy_sim hr_sim mn_sim sc_sim
     next unless 
 	/^(\d\d\d\d) (\d\d) (\d\d) (\d\d)\s+(\S+)\s+\S+ (\d\d) (\d\d) (\d\d) (\d\d)$/;
-    $newdatime = "$1$2$6-$7$8$9";
+    if($Predict){
+	$newdatime = "$1$2$3-$4"."0000";
+    }else{
+	$newdatime = "$1$2$6-$7$8$9";
+    }
     if($newdatime gt $olddatime){
 	print "olddatime=$olddatime,\n" if $Verbose;
 	print "newdatime=$newdatime,\n" if $Verbose;
@@ -348,13 +353,15 @@ the ensemble job script. In addition, it can collect
 the output from multiple runs into the assimilated results.
 
 Usage: 
-    AssimilateDst.pl [-h] [-c|-r|-s N] [-v] [EventNN]
+    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [EventNN]
 
 EventNN is the name of the event to be simulated. Here NN represents two
     digits from 01 to 99. The default is Event01.
 	
 -c       - collect data from multiple runs into the assimilated optimal
 -collect   result. This is a post processing step.
+-p       - use predicted Dst for assimilation. Default is using the observed
+-predict   hourly Dst.
 -r       - reset the ensemble by copying back the original EventNN/PARAM.in
 -reset     file into each run directory. Then EventNN and output file in are
            the runs are all removed.
