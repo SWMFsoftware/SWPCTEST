@@ -27,29 +27,26 @@ print "Event=$Event, nDir=$nDir, Ensemble=@Dir\n";
 
 &collect_data if $Collect;
 
-my $ParamOrig = "$Event/PARAM.in";   # File storing the original PARAM.in
-my $LastFile = "$Event/LAST";
+my $ParamOrig = "run/$Event/PARAM.in";   # File storing the original PARAM.in
+my $LastFile = "run/$Event/LAST";
 my $PlotDir = "$Event/GM/IO2";
 
 if($Reset){
     die "Could not find $ParamOrig\n" unless -f $ParamOrig;
     foreach my $Dir (@Dir){
 	my $EventDir = "$Dir/$Event";
-	print "cp $ParamOrig $EventDir/PARAM.in\n";
-	`cp $ParamOrig $EventDir/PARAM.in`;
-	print "rm -rf $EventDir/RESTART* $Dir/$PlotDir/*\n";
-	`rm -rf $EventDir/RESTART* $Dir/$PlotDir/*`;
+	&shell("cp $ParamOrig $EventDir/PARAM.in");
+	&shell("rm -rf $EventDir/RESTART* $EventDir/??/plots/*");
     }
-    print "rm -rf $Event/\n";
-    `rm -rf $Event`;
+    &shell("rm -rf run/$Event");
     print "Finished resetting $Event\n";
     exit 0;
 }
 
 die "$LastFile is present\n" if -f $LastFile;
 
-# Create directory for the ensemble
-`mkdir -p $PlotDir` unless -d $PlotDir;
+# Create plot directory for the ensemble
+&shell("mkdir -p run/$PlotDir") unless -d "run/$PlotDir";
 
 # Composition parameters for the different runs
 my $FractionH = 0.7;
@@ -67,13 +64,13 @@ my $Restart = (-f $ParamOrig);
 # Get previous DA time (if any) and save $ParamOrig (if not yet)
 if($Restart){
     # Previous assimilation time
-    $olddatime = `grep -A6 '#ENDTIME' $ParamFile`;
+    $olddatime = &shell("grep -A6 '#ENDTIME' $ParamFile");
 }else{
     # Copy original PARAM file
-    `cp $ParamFile $ParamOrig`;
+    &shell("cp $ParamFile $ParamOrig");
 
     # Use the start time as the previous assimilation time
-    $olddatime = `grep -A6 '#STARTTIME' $ParamFile`;
+    $olddatime = &shell("grep -A6 '#STARTTIME' $ParamFile");
     die "No #STARTTME found in $ParamFile\n" unless $olddatime;
 }
 $olddatime =~ s/\#(START|END)TIME\n//;
@@ -100,14 +97,15 @@ foreach my $Dir (@Dir){
 	    next;
 	}
         # Create restart tree (-W allows overwriting previous tree)
-	`cd $EventDir; ./Restart.pl -W $RestartDir`; 
-	# Replace PARAM.in with PARAM.in.restart if needed
-	next if `grep restartIN $ParamFile`; # already using restart PARAM file
+	&shell("cd $EventDir; ./Restart.pl -W $RestartDir");
+
+	# Replace PARAM.in with PARAM.in.restart only if needed
+	next if &shell("grep restartIN $ParamFile");
+
 	my $ParamRestart = "$ParamFile.restart";
 	die "Missing restart param $ParamRestart\n" unless -f $ParamRestart;
 	# Activate PARAM.in.restart
-	print "cp $ParamRestart $ParamFile\n" if $Verbose;
-	`cp $ParamRestart $ParamFile`;
+	&shell("cp $ParamRestart $ParamFile");
     }
 }
 
@@ -116,8 +114,7 @@ my $DstFile = "../Inputs/$Event/DstHourly.txt";
 
 my $ObsTimeNew; # new observation time
 my $ObsTime;    # old observation time
-my $ObsDstNew;  # new observed hourly Dst
-my $ObsDst;     # old observed hourly Dst
+my $ObsDst;     # observed hourly Dst
 open(DST, $DstFile) or die "Could not open Dst file $DstFile\n";
 while(<DST>){
     # Match: year mo dy hr dst_sm hours_sim dy_sim hr_sim mn_sim sc_sim
@@ -132,14 +129,12 @@ while(<DST>){
 	print "olddatime=$olddatime,\n" if $Verbose;
 	print "newdatime=$newdatime,\n" if $Verbose;
 	# Found new DA possibility
-	print "ObsTime=$ObsTime, $ObsTimeNew, ObsDst=$ObsDst, $ObsDstNew\n" 
-	    if $Verbose;
+	print "ObsTime=$ObsTime, $ObsTimeNew, ObsDst=$ObsDst\n" if $Verbose;
 	last;
     }
     # The observation time is from the previous hour
     $ObsTime    = $ObsTimeNew;
-    $ObsDst     = $ObsDstNew;
-    $ObsDstNew  = $5;
+    $ObsDst     = $5; # Dst for the hour prior 
     $ObsTimeNew = "$1 $2 $3 $4";
 }
 close(DST);
@@ -155,7 +150,7 @@ if($ObsTime){
     # Read SYM-H from the log files of each ensemble member
     for my $Dir (@Dir){
 	my $RunPlotDir = "$Dir/$PlotDir";
-	my @SimDst = `grep "$ObsTime" $RunPlotDir/log*.log`;
+	my @SimDst = &shell("grep '$ObsTime' $RunPlotDir/log*.log");
 	my $nSimDst = @SimDst;
 	next unless $nSimDst; # possibly failed run
 	# Add up SYM-H values for the hour of observations
@@ -176,7 +171,8 @@ if($ObsTime){
     die "Could not identify BestEventDir\n" if not $BestEventDir;
 
     # Copy all output files from BestEventDir into the ensemble
-    print "BestEventDir=$BestEventDir, BestDst=$BestDst, ObsDst=$ObsDst, ObsTime=$ObsTime\n";
+    print "BestEventDir=$BestEventDir, BestDst=$BestDst, "
+	. "ObsDst=$ObsDst, ObsTime=$ObsTime\n";
     my @Output = glob("$BestEventDir/GM/IO2/*");
     foreach my $Output (@Output){
 	# Check if this file has been assimilated already
@@ -187,22 +183,18 @@ if($ObsTime){
 	# Don't copy files from the future:
 	# olddatime is the end of the current run
 	next if $Time ge $olddatime;
-	print "cp $Output $PlotDir\n" if $Verbose;
-	`cp $Output $PlotDir`;
+	&shell("cp $Output run/$PlotDir");
     }
 
     # Link all the restarts to the best one
     for my $Dir (@Dir){
 	my $EventDir = "$Dir/$Event";
-	print 
-	    "cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir\n"
-	    if $Verbose;
-	`cd $EventDir; ./Restart.pl -i ../../$BestEventDir/$RestartDir`;
+	&shell("cd $EventDir;./Restart.pl -i ../../$BestEventDir/$RestartDir");
     }
 }
 
 # Final end time
-$endtime = `grep -A6 '#ENDTIME' $ParamOrig`;
+$endtime = &shell("grep -A6 '#ENDTIME' $ParamOrig");
 $endtime =~ s/\#ENDTIME\n//; $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
 $endtime =~ 
     s/(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d).*/$1$2$3\-$4$5$6/;
@@ -212,8 +204,8 @@ $endtime =~
 if($olddatime eq $newdatime or $newdatime ge $endtime){
     print "End of $DstFile or exceeded end time: use end time\n";
     $newdatime = $endtime;
-    print "This is the last run: touch $LastFile\n";
-    `touch $LastFile`;
+    print "This is the last run\n";
+    &shell("touch $LastFile");
 }
 
 my ($year, $month, $day, $hour, $min, $sec) =
@@ -259,12 +251,21 @@ while(<>){
 exit 0;
 
 ###############################################################################
+sub shell{
+    my $command = join(" ",@_);
+    print "$command\n" if $Verbose;
+    my $result = `$command`;
+    print $result if $result =~ /error/i;
+    return $result;
+}
+
+###############################################################################
 sub collect_data{
 
     my $EnsembleDir = "Ensemble/$Event";
     my $Runlog      = "$EnsembleDir/runlog";
     die "Could not find $Runlog\n" unless -f $Runlog;
-    my @BestDst = `grep BestDst $Runlog`;
+    my @BestDst = &shell("grep BestDst $Runlog");
 
     my $Run1 = $Dir[0];
     my $EventDir = "$Run1/$Event";
