@@ -63,6 +63,7 @@ help:
 	@echo "make check_postproc SIMDIR=New (collect results of events 1-6 from ./New into deltaB/New)"
 	@echo "make check_calc     SIMDIR=New (calculate all metrics from results in deltaB/New/)"
 	@echo "make check_dst      SIMDIR=New (calculate Dst error only from results in deltaB/New/)"
+	@echo "make check_dst_stat SIMDIR=New (calculate Dst error statistics from runs in deltaB/New/)"
 	@echo "make check_tar      SIMDIR=New (tar up results and metrics in deltaB/New)"
 	@echo "make check_compare RES1DIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
@@ -483,8 +484,8 @@ FULLRESDIR  = ${MYDIR}/deltaB/${RESDIR}
 FULLRES1DIR = ${MYDIR}/deltaB/${RES1DIR}
 FULLRES2DIR = ${MYDIR}/deltaB/${RES2DIR}
 
-FullRunDirList  = $(sort $(dir $(wildcard ${QUEDIR}[1-9]/Event*/)))
-FullResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run[1-9]/)))
+FullRunDirList  = $(sort $(dir $(wildcard ${QUEDIR}*/Event*/)))
+FullResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run*/)))
 
 RunDirList = $(subst ${FULLSIMDIR},,${FullRunDirList})
 
@@ -535,13 +536,17 @@ check_calc:
 check_dst:
 	@echo "Checking Dst against observations"
 	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;\
-	for ResDir in ${FullResDirList}; do						\
-	    if([ -d $${ResDir}/Event${FIRSTEVENT0} ]); then              \
+	for ResDir in ${FullResDirList}; do				\
 		echo ' working on $${ResDir}';				\
 		cd $${ResDir};						\
 		printf "${PREDICT}\n calc_dst_error,models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_dst_log.txt;     	\
-	    fi; \
 	done
+	make check_dst_stat
+
+check_dst_stat:
+	cd ${FULLRESDIR}; \
+	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc; \
+	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}'\n"   | idl > idl_dst_log.txt;
 
 check_tar:
 	@echo "Saving results as tarball"
