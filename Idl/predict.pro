@@ -2140,6 +2140,7 @@ pro calc_dst_error, models=models, events=events, mydir=mydir, InputDir=InputDir
   endfor
   colors=[255,100,250,150,200,50,25,220,125] ; reset colors
   close,unit
+
 end
 
 ;==============================================================================
@@ -2156,7 +2157,7 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, events=events, InputDir=InputDir
   if strmid(mydir,InputDir.strlen()-1) ne '/' then InputDir = InputDir+'/'
 
   ;; check how many runs
-  file_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run*/dst_error.txt', count=nRun)
+  file_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run?/dst_error.txt', count=nRun)
 
   if nRun le 2 then begin
      print, ' nRun ='+string(nRun,format='(i2)')+' is less than 2'
@@ -2250,16 +2251,16 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, events=events, InputDir=InputDir
      logfilenameplot = logfilename
      legends = ['Observation']
 
-     if file_test(mydir+'/deltaB/'+ResDir+'/run*/Event'+string(event,format='(i2.2)')+'/log*.log') then begin
+     if file_test(mydir+'/deltaB/'+ResDir+'/run?/Event'+string(event,format='(i2.2)')+'/log*.log') then begin
         eventnumber = string(event,format='(i2.2)')
-     endif else if file_test(mydir+'/deltaB/'+ResDir+'/run*/Event'+string(event,format='(i1.1)')+'/log*.log') then begin
+     endif else if file_test(mydir+'/deltaB/'+ResDir+'/run?/Event'+string(event,format='(i1.1)')+'/log*.log') then begin
         eventnumber = string(event,format='(i1.1)')
      endif else begin
         print, "Error: No simulation file is found. Stop"
         retall
      endelse
 
-     logfilename = mydir+'/deltaB/'+ResDir+'/run*/Event'+eventnumber+'/log*.log'
+     logfilename = mydir+'/deltaB/'+ResDir+'/run?/Event'+eventnumber+'/log*.log'
      legends     = [legends, 'run'+string(indgen(nRun)+1,format='(i1)')]
 
      read_log_data
@@ -2283,7 +2284,7 @@ end
 pro score_stat_nRun, mydir=mydir, ResDir=ResDir
 
   ;; check how many runs
-  dir_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run*', count=nRun)
+  dir_I = FILE_SEARCH(mydir+'/deltaB/'+ResDir+'/run?', count=nRun)
 
   if nRun le 2 then begin
      print, ' nRun ='+string(nRun,format='(i2)')+' is less than 2'
