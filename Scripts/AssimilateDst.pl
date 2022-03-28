@@ -176,7 +176,7 @@ if($ObsTime){
     my @Output = glob("$BestEventDir/GM/IO2/*");
     foreach my $Output (@Output){
 	# Check if this file has been assimilated already
-	my $File = $Output; $File =~ s/run\d\///;
+	my $File = $Output; $File =~ s/run\d/run/;
 	next if -f $File;
 	# Extract the time from the file name
 	my $Time = $Output; $Time =~ s/.*_e(\d+\-\d+)\..*/$1/;
