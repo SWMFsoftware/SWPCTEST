@@ -150,7 +150,7 @@ if($ObsTime){
     # Read SYM-H from the log files of each ensemble member
     for my $Dir (@Dir){
 	my $RunPlotDir = "$Dir/$PlotDir";
-	my @SimDst = &shell("grep '$ObsTime' $RunPlotDir/log*.log");
+	my @SimDst = &shell_array("grep '$ObsTime' $RunPlotDir/log*.log");
 	my $nSimDst = @SimDst;
 	next unless $nSimDst; # possibly failed run
 	# Add up SYM-H values for the hour of observations
@@ -258,19 +258,31 @@ sub shell{
     print $result if $result =~ /error/i;
     return $result;
 }
+###############################################################################
+sub shell_array{
+    my $command = join(" ",@_);
+    print "$command\n" if $Verbose;
+    my @result = `$command`;
+    return @result;
+}
 
 ###############################################################################
 sub collect_data{
 
-    my $EnsembleDir = "Ensemble/$Event";
+    my $EnsembleDir = "run/$Event";
     my $Runlog      = "$EnsembleDir/runlog";
     die "Could not find $Runlog\n" unless -f $Runlog;
-    my @BestDst = &shell("grep BestDst $Runlog");
+    my @BestDst = &shell_array("grep BestDst $Runlog");
+    my @EndTime = &shell_array("grep Old $Runlog");
+    foreach (@EndTime){chop; s/Old DA time=//};
 
+    print "Elements of BestDst=",scalar(@BestDst),
+	", elements of EndTime=",scalar @EndTime,"\n"
+	if $Verbose;
+    
     my $Run1 = $Dir[0];
     my $EventDir = "$Run1/$Event";
-###    my @Results = glob("$EventDir/???.txt $EventDir/*.log");
-    my @Results = glob("$EventDir/log*.log");
+    my @Results = glob("$EventDir/???.txt $EventDir/*.log");
     
     print "Results=@Results\n" if $Verbose;
 
@@ -280,16 +292,20 @@ sub collect_data{
     foreach my $Result (@Results){
 
 	my $EnsembleResult = $Result;
-	$EnsembleResult =~ s/$Run1/Ensemble/;
+	$EnsembleResult =~ s/$Run1/run/;
+
+	print "Result=$Result, EnsembleResult=$EnsembleResult\n" if $Verbose;
 	open(OUT,">$EnsembleResult") or die "Could not open $EnsembleResult\n";
 
 	# Read in all results into the Result hash indexed by the run directory
 	foreach my $Run (@Dir){
 	    my $SimResult = $Result;
 	    $SimResult =~ s/$Run1/$Run/;
-	    open(IN,$SimResult);
+	    print "SimResult=$SimResult\n" if $Verbose;
+	    open(IN, $SimResult);
 	    my @Result = <IN>;
 	    close(IN);
+	    print "Elements of Results=",scalar @Result," in $Run\n" if $Verbose;
 	    $Result{$Run} = [@Result];
 	    $Index{$Run} = 0;
 	}
@@ -301,29 +317,38 @@ sub collect_data{
 	    /(run\d)/ or die "Did not match runN: $_\n";
 	    $BestRun = $1;
 	    $nAssim++;
-	    next if $nAssim == 1; # Only need to set $BestRun now
-	    /log_e(\d\d\d\d)(\d\d)(\d\d)\-(\d\d)(\d\d)(\d\d)/
-		or die "Did not match date: $_\n";
-	    my $nextdatime = "$1 $2 $3 $4 $5 $6";
+	    /(\d\d\d\d) (\d\d) (\d\d) (\d\d)$/
+		or die "Did not match ObsTime: $_\n";
+	    my $ObsTime = "$1$2$3-$4"."0000";
+	    my $StartTime;
+	    my $EndTime;
+	    foreach my $Time (@EndTime){
+		$EndTime = $Time;
+		last if $StartTime ge $ObsTime;
+		$StartTime = $Time;
+	    }
+
+	    print "BestRun=$BestRun ObsTime=$ObsTime "
+		. "StartTime=$StartTime EndTime=$EndTime\n" if $Verbose;
 	    
-	    print "$nextdatime: BestRun=$BestRun\n" if $Verbose;
 	    # Advance to this time in each simulation
 	    foreach my $Run (@Dir){
 		LINE: {
 		    $Line = $Result{$Run}[$Index{$Run}];
-		    last LINE unless $Line; # exit if not more data
+		    $Index{$Run}++;
+		    last LINE unless $Line; # exit if no more data
 		    print OUT $Line if $Run eq $BestRun;
 		    $Line =~ s/\s+/ /g; # Replace multiple spaces with one
 		    $Line =~ s/ (\d) / 0$1 /g; # Replace single digit with 0N
 		    if($Line =~
 		       /(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d)/){
-			my $time = "$1 $2 $3 $4 $5 $6";
-			if($time gt $nextdatime){
-			    print "$Run: time=$time, nextdatime=$nextdatime\n";
-			    last LINE if "$1 $2 $3 $4 $5 $6" gt $nextdatime;
+			my $time = "$1$2$3-$4$5$6";
+			if($time gt $EndTime){
+			    print "$Run: last time=$time, Index=$Index{$Run}, EndTime=$EndTime\n";
+			    last LINE;
 			}
 		    }
-		    $Index{$Run}++;
+		    redo LINE;
 		}
 	    }
 	}
@@ -336,7 +361,6 @@ sub collect_data{
 	
 	close(OUT);
 	
-	last;
     }
     
     exit 0;
