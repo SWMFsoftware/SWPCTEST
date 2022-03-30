@@ -343,7 +343,7 @@ sub collect_data{
 		    if($Line =~
 		       /(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d)/){
 			my $time = "$1$2$3-$4$5$6";
-			if($time gt $EndTime){
+			if($time ge $EndTime){
 			    print "$Run: last time=$time, Index=$Index{$Run}, EndTime=$EndTime\n"
 				if $Verbose;
 			    last LINE;
