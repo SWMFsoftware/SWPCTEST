@@ -11,6 +11,7 @@ MYSCRIPTDIR = ${MYDIR}/Scripts
 MYIDLDIR    = ${MYDIR}/Idl
 IDLPATH     = ${COMMONDIR}/IDL/General:<IDL_DEFAULT>
 GMDIR       = ${DIR}/GM/BATSRUS
+QSUBSCRIPT  = ${COMMONDIR}/JobScripts/qsub.pfe.pbspl.pl
 SIMDIR      = Runs
 RESDIR	    = ${SIMDIR}
 RES1DIR	    = ${RESDIR}
@@ -57,6 +58,7 @@ help:
 	@echo "make test_compile              (compile SWMF)"
 	@echo "make test_rundir EVENTS=2-5    (create run directories for events 2-5)"
 	@echo "make test_run                  (submit runs to queue)"
+	@echo "make ensemble_run              (submit ensemble runs to queue)"
 	@echo ""
 	@echo "make check                     (process results of events 1-6 in ./Runs into deltaB/Runs)"
 	@echo "make check EVENTS=  SIMDIR=New (process all results from ./New into deltaB/New)"
@@ -190,7 +192,7 @@ test_rundir:
 		rm -rf ${QUEDIR}_backup;	\
 		mkdir -p ${QUEDIR}_backup;	\
 		mv run[1-9] ${QUEDIR}_backup/;	\
-	fi;							\
+	fi;
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
 		make rundir MACHINE=${MACHINE} RUNDIR=${QUEDIR}$${iRun}/Event$$e NCIRCLE=${NCIRCLE}; \
@@ -202,6 +204,7 @@ test_rundir:
 		cd ${QUEDIR}$${iRun}/Event$$e;				     		    \
 	  	   ${MYSCRIPTDIR}/change_param.pl ${PLOT} ${RESTART} -imf=${IMF} -irun=$${iRun};  \
 	done; done
+	cp ${MYDIR}/Inputs/ensemble.pfe $(MYDIR)/${SIMDIR}/;
 
 test_run:
 	@echo "Submitting jobs"
@@ -215,6 +218,13 @@ test_run:
 		   ./qsub.pfe.pbspl.pl job.pfe ev$$e.$${iRun};		\
 		fi;                                                     \
 	done; done
+
+ensemble_run:
+	@echo "Submitting ensemble jobs"
+	cd $(MYDIR)/${SIMDIR}/; 	\
+	for e in ${EVENTLIST}; do       \
+		${QSUBSCRIPT} ensemble.pfe Event$$e; \
+	done;
 
 ##############################################################################
 
