@@ -4,14 +4,23 @@
 $^I = "~";
 
 # Assimilate real-time Dst into ensemble simulation
-my $Help    = ($h or $help);
-my $Verbose = ($v or $verbose);
-my $Reset   = ($r or $reset);
-my $Sleep   = ($s or $sleep);
-my $Predict = ($p or $predict);
-my $Collect = ($c or $collect);
+my $Help       = ($h or $help);
+my $Verbose    = ($v or $verbose);
+my $Reset      = ($r or $reset);
+my $Sleep      = ($s or $sleep);
+my $Predict    = ($p or $predict);
+my $Collect    = ($c or $collect);
+my $FractionH  = ($F or $Fraction);
+my $CpcpFactor = ($C or $CPCP);
 
 use strict;
+
+$FractionH = 0.7 unless $FractionH or $CpcpFactor; # default variation
+
+die "Invalid value for -F=$FractionH\n"
+    if $FractionH < 0 or $FractionH >= 1;
+die "Invalid value for -C=$CpcpFactor\n" 
+    if $CpcpFactor < 0 or $CpcpFactor >= 1;
 
 &print_help if $Help;
 
@@ -48,9 +57,16 @@ die "$LastFile is present\n" if -f $LastFile;
 # Create plot directory for the ensemble
 &shell("mkdir -p run/$PlotDir") unless -d "run/$PlotDir";
 
-# Composition parameters for the different runs
-my $FractionH = 0.7;
+# H-O composition: H fraction goes from $FractionH to (1-$FractionH)/$nDir
 my $dFraction = (1 - $FractionH)/$nDir;
+
+# CPCP parameter goes from $CpcpFactor to 1/$CpcpFactor with ratios $CpcpRatio
+my $CpcpRatio = $CpcpFactor**(-2/($nDir-1));
+
+print "FractionH=$FractionH, dFraction=$dFraction\n" 
+    if $FractionH and $Verbose;
+print "CpcpFactor=$CpcpFactor, CpcpRatio=$CpcpRatio\n" 
+    if $CpcpRatio and $Verbose;
 
 my $EventDir  = "$Dir[0]/$Event";     # e.g. run1/Event04
 my $ParamFile = "$EventDir/PARAM.in"; # e.g. run1/Event04/PARAM.in
@@ -238,13 +254,21 @@ while(<>){
 
     $_ = "#MAKEDIR\nF\t\t\tDoMakeDir\n\n$1\n" if /^\#(RESTARTOUTDIR)/;
 
-    # Set the FractionH and FractionO in the COMPOSITION command
-    $_ = sprintf("%5.3f\t\t\tFractionH\n", $FractionH) if /FractionH/;
-    if(/FractionO/){
-	$_ = sprintf("%5.3f\t\t\tFractionO\n", 1-$FractionH);
-	$FractionH += $dFraction; $FractionH = 1 if $FractionH > 1.0;
+    if($FractionH){
+	# Set the FractionH and FractionO in the COMPOSITION command
+	$_ = sprintf("%5.3f\t\t\tFractionH\n", $FractionH) if /FractionH/;
+	if(/FractionO/){
+	    $_ = sprintf("%5.3f\t\t\tFractionO\n", 1-$FractionH);
+	    $FractionH += $dFraction; $FractionH = 1 if $FractionH > 1.0;
+	}
     }
-    
+
+    if($CpcpFactor and /Rho0Cpcp|RhoPerCpcp/){
+	# Multiply CPCPBOUNDARY parameters
+	$_ = sprintf("%3.1f\*",$CpcpFactor).$_;
+	$CpcpFactor *= $CpcpRatio if /RhoPerCpcp/;
+    }
+
     print;
 }
 
@@ -379,7 +403,8 @@ the ensemble job script. In addition, it can collect
 the output from multiple runs into the assimilated results.
 
 Usage: 
-    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [EventNN]
+    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [-F=FractionH] [-C=CpcpFactor]
+         [EventNN]
 
 EventNN is the name of the event to be simulated. Here NN represents two
     digits from 01 to 99. The default is Event01.
@@ -397,6 +422,35 @@ EventNN is the name of the event to be simulated. Here NN represents two
 -help
 -v       - provide more verbose output. 
 -verbose
+
+-F=FRACTIONH  - Vary H+ fraction from FRACTIONH to 1-(1-FRACTIONH)/(N-1) where
+-Fraction=...   N is the number of ensemble members. 
+                Valid range is 0 < FRACTIONH < 1. 
+                If neither -F= nor -C= are used, the default is F=0.7.
+
+-C=CPCPFACTOR - Vary CPCPBOUNDARY parameters by multiplying them with values
+-CPCP=...       from CPCPFACTOR to 1/CPCPFACTOR. 
+                Valid range is 0 < CPCPFACTOR < 1. Default is no variation.
+
+Examples:
+
+      Do assimilation for Event04 with default variation of the H+ fraction
+      and sleep 60s between (re)starting ensemble members. Use verbose output:
+
+../Scripts/AssimilateDst.pl -v -s=60 Event04
+
+      Assimilate Event01 by varying the CPCPCBOUNDARY parameters 
+      by multiplying with a factor from 0.5 to 2. Assimilate predicted Dst:
+
+../Scripts/AssimilateDst.pl -p -C=0.5 Event01
+
+      Collect post-processed results from ensembles to the assimilated run:
+
+../Scripts/AssimilateDst.pl -c Event01
+
+      Reset Event01 for a new run:
+
+../Scripts/AssimilateDst.pl -r Event01
 
 ";
     exit 0;
