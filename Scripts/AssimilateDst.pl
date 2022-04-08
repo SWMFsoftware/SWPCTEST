@@ -263,10 +263,11 @@ while(<>){
 	}
     }
 
-    if($CpcpFactor and /Rho0Cpcp|RhoPerCpcp/){
+    # Match "28.0   Rho0Cpcp" and "0.1   RhoPerCpcp" lines
+    if($CpcpFactor and /^[\d\.\s]+(Rho0Cpcp|RhoPerCpcp)/){
 	# Multiply CPCPBOUNDARY parameters
-	$_ = sprintf("%3.1f\*",$CpcpFactor).$_;
-	$CpcpFactor *= $CpcpRatio if /RhoPerCpcp/;
+	$_ = sprintf("%3.1f\*",$CpcpFactor).$_;    # insert multiplier
+	$CpcpFactor *= $CpcpRatio if /RhoPerCpcp/; # increase multiplier
     }
 
     print;
