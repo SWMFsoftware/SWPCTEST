@@ -174,7 +174,7 @@ check:
 test_compile:
 	-@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
-	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=91,181; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=181,361; \
 	./Config.pl -noacc; \
 	make SWMF PIDL; \
 	)
