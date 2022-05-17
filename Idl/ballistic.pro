@@ -20,8 +20,9 @@ read_log_data
 ; distance from xL1 to xBC
 dist = 0*logtime + (xL1-xBC)*6378.0 
 
-; Propagate solar wind by xbc
+; Propagate solar wind to xbc
 ;correct_imf, wlog, dist, logfilename, 'IMF_ballistic_gsm.dat', /GSM
-correct_imf, wlog, dist, logfilename, 'IMF_ballistic.dat'
+;correct_imf, wlog, dist, logfilename, 'IMF_ballistic.dat'
+correct_imf, wlog, dist, logfilename, 'IMF_ballistic_shock.dat', decay=60
 
 exit
