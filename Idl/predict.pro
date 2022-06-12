@@ -1136,7 +1136,7 @@ pro calc_all_events, choice=choice, models=models, events=events, $
                                  +string(event,format='(i2.2)')+'.txt'
 
                  if file_test(filenameInLocal) then begin
-                    print, filenameInLocal + ' exists, get socres from file.'
+                    print, filenameInLocal + ' exists, get scores from file.'
                     get_scores_from_file, choice, filenameInLocal,  $
                                           stations_I(istation),     $
                                           filename, filenameStation,$
@@ -1158,7 +1158,7 @@ pro calc_all_events, choice=choice, models=models, events=events, $
                                  +string(event,format='(i2.2)')+'.txt'
 
                  if file_test(filenameInLocal) then begin
-                    print, filenameInLocal + ' exists, get socres from file.'
+                    print, filenameInLocal + ' exists, get scores from file.'
                     get_scores_from_file, choice, filenameInLocal,    $
                                           stations_I(istation),       $
                                           filename, filenameStation,  $
@@ -1287,7 +1287,6 @@ pro get_scores_from_file, choice, filenameInLocal, strStations, $
 
   close, lunOut & free_lun, lunOut
 end
-
 
 ;==============================================================================
 
@@ -2256,7 +2255,8 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, events=events, InputDir=InputDir
      endif else if file_test(mydir+'/deltaB/'+ResDir+'/run?/Event'+string(event,format='(i1.1)')+'/log*.log') then begin
         eventnumber = string(event,format='(i1.1)')
      endif else begin
-        print, "Error: No simulation file is found. Stop"
+        print, "Error in dst_stat_nRun: No logfile matching"
+        print, mydir+'/deltaB/'+ResDir+'/run?/Event'+string(event,format='(i2.2)')+'/log*.log' 
         retall
      endelse
 
