@@ -64,6 +64,7 @@ help:
 	@echo "make check EVENTS=  SIMDIR=New (process all results from ./New into deltaB/New)"
 	@echo "make check_postproc SIMDIR=New (collect results of events 1-6 from ./New into deltaB/New)"
 	@echo "make check_calc     SIMDIR=New (calculate all metrics from results in deltaB/New/)"
+	@echo "make check_stat     SIMDIR=New (calculate statistics from runs in deltaB/New/)"
 	@echo "make check_dst      SIMDIR=New (calculate Dst error only from results in deltaB/New/)"
 	@echo "make check_dst_stat SIMDIR=New (calculate Dst error statistics from runs in deltaB/New/)"
 	@echo "make check_tar      SIMDIR=New (tar up results and metrics in deltaB/New)"
@@ -532,16 +533,20 @@ check_postproc: show_dir
 
 check_calc:
 	@echo "Checking results against observations"
-	@(make clean_calc RESDIR=${RESDIR}; 				\
-	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;		\
+	@make clean_calc RESDIR=${RESDIR} 
+	@(export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;	\
 	for ResDir in ${FullResDirList}; do				\
-		echo "working on $$ResDir";				\
-		cd $${ResDir};						\
-		printf "${PREDICT}\n check_calc_all,  models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_check_calc_log.txt; \
-	done;			\
+	    echo "working on $$ResDir";					\
+	    cd $${ResDir};						\
+	    printf "${PREDICT}\n check_calc_all,models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_check_calc_log.txt; \
+	done);
+	make check_stat
+
+check_stat:
+	echo "${PREDICT}; stat_nRun,mydir='${MYDIR}',events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}"; \
 	cd ${FULLRESDIR};	\
-	printf "${PREDICT}\n stat_nRun, mydir='${MYDIR}', events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}'\n"   | idl > idl_stat_log.txt; \
-	)
+	printf "${PREDICT}\n stat_nRun,mydir='${MYDIR}',events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}'\n" \
+	| idl > idl_stat_log.txt;
 
 check_dst:
 	@echo "Checking Dst against observations"
@@ -556,7 +561,7 @@ check_dst:
 check_dst_stat:
 	cd ${FULLRESDIR}; \
 	export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc; \
-	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}'\n"   | idl > idl_dst_log.txt;
+	printf "${PREDICT}\n dst_stat_nRun, mydir='${MYDIR}', events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}'\n"   | idl > idl_dst_stat_log.txt;
 
 check_tar:
 	@echo "Saving results as tarball"
