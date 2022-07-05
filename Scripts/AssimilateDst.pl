@@ -11,9 +11,17 @@ my $Sleep      = ($s or $sleep);
 my $Predict    = ($p or $predict);
 my $Collect    = ($c or $collect);
 my $FractionH  = ($F or $Fraction);
+my $dFracH     = ($dF or $dFraction);
+my $dDst       = ($dD or $dDst or 10);
 my $CpcpFactor = ($C or $CPCP);
 
 use strict;
+
+# Valid range of FractionH parameter
+my $MinFracH = 0.65;
+my $MaxFracH = 0.95;
+my $FracH;       # Current value
+my $BestDst;     # Current simulation Dst
 
 $FractionH = 0.7 unless $FractionH or $CpcpFactor; # default variation
 
@@ -161,7 +169,7 @@ if($ObsTime){
     # Only the last log file contributes, the rest is coming from the ensemble
     my $BestEventDir;
     my $BestLog;
-    my $BestDst = 1e6;
+    $BestDst = 1e6;
 
     # Read SYM-H from the log files of each ensemble member
     for my $Dir (@Dir){
@@ -254,7 +262,19 @@ while(<>){
 
     $_ = "#MAKEDIR\nF\t\t\tDoMakeDir\n\n$1\n" if /^\#(RESTARTOUTDIR)/;
 
-    if($FractionH){
+    if($dFracH){
+	# Find current FractionH and adjust it by dFracH based on Dst
+	if(/([\d\.])+\t\t\tFractionH/){
+	    $FracH = $1;
+	    $FracH += $dFracH if $ObsDst < $BestDst - $dDst
+		and $FracH + $dFracH < $MaxFracH;
+	    $FracH -= $dFracH if $ObsDst > $BestDst + $dDst
+		and $FracH - $dFracH > $MinFracH;
+	    $_ = sprintf("%5.3f\t\t\tFractionH\n", $FracH);
+	}
+	# Set FractionO as 1 - FractionH
+	$_ = sprintf("%5.3f\t\t\tFractionO\n", 1-$FracH) if /FractionO/;
+    }elsif($FractionH){
 	# Set the FractionH and FractionO in the COMPOSITION command
 	$_ = sprintf("%5.3f\t\t\tFractionH\n", $FractionH) if /FractionH/;
 	if(/FractionO/){
@@ -404,8 +424,8 @@ the ensemble job script. In addition, it can collect
 the output from multiple runs into the assimilated results.
 
 Usage: 
-    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [-F=FractionH] [-C=CpcpFactor]
-         [EventNN]
+    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [-F=FractionH|-dF=dFracH]
+         [-C=CpcpFactor] [EventNN]
 
 EventNN is the name of the event to be simulated. Here NN represents two
     digits from 01 to 99. The default is Event01.
@@ -428,6 +448,12 @@ EventNN is the name of the event to be simulated. Here NN represents two
 -Fraction=...   N is the number of ensemble members. 
                 Valid range is 0 < FRACTIONH < 1. 
                 If neither -F= nor -C= are used, the default is F=0.7.
+
+-dF=DFRACTION   Modify H+ and O+ fractions by +/-DFRACION depending on the
+-dFraction=...  observed vs simulated Dst.
+
+-dD=DDST        Set the tolerance in Dst. If |ObsDst-SimDst| < DDST, do not
+-dDst=...       modify the fraction. Default value is 10nT.
 
 -C=CPCPFACTOR - Vary CPCPBOUNDARY parameters by multiplying them with values
 -CPCP=...       from CPCPFACTOR to 1/CPCPFACTOR. 
