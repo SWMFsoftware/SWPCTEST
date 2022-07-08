@@ -23,7 +23,7 @@ my $MaxFracH = 0.95;
 my $FracH;       # Current value
 my $BestDst;     # Current simulation Dst
 
-$FractionH = 0.7 unless $FractionH or $CpcpFactor; # default variation
+$FractionH = 0.7 unless $FractionH or $dFracH or $CpcpFactor; # default value
 
 die "Invalid value for -F=$FractionH\n"
     if $FractionH < 0 or $FractionH >= 1;
@@ -38,7 +38,8 @@ die "Incorrect event name $Event\n" unless $Event =~ /^Event\d+$/;
 
 my @Dir = glob("run[1-9]");
 my $nDir = @Dir;
-die "There are not enough run directories: @Dir\n" unless $nDir > 1;
+die "There are not enough run directories: @Dir\n" unless 
+    $nDir > 1 or ($nDir==1 and ($Reset or $dFracH));
 
 print "Event=$Event, nDir=$nDir, Ensemble=@Dir\n";
 
@@ -69,7 +70,8 @@ die "$LastFile is present\n" if -f $LastFile;
 my $dFraction = (1 - $FractionH)/$nDir;
 
 # CPCP parameter goes from $CpcpFactor to 1/$CpcpFactor with ratios $CpcpRatio
-my $CpcpRatio = $CpcpFactor**(-2/($nDir-1));
+my $CpcpRatio;
+$CpcpRatio = $CpcpFactor**(-2/($nDir-1)) if $CpcpFactor and $nDir > 1;
 
 print "FractionH=$FractionH, dFraction=$dFraction\n" 
     if $FractionH and $Verbose;
@@ -263,8 +265,8 @@ while(<>){
     $_ = "#MAKEDIR\nF\t\t\tDoMakeDir\n\n$1\n" if /^\#(RESTARTOUTDIR)/;
 
     if($dFracH){
-	# Find current FractionH and adjust it by dFracH based on Dst
-	if(/([\d\.])+\t\t\tFractionH/){
+	# Find current FracH and adjust it by dFracH based on Dst
+	if(/([\d\.]+)\t\t\tFractionH/){
 	    $FracH = $1;
 	    $FracH += $dFracH if $ObsDst < $BestDst - $dDst
 		and $FracH + $dFracH < $MaxFracH;
@@ -292,6 +294,8 @@ while(<>){
 
     print;
 }
+
+print "New FracH=$FracH\n" if $dFracH and $Verbose;
 
 exit 0;
 
