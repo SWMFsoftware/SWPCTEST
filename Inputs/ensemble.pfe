@@ -17,6 +17,7 @@
 ### PBS -l select=45:ncpus=28:model=bro_ele
 ### PBS -l select=30:ncpus=40:model=sky_ele
 ### PBS -l select=30:ncpus=40:model=cas_ait
+### PBS -l select=10:ncpus=128:model=rom_ait
 
 # Combine STDOUT and STDERR
 #PBS -j oe
@@ -42,8 +43,8 @@ setenv PBS_NODEFILE ./hosts
 
 # Run the ensemble until fully done
 while (! -f run/${EVENT}/LAST)
-    ../Scripts/AssimilateDst.pl -v -s=60 ${EVENT} >>& run/${EVENT}/runlog
-    foreach rundir ( run?/Event01 )
+    ../Scripts/AssimilateDst.pl -v -dF=0.1 -s=60 ${EVENT} >>& run/${EVENT}/runlog
+    foreach rundir ( run?/${EVENT} )
        (cd ${rundir}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     end
     wait
