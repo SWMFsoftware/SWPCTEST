@@ -82,6 +82,67 @@ function exceeds, time, array, tmin, tmax, dt, threshold, mincount
 
 end
 
+
+; ============================================================================
+
+function fft_segment, time, array, tmin, tmax, dt_window, slope_impedance
+
+  ;; time and array form a time series
+  ;; bin data from tmin to tmax with dt_window bin size
+  ;; return the sum of the power_spectrum/impedance (the slope is a parameter)
+  ;; dt_window is the window of the fft transform.
+
+  n = n_elements(array)
+
+  if n ne n_elements(time) then begin
+     print, 'ERROR in function fft_segment, number of elements differ in time and array'
+     help, time, array
+     retall
+  endif
+
+  ;; adjust the array to within tmin and tmax
+  index = where(time le tmax and time ge tmin)
+
+  array_local = array(index)
+  time_local  = time(index)
+
+  cadence= time_local(1:*)-time_local(0:-2)
+
+  if max(cadence)/min(cadence) ge 1.5 then begin
+     print, 'ERROR in function fft_segment, missing data'
+     print, 'min(cadence), max(cadence) = ', $
+            min(cadence), max(cadence)
+     ;; plot,cadence
+     retall
+  endif
+
+  ;; calculate the number of bins
+  nbin  = fix( (tmax - tmin)/dt_window ) ;;; + 1
+
+  integral = fltarr(nbin)
+
+  ;; loop though bin
+  for i = 0, nbin - 1 do begin
+     ;; calculate istart and iend, dt_window is in hours
+     istart = fix(i*dt_window*60)
+     iend   = fix(min([(i+1)*dt_window*60,n_elements(array_local)]))-1
+
+     ;; the array to calculate the fft power spectrum
+     array_tmp = array_local[istart:iend]
+
+     ;;print, 'i, istart, iend = ', i, istart, iend
+     ;;print, time_local(istart), time_local(iend)
+
+     power_tmp = FFT_POWERSPECTRUM(array_tmp, 60, freq=w_tmp)
+
+     ;; the heating effect is the power_spectrum / impedance with
+     ;; some unknown constant coefficient...
+     integral(i) = total(power_tmp(1:*)/w_tmp(1:*)^slope_impedance)
+  endfor
+
+  return, integral
+end
+
 ; ============================================================================
 function scale_exp, x, a
 
@@ -775,6 +836,9 @@ pro predict, choice,                                                  $
 
                  oplot, t_dbdt_obs, b, color = 250
               endif
+           end
+           'fft':begin
+              print, 'hello world'
            end
         endcase
      endfor                     ; istation
