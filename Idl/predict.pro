@@ -89,7 +89,8 @@ function fft_segment, time, array, tmin, tmax, dt_window, slope_impedance
 
   ;; time and array form a time series
   ;; bin data from tmin to tmax with dt_window bin size
-  ;; return the sum of the power_spectrum/impedance (the slope is a parameter)
+  ;; return the sum of the power_spectrum*impedance^2,
+  ;; in which the impedance is w^slope (the slope is a parameter)
   ;; dt_window is the window of the fft transform.
 
   n = n_elements(array)
@@ -137,7 +138,8 @@ function fft_segment, time, array, tmin, tmax, dt_window, slope_impedance
 
      ;; the heating effect is the power_spectrum / impedance with
      ;; some unknown constant coefficient...
-     integral(i) = total(power_tmp(1:*)/w_tmp(1:*)^slope_impedance)
+     integral(i) = total(power_tmp*w_tmp^(slope_impedance*2))
+
   endfor
 
   return, integral
