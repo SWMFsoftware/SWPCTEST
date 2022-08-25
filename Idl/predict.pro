@@ -131,12 +131,12 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
   integral_obs = fltarr(nbin)
   integral_sim = fltarr(nbin)
 
-  print, 'tmin, tmax =', tmin, tmax
+  ;; print, 'tmin, tmax =', tmin, tmax
 
   ;; loop though bin
   for i = 0, nbin - 1 do begin
      tmin_local = tmin + dt_window*i
-     tmax_local = tmin + dt_window*(i+1)
+     tmax_local = min([tmin + dt_window*(i+1),tmax])
 
      ;; obtain the index
      index_obs_tmp = where(time_obs_local ge tmin_local and time_obs_local lt tmax_local)
@@ -146,8 +146,8 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      array_obs_tmp = array_obs_local[index_obs_tmp]
      array_sim_tmp = array_sim_local[index_sim_tmp]
 
-     print, time_obs_local(index_obs_tmp(0)), time_obs_local(index_obs_tmp(-1))
-     print, time_sim_local(index_sim_tmp(0)), time_sim_local(index_sim_tmp(-1))
+     ;; print, time_obs_local(index_obs_tmp(0)), time_obs_local(index_obs_tmp(-1))
+     ;; print, time_sim_local(index_sim_tmp(0)), time_sim_local(index_sim_tmp(-1))
 
      power_obs_tmp = FFT_POWERSPECTRUM(array_obs_tmp, 60, freq=w_obs_tmp)
      power_sim_tmp = FFT_POWERSPECTRUM(array_sim_tmp, 60, freq=w_sim_tmp)
