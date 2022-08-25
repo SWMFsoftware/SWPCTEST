@@ -542,6 +542,17 @@ check_calc:
 	done);
 	make check_stat
 
+check_calc_fft:
+	@echo "Checking fft results against observations"
+	@make clean_calc RESDIR=${RESDIR}
+	@(export IDL_PATH='${IDLPATH}'; export IDL_STARTUP=idlrc;	\
+	for ResDir in ${FullResDirList}; do				\
+	    echo "working on $$ResDir";					\
+	    cd $${ResDir};						\
+	    printf "${PREDICT}\n check_calc_fft,models=['$${ResDir}'],events='${EVENTS_EXPAND}',mydir='${MYDIR}',InputDir='${INPUTDIR}'\n" | idl > idl_check_calc_fft_log.txt; \
+	done);
+	make check_stat
+
 check_stat:
 	echo "${PREDICT}; stat_nRun,mydir='${MYDIR}',events='${EVENTS_EXPAND}',ResDir='${RESDIR}',InputDir='${INPUTDIR}"; \
 	cd ${FULLRESDIR};	\
