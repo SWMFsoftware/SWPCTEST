@@ -85,64 +85,99 @@ end
 
 ; ============================================================================
 
-function fft_segment, time, array, tmin, tmax, dt_window, slope_impedance
+function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
+                      tmin, tmax, dt_window, slope_impedance,      $
+                      plotfile
 
-  ;; time and array form a time series
-  ;; bin data from tmin to tmax with dt_window bin size
-  ;; return the sum of the power_spectrum*impedance^2,
-  ;; in which the impedance is w^slope (the slope is a parameter)
-  ;; dt_window is the window of the fft transform.
+  ;; time_obs and array_obs form a time series of observations
+  ;; time_sim and array_sim form a time series of simulations
+  ;; bin data from tmin to tmax with the size of dt_window, which
+  ;; is the window of the fft transform.
 
-  n = n_elements(array)
+  if not keyword_set(plotfile) then plotfile =''
 
-  if n ne n_elements(time) then begin
+  if n_elements(array_obs) ne n_elements(time_obs) or            $
+     n_elements(array_sim) ne n_elements(time_sim) then begin
      print, 'ERROR in function fft_segment, number of elements differ in time and array'
-     help, time, array
+     help, time_obs, array_obs, time_sim, array_sim
      retall
   endif
 
   ;; adjust the array to within tmin and tmax
-  index = where(time le tmax and time ge tmin)
+  index_obs       = where(time_obs le tmax and time_obs ge tmin)
+  array_obs_local = array_obs(index_obs)
+  time_obs_local  = time_obs(index_obs)
+  cadence_obs     = time_obs_local(1:*)-time_obs_local(0:-2)
 
-  array_local = array(index)
-  time_local  = time(index)
+  index_sim       = where(time_sim le tmax and time_sim ge tmin)
+  array_sim_local = array_sim(index_sim)
+  time_sim_local  = time_sim(index_sim)
+  cadence_sim     = time_sim_local(1:*)-time_sim_local(0:-2)
 
-  cadence= time_local(1:*)-time_local(0:-2)
-
-  if max(cadence)/min(cadence) ge 1.5 then begin
+  if max(cadence_obs)/min(cadence_obs) ge 1.5 or                 $
+     max(cadence_sim)/min(cadence_sim) ge 1.5 then begin
      print, 'ERROR in function fft_segment, missing data'
-     print, 'min(cadence), max(cadence) = ', $
-            min(cadence), max(cadence)
+     print, 'min(cadence_obs), max(cadence_obs) = ', $
+            min(cadence_obs), max(cadence_obs)
+     print, 'min(cadence_sim), max(cadence_sim) = ', $
+            min(cadence_sim), max(cadence_sim)
      ;; plot,cadence
-     retall
+     return, 0
   endif
 
   ;; calculate the number of bins
   nbin  = fix( (tmax - tmin)/dt_window ) ;;; + 1
 
-  integral = fltarr(nbin)
+  integral_obs = fltarr(nbin)
+  integral_sim = fltarr(nbin)
+
+  print, 'tmin, tmax =', tmin, tmax
 
   ;; loop though bin
   for i = 0, nbin - 1 do begin
-     ;; calculate istart and iend, dt_window is in hours
-     istart = fix(i*dt_window*60)
-     iend   = fix(min([(i+1)*dt_window*60,n_elements(array_local)]))-1
+     tmin_local = tmin + dt_window*i
+     tmax_local = tmin + dt_window*(i+1)
+
+     ;; obtain the index
+     index_obs_tmp = where(time_obs_local ge tmin_local and time_obs_local lt tmax_local)
+     index_sim_tmp = where(time_sim_local ge tmin_local and time_sim_local lt tmax_local)
 
      ;; the array to calculate the fft power spectrum
-     array_tmp = array_local[istart:iend]
+     array_obs_tmp = array_obs_local[index_obs_tmp]
+     array_sim_tmp = array_sim_local[index_sim_tmp]
 
-     ;;print, 'i, istart, iend = ', i, istart, iend
-     ;;print, time_local(istart), time_local(iend)
+     print, time_obs_local(index_obs_tmp(0)), time_obs_local(index_obs_tmp(-1))
+     print, time_sim_local(index_sim_tmp(0)), time_sim_local(index_sim_tmp(-1))
 
-     power_tmp = FFT_POWERSPECTRUM(array_tmp, 60, freq=w_tmp)
+     power_obs_tmp = FFT_POWERSPECTRUM(array_obs_tmp, 60, freq=w_obs_tmp)
+     power_sim_tmp = FFT_POWERSPECTRUM(array_sim_tmp, 60, freq=w_sim_tmp)
 
      ;; the heating effect is the power_spectrum / impedance with
      ;; some unknown constant coefficient...
-     integral(i) = total(power_tmp*w_tmp^(slope_impedance*2))
+     integral_obs(i) = total(power_obs_tmp*w_obs_tmp^(slope_impedance*2))
+     integral_sim(i) = total(power_sim_tmp*w_sim_tmp^(slope_impedance*2))
 
+     if plotfile then begin
+        set_device, plotfile + '_n'+string(i,format='(i2.2)')+'.eps', /land
+
+        plot,  alog10(w_obs_tmp),alog10(power_obs_tmp), xtitle='Frequency', ytitle='Spectrum'
+        oplot, alog10(w_sim_tmp),alog10(power_sim_tmp), color=250
+
+        close_device, /pdf
+     endif
   endfor
 
-  return, integral
+  if plotfile then begin
+     set_device, plotfile+'_integral.eps',/land
+     plot,  findgen(nbin)+tmin, integral_obs, xtitle = 'Time', ytitle = 'Heating'
+     oplot, findgen(nbin)+tmin, integral_sim,color=250
+     close_device, /pdf
+  endif
+
+  ;;; plot,  findgen(nbin)+tmin, integral_obs, xtitle = 'Time', ytitle = 'Heating'
+  ;; oplot, findgen(nbin)+tmin, integral_sim,color=250
+
+  return, 1
 end
 
 ; ============================================================================
@@ -840,7 +875,27 @@ pro predict, choice,                                                  $
               endif
            end
            'fft':begin
-              print, 'hello world'
+
+              !p.multi   = 0
+              !p.thick   = 3
+              !x.thick   = 3
+              !y.thick   = 3
+              !p.charsize = 2
+
+              plotfile  = choice + '_event' + string(event, format='(i2.2)') + $
+                          '_station_'+station
+
+              set_device, plotfile + '.eps', /land
+              plot,  t_db_obs, db_obs, yrange=[0,max([db_obs,db_sim])*1.2], xtitle='Time', ytitle='db [nT]'
+              oplot, t_db_sim, db_sim, color=250
+              close_device, /pdf
+
+              tmin = float(floor(t_db_obs(0)))
+              tmax = float(ceil(t_db_obs(-1)))
+
+              status = fft_segment(t_db_obs, db_obs, t_db_sim, db_sim, $
+                                   tmin, tmax, 1.0, 0.5, plotfile)
+
            end
         endcase
      endfor                     ; istation
@@ -1259,6 +1314,38 @@ pro calc_all_events, choice=choice, models=models, events=events, $
      endfor
   endfor
 end
+;==============================================================================
+
+pro fft_all_events, models=models, events=events, mydir=mydir, InputDir=InputDir
+
+;; to be continue
+
+  if n_elements(models) lt 1 then models=['Results', 'SWMF_CCMC']
+
+  for imodel = 0, n_elements(models)-1 do begin
+     model   = models(imodel)
+     event_I = set_eventlist(events,mydir,model)
+
+     ;; Create full metrics for each event:
+     for iEvent = 0, n_elements(event_I)-1 do begin
+        event=event_I(iEvent)
+
+        set_stationlist, mydir=mydir, stationsFile='stations.csv',$
+                         model=model, event=event,                $
+                         stations_I, station_orig_I
+
+        for istation = 0, n_elements(stations_I)-1 do begin
+           stationIn_I = strsplit(stations_I(istation),/extract)
+
+           predict,'fft', model=model,                           $
+                   station_I=stationIn_I,                        $
+                   events=string(event,format='(i2.2)'),         $
+                   mydir=mydir
+        endfor
+     endfor
+  endfor
+end
+
 ;==============================================================================
 
 pro get_scores_from_file, choice, filenameInLocal, strStations, $
@@ -2472,7 +2559,24 @@ pro check_calc_all, models=models, events=events, mydir=mydir, InputDir=InputDir
   print,'----------------------------------------------------'
   print,'plot_2d_map done.'
   print,'----------------------------------------------------'
-  
+
+end
+
+;==============================================================================
+
+pro check_calc_fft, models=models, events=events, mydir=mydir, InputDir=InputDir
+
+  if (not file_test('Event*',/DIRECTORY)) then begin
+     print, "Error: no simulation results in dir:" + models
+     retall
+  endif
+
+  fft_all_events, models=models, events=events,    $
+                  mydir=mydir, InputDir=InputDir
+
+  print,'----------------------------------------------------'
+  print,'fft done.'
+  print,'----------------------------------------------------'
 end
 
 ;==============================================================================
