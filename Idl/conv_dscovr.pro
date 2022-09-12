@@ -64,10 +64,9 @@ pro conv_dscovr, date, logfile, append=append
   i = 0
   for hour = 0, 23 do begin
      for minute = 0, 59 do begin
-        if bx(i) gt -99999. and ux(i) gt -99999. and rho(i) gt -99999. then $
-           printf, unit, year, month, day, hour, minute, 0, 0, $
-                   bx(i), by(i), bz(i), ux(i), uy(i), uz(i), rho(i), T(i),$
-                   format = '(i4,6i3,8f12.3)'
+        printf, unit, year, month, day, hour, minute, 0, 0, $
+                bx(i), by(i), bz(i), ux(i), uy(i), uz(i), rho(i), T(i),$
+                format = '(i4,6i3,8f12.3)'
         i++
      endfor
   endfor
