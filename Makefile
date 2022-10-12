@@ -84,6 +84,7 @@ help:
 	@echo "test_gpu                       (run the GPU version of SWPC V2)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2-6,95-98)"
+	@echo "make ballistic_mix             (ballistic propagation of IMF_fix for events 10-15)"
 	@echo "make ballistic_limited         (limiting+ballistic propagation for events 2-6,95-98)"
 	@echo "make propagate1d EVENTS=2,3    (propagate ACE/DISCVR data to BATSRUS boundary)"
 	@echo "make propagate1d_plot          (create Inputs/event*/mhd_vs_ballistic.* plots)"
