@@ -1,5 +1,7 @@
 pro combine_dscovr_ace,dscovr_file,ace_file,outfile
 
+  ;; Example: combine_dscovr_ace,'dscovr.dat', 'ace.dat', 'L1_mix.dat'
+
   common phys_const
   
   get_log, dscovr_file, wlog1, wlognames1, logtime1, headlines=headlines1
@@ -10,10 +12,29 @@ pro combine_dscovr_ace,dscovr_file,ace_file,outfile
   n1 = n_elements(logtime1)
   n2 = n_elements(logtime2)
   if n1 ne n2 then begin
-     print,'number of times are different:',n1, n2
-     retall
+     print,'number of times are different:', n1, n2
+     timestart = logtime1[0] > logtime2[0]
+     timeend   = logtime1[-1] < logtime2[-1]
+     help,timestart,timeend
+     ii = where(logtime1 ge timestart and logtime1 le timeend)
+     wlog1 = wlog1(ii,*)
+     logtime1 = logtime1(ii)
+     ii = where(logtime2 ge timestart and logtime2 le timeend)
+     wlog2 = wlog2(ii,*)
+     logtime2 = logtime2(ii)
+     n1 = n_elements(logtime1)
+     n2 = n_elements(logtime2)
+     print,'number of times after adjustment:', n1, n2
+     if n1 ne n2 then retall
   endif
 
+  ;; convert bad data into -Inf
+  wlog1( where(wlog1 lt -4000.) ) = -1./0.
+  wlog2( where(wlog2 lt -4000.) ) = -1./0.
+
+  wlog1( where(wlog1(*,13) lt 0.),13 ) = -1./0.
+  wlog2( where(wlog2(*,13) lt 0.),13 ) = -1./0.
+  
   x1 = fix(headlines1(1), type=4)
   y1 = fix(headlines1(2), type=4)
   z1 = fix(headlines1(3), type=4)
