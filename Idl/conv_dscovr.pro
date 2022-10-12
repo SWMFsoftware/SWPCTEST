@@ -1,5 +1,11 @@
 pro conv_dscovr, date, logfile, append=append
 
+  ;; Convert daily DSCOVR data into logfile. For example
+  ;; cd,'Event10/DSCOVR/
+  ;; conv_dscovr, '20170527', '../dscovr.dat'
+  ;; conv_dscovr, '20170528', '../dscovr.dat', /append
+  ;; conv_dscovr, '20170529', '../dscovr.dat', /append
+  
   files = file_search('oe_*dscovr_s'+date+'*_pub.nc')
   help,files
 
