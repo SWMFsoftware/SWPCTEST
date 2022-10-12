@@ -17,6 +17,12 @@ satellite trajectory files, are found in the Inputs/event[#] directories.
 Additional events can be added by adding new entries to event_list.txt and
 creating a corresponding Inputs/event[#] directory.
 
+DSCOVR data can be obtained from https://www.ngdc.noaa.gov/dscovr/  (POP, M1M, F1M)
+ACE data can be obtained from https://izw1.caltech.edu/ACE/ASC/level2/
+(ACE_Mag_data    16s: year, dy, hr, mn, sc, Bgse_x,y,z),
+(ACE_PLASMA_data 64s: year, dy,  hr, mn, sc, H+ dens, temp, velGSEx,y,z, GSE_x,y,z)
+
+
 The Idl directory contains scripts to evaluate the results and calculate
 skill scores both for direct dB/dt and power law fit a(dB)^p. 
 See Idl/README for more detail.
