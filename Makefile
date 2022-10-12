@@ -136,6 +136,14 @@ propagate1d_wind_plot:
 		idl ${MYDIR}/Idl/compare_wind.pro; 	\
 	done
 
+ballistic_mix:
+	for e in 10 11 12 13 14 15; do			\
+		cd ${MYINPUTDIR}/Event$$e/;		\
+		ln -s L1_mix.dat L1.dat;		\
+		idl ${MYDIR}/Idl/ballistic.pro;		\
+		mv IMF_ballistic_shock.dat IMF_ballistic_mix.dat;\
+	done
+
 ballistic:
 	for e in 02 03 04 05 06 95 96 97 98; do		\
 		cd ${MYINPUTDIR}/Event$$e/;		\
