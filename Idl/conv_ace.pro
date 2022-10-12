@@ -44,28 +44,27 @@ pro conv_ace, acefiles, logfile, append=append
   wlogout = dblarr(nt,8)
 
   help, logtimeout, wlogout
-  ;; interpolate the magnetic field
-  print,'wlognames=',wlognames
-  for ivar = 0, 2 do begin
-     name = varnames[ivar]
-     field = log_func(wlog, wlognames, name, error)
-     if error then begin
-        print,'ERROR: could not find variable ',name,' in wlognames=', wlognames
-        return
-     endif
-     wlogout(*,ivar) = interpol(field, logtime, logtimeout)
-  endfor
 
-  ;; interpolate the plasma variables
+  ;; interpolate all variables
+  print,'wlognames=',wlognames
   print,'wlognames1=',wlognames1
-  for ivar = 3, 7 do begin
+  for ivar = 0, 7 do begin
      name = varnames(ivar)
-     field = log_func(wlog1, wlognames1, name, error)
+     if ivar lt 3 then $
+        field = log_func(wlog, wlognames, name, error) $
+     else $
+        field = log_func(wlog1, wlognames1, name, error)
      if error then begin
-        print,'ERROR: could not find variable ',name,' in wlognames1=', wlognames1
+        print,'ERROR: could not find variable ',name
         return
      endif
-     wlogout(*,ivar) = interpol(field, logtime1, logtimeout)
+     field(where(field le -9999d0, /NULL)) = !values.F_NaN
+     if ivar lt 3 then $
+        field2 = interpol(field, logtime, logtimeout) $
+     else $
+        field2 = interpol(field, logtime1, logtimeout)
+     field2(where(1-finite(field2), /NULL)) = -9999.9d0
+     wlogout(*,ivar) = field2
   endfor
 
   ;; write out results
