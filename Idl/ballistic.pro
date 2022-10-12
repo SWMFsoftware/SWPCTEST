@@ -3,10 +3,13 @@
 common getlog_param
 common log_data
 
-; Get the extraction position from the IMF_mhd.dat file
+
+; Get the extraction position from the IMF_mhd.dat file (if exists)
 spawn,"perl -ne 'if(/:\s+(\S+)/){print $1;exit}' IMF_mhd.dat",xBC
 ; convert to scalar double precision real
 xBC=double(xBC(0))
+
+if xBC eq 0.0 then xBC = 32.0               ; MHD code boundary location
 help, xBC
 
 ; get the L1 position from the L1.dat file
