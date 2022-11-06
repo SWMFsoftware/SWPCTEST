@@ -20,6 +20,18 @@ help, xL1
 logfilename='L1.dat'
 read_log_data
 
+badvalue = -9999.0
+ii = where(wlog(*,7) gt badvalue and $
+           wlog(*,10) gt badvalue and $
+           wlog(*,13) gt badvalue, /null)
+
+nbad = n_elements(logtime) - n_elements(ii)
+if nbad gt 0 then print, "!!!", nbad, " bad values are removed !!!"
+
+wlog    = wlog(ii,*)
+logtime = logtime(ii)
+
+
 ; distance from xL1 to xBC
 dist = 0*logtime + (xL1-xBC)*6378.0 
 
@@ -28,4 +40,4 @@ dist = 0*logtime + (xL1-xBC)*6378.0
 ;correct_imf, wlog, dist, logfilename, 'IMF_ballistic.dat'
 correct_imf, wlog, dist, logfilename, 'IMF_ballistic_shock.dat', decay=60
 
-exit
+;exit
