@@ -3,7 +3,6 @@ deltaB
 Runs*/
 *.tgz
 SWMF
-Events
 idl*.txt
 *~
 Scripts/__pycache__/
