@@ -2,6 +2,15 @@
 
 import numpy as np
 from datetime import datetime
+from datetime import date
+
+def get_doy(str):
+    time_local = datetime.strptime(str,'%Y-%m-%dT%H:%M:%S')
+    yyyy = time_local.year
+    mm   = time_local.month
+    dd   = time_local.day
+    diff = date(yyyy, mm, dd) - date(yyyy,1,1)
+    return diff.days+1
 
 def download_omni(str_start_time='2019-08-04T00:00:00',
                   str_end_time  ='2019-08-08T00:00:00',
