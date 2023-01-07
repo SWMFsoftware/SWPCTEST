@@ -99,7 +99,7 @@ if __name__ == '__main__':
             if params[0] in RunIDs:
                 RunID      = params[0]
                 start_time = params[1]
-                end_time   = params[2]
+                end_time   = params[3]
 
                 EventDir=os.getcwd()+'/Events/'+'Event'+str(RunID).zfill(2)
                 str_time_filename = start_time[0:10].replace('-','_')
