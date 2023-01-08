@@ -87,13 +87,16 @@ end
 
 function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
                       tmin, tmax, dt_window, slope_impedance,      $
-                      plotfile
+                      plotfile, date_plot, title_plot,             $
+                      integral_obs, integral_sim
 
   ;; time_obs and array_obs form a time series of observations
   ;; time_sim and array_sim form a time series of simulations
   ;; bin data from tmin to tmax with the size of dt_window, which
   ;; is the window of the fft transform.
 
+  dt_window = dt_window/60
+  
   if not keyword_set(plotfile) then plotfile =''
 
   if n_elements(array_obs) ne n_elements(time_obs) or            $
@@ -139,8 +142,8 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      tmax_local = min([tmin + dt_window*(i+1),tmax])
 
      ;; obtain the index
-     index_obs_tmp = where(time_obs_local ge tmin_local and time_obs_local lt tmax_local)
-     index_sim_tmp = where(time_sim_local ge tmin_local and time_sim_local lt tmax_local)
+     index_obs_tmp = where(time_obs_local ge tmin_local-1e-4 and time_obs_local lt tmax_local+1e-4)
+     index_sim_tmp = where(time_sim_local ge tmin_local-1e-4 and time_sim_local lt tmax_local+1e-4)
 
      ;; the array to calculate the fft power spectrum
      array_obs_tmp = array_obs_local[index_obs_tmp]
@@ -158,19 +161,69 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      integral_sim(i) = total(power_sim_tmp*w_sim_tmp^(slope_impedance*2))
 
      if plotfile then begin
-        set_device, plotfile + '_n'+string(i,format='(i2.2)')+'.eps', /land
-
-        plot,  alog10(w_obs_tmp),alog10(power_obs_tmp), xtitle='Frequency', ytitle='Spectrum'
+        ;; print, tmin_local
+        set_device, plotfile + '_h'+string(tmin_local,format='(f5.2)')+'.eps', /land
+        plot,  alog10(w_obs_tmp),alog10(power_obs_tmp), xtitle='log10(Frequency [Hz])', ytitle='log10(dB power spectrum)', $
+               xstyle=1, yrange = [min([alog10(power_obs_tmp), alog10(power_sim_tmp)])-1,      $
+                                   max([alog10(power_obs_tmp), alog10(power_sim_tmp)])+1],     $
+               ystyle=1, title='A ' + string(dt_window*60, format='(i2.2)') + '-min window from ' $
+               + string(tmin_local,format='(f4.1)') + ' hours at ' +  title_plot
         oplot, alog10(w_sim_tmp),alog10(power_sim_tmp), color=250
+        ;; plot,  w_obs_tmp,power_obs_tmp, xtitle='Frequency', ytitle='Spectrum', $
+        ;;        xstyle=1, yrange = [min([power_obs_tmp, power_sim_tmp])-1,      $
+        ;;                            max([power_obs_tmp, power_sim_tmp])+1],     $
+        ;;        ystyle=1
+        ;; oplot, alog10(w_sim_tmp),alog10(power_sim_tmp), color=250
 
+        plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+              /noerase, xstyle=-1, ystyle=-1, thick=4
+        plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+              /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
+        xyouts, 0.75, 0.90, 'Observations'
+        xyouts, 0.75, 0.82, 'Simulations', color=250
+        close_device, /pdf
+
+        tmp1 = power_obs_tmp*w_obs_tmp^(slope_impedance*2)
+        tmp2 = power_sim_tmp*w_sim_tmp^(slope_impedance*2)
+        
+        set_device, plotfile + '_cont_h'+string(tmin_local,format='(f5.2)')+'.eps', /land
+        ;; plot,  alog10(w_obs_tmp(1:*)),alog10(tmp1(1:*)), xtitle='Frequency', ytitle='Contribution', $
+        ;;        xstyle=1, yrange = [alog10(min([tmp1(1:*), tmp2(1:*)]))-1,   $
+        ;;                            alog10(max([tmp1(1:*), tmp2(1:*)]))+1],  $
+        ;;        ystyle=1
+        ;; oplot, alog10(w_sim_tmp(1:*)),alog10(tmp2(1:*)), color=250
+        plot,  w_obs_tmp(1:*),tmp1(1:*), xtitle='Frequency [Hz]', ytitle='E power spectrum', $
+               xstyle=1, yrange = [min([tmp1(1:*), tmp2(1:*)])*0.8,   $
+                                   max([tmp1(1:*), tmp2(1:*)])*1.2],  $
+               ystyle=1, title='A ' + string(dt_window*60, format='(i2.2)') + '-min window from ' $
+               + string(tmin_local,format='(f4.1)') + ' hours at ' +  title_plot
+        oplot, w_sim_tmp(1:*),tmp2(1:*), color=250
+
+        plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+              /noerase, xstyle=-1, ystyle=-1, thick=4
+        plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+              /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
+        xyouts, 0.75, 0.90, 'Observations'
+        xyouts, 0.75, 0.82, 'Simulations', color=250
         close_device, /pdf
      endif
   endfor
 
   if plotfile then begin
      set_device, plotfile+'_integral.eps',/land
-     plot,  findgen(nbin)+tmin, integral_obs, xtitle = 'Time', ytitle = 'Heating'
+     plot,  findgen(nbin)+tmin, integral_obs, xtitle = 'Hours from ' + date_plot, $
+            ytitle = 'E!u2!n Hourly Integral',                                    $
+            yrange = [min([integral_obs, integral_sim])*0.8,                      $
+                      max([integral_obs, integral_sim])*1.2],                     $
+            title=title_plot
      oplot, findgen(nbin)+tmin, integral_sim,color=250
+
+     plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+           /noerase, xstyle=-1, ystyle=-1, thick=4
+     plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+           /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
+     xyouts, 0.75, 0.90, 'Observations'
+     xyouts, 0.75, 0.82, 'Simulations', color=250
      close_device, /pdf
   endif
 
@@ -476,7 +529,7 @@ pro predict, choice,                                                  $
              showplot=showplot, saveplot=saveplot, mydir=mydir,       $
              stations_used=stations_used, DoPrintHeader=DoPrintHeader,$
              InputDir=InputDir,lunStation=lunStation,                 $
-             DoPrintStationHeader=DoPrintStationHeader
+             DoPrintStationHeader=DoPrintStationHeader, lun_fft=lun_fft
 
   ;; choice = 'db', 'dbdt', 'corr'
   ;; model: the directorys containing results (not an array anymore)
@@ -514,6 +567,7 @@ pro predict, choice,                                                  $
   if not keyword_set(DoPrintHeader) then DoPrintHeader = 0
   if not keyword_set(DoPrintStationHeader) then DoPrintStationHeader = 0
   if not keyword_set(InputDir) then InputDir='Inputs'
+  if not keyword_set(lun_fft)  then lun_fft=-1
   if saveplot then showplot=1
 
   ;; Width of stencil for time derivative
@@ -586,6 +640,9 @@ pro predict, choice,                                                  $
 
   stations_used = strarr(n_elements(event_I))
 
+  integral_obs_III = fltarr(n_elements(event_I), nstation, 2)
+  integral_sim_III = fltarr(n_elements(event_I), nstation, 2)
+  
   for iEvent = 0,n_elements(event_I)-1 do begin
 
      event = event_I(iEvent)
@@ -882,20 +939,51 @@ pro predict, choice,                                                  $
               !y.thick   = 3
               !p.charsize = 2
 
+              date_plot = set_date_string(yyyy_date(0),mm_date(0),dd_date(0))
+              title_plot= station
+              
               plotfile  = choice + '_event' + string(event, format='(i2.2)') + $
                           '_station_'+station
 
               set_device, plotfile + '.eps', /land
-              plot,  t_db_obs, db_obs, yrange=[0,max([db_obs,db_sim])*1.2], xtitle='Time', ytitle='db [nT]'
+              plot,  t_db_obs, db_obs, yrange=[0,max([db_obs,db_sim])*1.2], $
+                     xtitle='Hours from ' + date_plot, ytitle='dB [nT]',    $
+                     title=title_plot
               oplot, t_db_sim, db_sim, color=250
+              plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+                    /noerase, xstyle=-1, ystyle=-1, thick=4
+              plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+                    /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
+              xyouts, 0.75, 0.90, 'Observations'
+              xyouts, 0.75, 0.82, 'Simulations', color=250
               close_device, /pdf
 
+              set_device, plotfile + '_dbdt.eps', /land
+              plot,  t_dbdt_obs, dbdt_obs, yrange=[0,max([dbdt_obs,dbdt_sim])*1.2], $
+                     xtitle='Hours from ' + date_plot, ytitle='dBdt [nT/s]',        $
+                     title=title_plot
+              oplot, t_dbdt_sim, dbdt_sim, color=250
+              plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+                    /noerase, xstyle=-1, ystyle=-1, thick=4
+              plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+                    /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
+              xyouts, 0.75, 0.90, 'Observations'
+              xyouts, 0.75, 0.82, 'Simulations', color=250
+              close_device, /pdf
+              
               tmin = float(floor(t_db_obs(0)))
               tmax = float(ceil(t_db_obs(-1)))
 
               status = fft_segment(t_db_obs, db_obs, t_db_sim, db_sim, $
-                                   tmin, tmax, 1.0, 0.5, plotfile)
+                                   tmin, tmax, 60.0, 0.5, plotfile, date_plot, title_plot, $
+                                   integral_obs, integral_sim)
 
+              if status then begin
+                 integral_obs_III[iEvent, istation, 0] = mean(integral_obs)
+                 integral_obs_III[iEvent, istation, 1] = max(integral_obs)
+                 integral_sim_III[iEvent, istation, 0] = mean(integral_sim)
+                 integral_sim_III[iEvent, istation, 1] = max(integral_sim)
+              endif
            end
         endcase
      endfor                     ; istation
@@ -921,6 +1009,15 @@ pro predict, choice,                                                  $
      if saveplot then close_device, /pdf
 
   endfor                        ; iEvent for event_I
+
+  for iEvent = 0,n_elements(event_I)-1 do begin
+     for istation = 0, nstation-1 do begin
+        printf, lun_fft, strupcase(station_I[istation]),     $
+                integral_obs_III[iEvent, istation, 0], integral_sim_III[iEvent, istation, 0], $
+                integral_obs_III[iEvent, istation, 1], integral_sim_III[iEvent, istation, 1], $
+                format='(a3,4f11.4)'
+     endfor
+  endfor
 
   !p.multi(0) = 0
 
@@ -1337,10 +1434,17 @@ pro fft_all_events, models=models, events=events, mydir=mydir, InputDir=InputDir
         for istation = 0, n_elements(stations_I)-1 do begin
            stationIn_I = strsplit(stations_I(istation),/extract)
 
+           filename = string(station_orig_I(istation), event, $
+                             format='("fft_stats_",a3,"_event",i2.2,".txt")')
+
+           openw, lun_fft, filename, /get_lun
+           printf,lun_fft, 'Station      Mean_Obs        Mean_Sim       Max_Obs        Max_Sim'
+
            predict,'fft', model=model,                           $
                    station_I=stationIn_I,                        $
                    events=string(event,format='(i2.2)'),         $
-                   mydir=mydir
+                   mydir=mydir, lun_fft=lun_fft
+           close, lun_fft & free_lun, lun_fft
         endfor
      endfor
   endfor
