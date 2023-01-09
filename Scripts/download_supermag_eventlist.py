@@ -72,7 +72,7 @@ if __name__ == '__main__':
             if params[0] in RunIDs:
                 RunID      = params[0]
                 start_time = params[1]
-                end_time   = params[2]
+                end_time   = params[3]
 
                 EventDir=os.getcwd()+'/Events/Event'+str(RunID).zfill(2)+'/deltaB'
 
@@ -114,7 +114,8 @@ if __name__ == '__main__':
 
                 FileId=open('runidl1','w')
                 FileId.write(';\n;\n')
-                FileId.write('.r Idl/supermag-api Idl/download_supermag\n')
+                FileId.write('.r Idl/supermag-api\n')
+                FileId.write('.r Idl/download_supermag\n')
                 FileId.write('download_supermag,\''+start_time + '\',\'' +end_time + '\','
                              +'str_stations=['+str_stations[:-1]+'],dir_out=\''
                              +EventDir +'\n')
