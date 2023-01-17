@@ -11,6 +11,7 @@
 ### PBS -l select=12:ncpus=28:model=bro_ele
 ### PBS -l select=9:ncpus=40:model=sky_ele
 ### PBS -l select=9:ncpus=40:model=cas_ait
+### PBS -l select=4:ncpus=128:model=rom_ait
 
 # Set maximum walltime
 #PBS -l walltime=48:00:00
