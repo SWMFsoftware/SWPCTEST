@@ -11,6 +11,8 @@ my $Sleep      = ($s or $sleep);
 my $Predict    = ($p or $predict);
 my $Collect    = ($c or $collect);
 my $FractionH  = ($F or $Fraction);
+my $MinFracH   = ($Fmin or 0.65);
+my $MaxFracH   = ($Fmax or 0.95);
 my $dFracH     = ($dF or $dFraction);
 my $dDst       = ($dD or $dDst or 10);
 my $CpcpFactor = ($C or $CPCP);
@@ -18,8 +20,6 @@ my $CpcpFactor = ($C or $CPCP);
 use strict;
 
 # Valid range of FractionH parameter
-my $MinFracH = 0.65;
-my $MaxFracH = 0.95;
 my $FracH;       # Current value
 my $BestDst;     # Current simulation Dst
 
@@ -268,10 +268,10 @@ while(<>){
 	# Find current FracH and adjust it by dFracH based on Dst
 	if(/([\d\.]+)\t\t\tFractionH/){
 	    $FracH = $1;
-	    $FracH += $dFracH if $ObsDst < $BestDst - $dDst
-		and $FracH + $dFracH < $MaxFracH;
-	    $FracH -= $dFracH if $ObsDst > $BestDst + $dDst
-		and $FracH - $dFracH > $MinFracH;
+	    $FracH += $dFracH if $ObsDst < $BestDst - $dDst;
+	    $FracH -= $dFracH if $ObsDst > $BestDst + $dDst;
+	    $FracH = $MaxFracH if $FracH > $MaxFracH;
+	    $FracH = $MinFracH if $FracH < $MinFracH;
 	    $_ = sprintf("%5.3f\t\t\tFractionH\n", $FracH);
 	}
 	# Set FractionO as 1 - FractionH
@@ -465,10 +465,10 @@ EventNN is the name of the event to be simulated. Here NN represents two
 
 Examples:
 
-      Do assimilation for Event04 with default variation of the H+ fraction
+      Assimilate Event04 with H+ fraction varying from 0.7 to 0.9 in 0.1 steps      
       and sleep 60s between (re)starting ensemble members. Use verbose output:
 
-../Scripts/AssimilateDst.pl -v -s=60 Event04
+../Scripts/AssimilateDst.pl -v -Fmin=0.7 -Fmax=0.9 -dF=0.1 -s=60 Event04
 
       Assimilate Event01 by varying the CPCPCBOUNDARY parameters 
       by multiplying with a factor from 0.5 to 2. Assimilate predicted Dst:
