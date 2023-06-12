@@ -262,10 +262,12 @@ end
 
 ; ============================================================================
 
-pro read_station, file, t, data, date, tderiv, dataderiv, dn
+pro read_station, file, t, data, date, tderiv, dataderiv, dn, IsNbor=IsNbor
 
   common start_date
 
+  if not keyword_set(IsNbor) then IsNbor = 0
+  
   ;; reset common block data
   start_year  = -1
   start_month = -1
@@ -276,32 +278,49 @@ pro read_station, file, t, data, date, tderiv, dataderiv, dn
 
   date = julday(wlog(0,1), wlog(0,2), wlog(0,0))
 
-  ; Calculate horizontal component (db or dbdt)
-  i = where(wlogname eq 'B_NorthGeomag') & i = i(0)
-  j = where(wlogname eq 'B_EastGeomag')  & j = j(0)
-  
-  if i lt 0 and j lt 0 then begin
-     i = where(wlogname eq 'dBdt_NorthGeomag') & i = i(0)
-     j = where(wlogname eq 'dBdt_EastGeomag')  & j = j(0)
-  end
+  if IsNbor then begin
+     i = where(wlogname eq 'dB')   & i = i(0)
+     j = where(wlogname eq 'dBdt') & j = j(0)
+     data      = wlog(*,i)
+     dataderiv = wlog(1:*,j)
 
-  if i lt 0 or j lt 0 then begin
-     print, 'ERROR for file =', file
-     print, 'Cannot find variables (B|dBdt)_(North|East) in wlogname='
-     print, wlogname
-     retall
-  endif
+     if i lt 0 or j lt 0 then begin
+        print, 'ERROR for file =', file
+        print, 'Cannot find variables dB or dBdt in wlogname='
+        print, wlogname
+        retall
+     endif
 
-  data = sqrt(wlog(*,i)^2 + wlog(*,j)^2)
+     n  = n_elements(data)
+     tderiv = 0.5*(t(dn:n-1)+t(0:n-1-dn))
+  endif else begin
+     ;; Calculate horizontal component (db or dbdt)
+     i = where(wlogname eq 'B_NorthGeomag') & i = i(0)
+     j = where(wlogname eq 'B_EastGeomag')  & j = j(0)
 
-  ; Calculate time derivative
-  n  = n_elements(data)
+     if i lt 0 and j lt 0 then begin
+        i = where(wlogname eq 'dBdt_NorthGeomag') & i = i(0)
+        j = where(wlogname eq 'dBdt_EastGeomag')  & j = j(0)
+     end
 
-  tderiv = 0.5*(t(dn:n-1)+t(0:n-1-dn))
+     if i lt 0 or j lt 0 then begin
+        print, 'ERROR for file =', file
+        print, 'Cannot find variables (B|dBdt)_(North|East) in wlogname='
+        print, wlogname
+        retall
+     endif
 
-  dataderiv = sqrt( (wlog(dn:n-1,i)-wlog(0:n-1-dn,i))^2 + $
-                    (wlog(dn:n-1,j)-wlog(0:n-1-dn,j))^2 ) $
-              / (3600*(t(dn:n-1) - t(0:n-1-dn)))
+     data = sqrt(wlog(*,i)^2 + wlog(*,j)^2)
+
+     ;; Calculate time derivative
+     n  = n_elements(data)
+
+     tderiv = 0.5*(t(dn:n-1)+t(0:n-1-dn))
+
+     dataderiv = sqrt( (wlog(dn:n-1,i)-wlog(0:n-1-dn,i))^2 + $
+                       (wlog(dn:n-1,j)-wlog(0:n-1-dn,j))^2 ) $
+                 / (3600*(t(dn:n-1) - t(0:n-1-dn)))
+  endelse
 
 end
 
