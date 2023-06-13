@@ -63,15 +63,13 @@ function exceeds, time, array, tmin, tmax, dt, threshold, mincount
   count  = intarr(nbin)
 
   for i = 0, n - 1 do begin
-
      t = time[i]
      if t lt tmin or t gt tmax then continue
 
-     ibin = fix( (t - tmin)/dt ) < nbin-1
+     ibin = fix( (t - tmin)/dt ) < (nbin-1)
 
      count(ibin) += 1
      if array[i] ge threshold then result[ibin] = 1
-    
   endfor
 
   ii = where(count ge mincount)
@@ -160,7 +158,7 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      integral_obs(i) = total(power_obs_tmp*w_obs_tmp^(slope_impedance*2))
      integral_sim(i) = total(power_sim_tmp*w_sim_tmp^(slope_impedance*2))
 
-     if plotfile then begin
+     if 0 then begin
         ;; print, tmin_local
         set_device, plotfile + '_h'+string(tmin_local,format='(f5.2)')+'.eps', /land
         plot,  alog10(w_obs_tmp),alog10(power_obs_tmp), xtitle='log10(Frequency [Hz])', ytitle='log10(dB power spectrum)', $
@@ -169,11 +167,6 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
                ystyle=1, title='A ' + string(dt_window*60, format='(i2.2)') + '-min window from ' $
                + string(tmin_local,format='(f4.1)') + ' hours at ' +  title_plot
         oplot, alog10(w_sim_tmp),alog10(power_sim_tmp), color=250
-        ;; plot,  w_obs_tmp,power_obs_tmp, xtitle='Frequency', ytitle='Spectrum', $
-        ;;        xstyle=1, yrange = [min([power_obs_tmp, power_sim_tmp])-1,      $
-        ;;                            max([power_obs_tmp, power_sim_tmp])+1],     $
-        ;;        ystyle=1
-        ;; oplot, alog10(w_sim_tmp),alog10(power_sim_tmp), color=250
 
         plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
               /noerase, xstyle=-1, ystyle=-1, thick=4
@@ -185,13 +178,8 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
 
         tmp1 = power_obs_tmp*w_obs_tmp^(slope_impedance*2)
         tmp2 = power_sim_tmp*w_sim_tmp^(slope_impedance*2)
-        
+
         set_device, plotfile + '_cont_h'+string(tmin_local,format='(f5.2)')+'.eps', /land
-        ;; plot,  alog10(w_obs_tmp(1:*)),alog10(tmp1(1:*)), xtitle='Frequency', ytitle='Contribution', $
-        ;;        xstyle=1, yrange = [alog10(min([tmp1(1:*), tmp2(1:*)]))-1,   $
-        ;;                            alog10(max([tmp1(1:*), tmp2(1:*)]))+1],  $
-        ;;        ystyle=1
-        ;; oplot, alog10(w_sim_tmp(1:*)),alog10(tmp2(1:*)), color=250
         plot,  w_obs_tmp(1:*),tmp1(1:*), xtitle='Frequency [Hz]', ytitle='E power spectrum', $
                xstyle=1, yrange = [min([tmp1(1:*), tmp2(1:*)])*0.8,   $
                                    max([tmp1(1:*), tmp2(1:*)])*1.2],  $
@@ -225,10 +213,29 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      xyouts, 0.75, 0.90, 'Observations'
      xyouts, 0.75, 0.82, 'Simulations', color=250
      close_device, /pdf
-  endif
 
-  ;;; plot,  findgen(nbin)+tmin, integral_obs, xtitle = 'Time', ytitle = 'Heating'
-  ;; oplot, findgen(nbin)+tmin, integral_sim,color=250
+     openw, lun_tmp, plotfile+'_integral.txt', /get_lun
+     printf,lun_tmp, 'Time Integral_obs Integral_obs'
+     for itmp=0,nbin-1 do begin
+        printf, lun_tmp, itmp+tmin, integral_obs(itmp), integral_sim(itmp)
+     endfor
+     close, lun_tmp & free_lun, lun_tmp
+
+     exc_obs  = $
+        exceeds(findgen(nbin), integral_obs, 0., float(nbin-1), 2., 1., 0)
+
+     exc_sim = $
+        exceeds(findgen(nbin), integral_sim, 0., float(nbin-1), 2., 1., 0)
+
+     hit_fft   = total(exc_obs*exc_sim)
+     false_fft = total((1-exc_obs)*(exc_sim))
+     miss_fft  = total(exc_obs*(1-exc_sim))
+     no_fft    = total((1-exc_obs)*(1-exc_sim))
+
+     ;; get_skill_scores,hit_fft,false_fft,miss_fft,no_fft,fft_pod_local,fft_pof_local,fft_hss_local
+     ;; print, plotfile + ' h,f,m,n,pod,pof,hss =', hit_fft,false_fft,miss_fft,no_fft,fft_pod_local,fft_pof_local,fft_hss_local
+
+  endif
 
   return, 1
 end
@@ -548,7 +555,9 @@ pro predict, choice,                                                  $
              showplot=showplot, saveplot=saveplot, mydir=mydir,       $
              stations_used=stations_used, DoPrintHeader=DoPrintHeader,$
              InputDir=InputDir,lunStation=lunStation,                 $
-             DoPrintStationHeader=DoPrintStationHeader, lun_fft=lun_fft
+             DoPrintStationHeader=DoPrintStationHeader,               $
+             integral_obs_III=integral_obs_III,                       $
+             integral_sim_III=integral_sim_III
 
   ;; choice = 'db', 'dbdt', 'corr'
   ;; model: the directorys containing results (not an array anymore)
@@ -581,7 +590,7 @@ pro predict, choice,                                                  $
   if not keyword_set(verbose)  then verbose=0
   if not keyword_set(showplot) then showplot=0
   if not keyword_set(saveplot) then saveplot=0
-  if not keyword_set(lunOut)   then lunOut=-1 ; -1 is STDOUT
+  if not keyword_set(lunOut)   then lunOut=-1          ; -1 is STDOUT
   if not keyword_set(lunStation)    then lunStation=-1 ; -1 is STDOUT
   if not keyword_set(DoPrintHeader) then DoPrintHeader = 0
   if not keyword_set(DoPrintStationHeader) then DoPrintStationHeader = 0
@@ -659,9 +668,6 @@ pro predict, choice,                                                  $
 
   stations_used = strarr(n_elements(event_I))
 
-  integral_obs_III = fltarr(n_elements(event_I), nstation, 2)
-  integral_sim_III = fltarr(n_elements(event_I), nstation, 2)
-  
   for iEvent = 0,n_elements(event_I)-1 do begin
 
      event = event_I(iEvent)
@@ -799,7 +805,7 @@ pro predict, choice,                                                  $
                                        [hit_db, false_db, miss_db, no_db]
 
               get_skill_scores,hit_db,false_db,miss_db,no_db,db_pod_local,db_pof_local,db_hss_local
-              
+
               if lunStation ne -1 and DoPrintStationHeader ne 0 then begin
                  printf, lunStation, 'db skill scores for model: ' + model
                  printf, lunStation, 'Event   =', event_I[iEvent]
@@ -809,12 +815,12 @@ pro predict, choice,                                                  $
                  printf, lunStation, '#START'
                  DoPrintStationHeader = 0
               endif
-     
+
               if lunStation ne -1 then $
                  printf, lunStation, station, threshold, hit_db,no_db,false_db,miss_db,         $
                          hit_db+no_db+false_db+miss_db, db_pod_local,db_pof_local,db_hss_local, $
                          format='(a3,1x,f8.4, 5i6, 3f12.4)'
-              
+
               if showplot then begin
                  title = strupcase(station) + ': H,F,M,N=' + $
                          string(hit_db, false_db, miss_db, no_db, $
@@ -896,7 +902,7 @@ pro predict, choice,                                                  $
                  printf, lunStation, '#START'
                  DoPrintStationHeader = 0
               endif
-     
+
               if lunStation ne -1 then $
                  printf, lunStation, station, threshold, hit_dbdt,no_dbdt,false_dbdt,miss_dbdt,$
                          hit_dbdt+no_dbdt+false_dbdt+miss_dbdt, $
@@ -964,31 +970,33 @@ pro predict, choice,                                                  $
               plotfile  = choice + '_event' + string(event, format='(i2.2)') + $
                           '_station_'+station
 
-              set_device, plotfile + '.eps', /land
-              plot,  t_db_obs, db_obs, yrange=[0,max([db_obs,db_sim])*1.2], $
-                     xtitle='Hours from ' + date_plot, ytitle='dB [nT]',    $
-                     title=title_plot
-              oplot, t_db_sim, db_sim, color=250
-              plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
-                    /noerase, xstyle=-1, ystyle=-1, thick=4
-              plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
-                    /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
-              xyouts, 0.75, 0.90, 'Observations'
-              xyouts, 0.75, 0.82, 'Simulations', color=250
-              close_device, /pdf
-
-              set_device, plotfile + '_dbdt.eps', /land
-              plot,  t_dbdt_obs, dbdt_obs, yrange=[0,max([dbdt_obs,dbdt_sim])*1.2], $
-                     xtitle='Hours from ' + date_plot, ytitle='dBdt [nT/s]',        $
-                     title=title_plot
-              oplot, t_dbdt_sim, dbdt_sim, color=250
-              plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
-                    /noerase, xstyle=-1, ystyle=-1, thick=4
-              plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
-                    /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
-              xyouts, 0.75, 0.90, 'Observations'
-              xyouts, 0.75, 0.82, 'Simulations', color=250
-              close_device, /pdf
+              if 0 then begin
+                 set_device, plotfile + '.eps', /land
+                 plot,  t_db_obs, db_obs, yrange=[0,max([db_obs,db_sim])*1.2], $
+                        xtitle='Hours from ' + date_plot, ytitle='dB [nT]',    $
+                        title=title_plot
+                 oplot, t_db_sim, db_sim, color=250
+                 plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+                       /noerase, xstyle=-1, ystyle=-1, thick=4
+                 plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+                       /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
+                 xyouts, 0.75, 0.90, 'Observations'
+                 xyouts, 0.75, 0.82, 'Simulations', color=250
+                 close_device, /pdf
+                 
+                 set_device, plotfile + '_dbdt.eps', /land
+                 plot,  t_dbdt_obs, dbdt_obs, yrange=[0,max([dbdt_obs,dbdt_sim])*1.2], $
+                        xtitle='Hours from ' + date_plot, ytitle='dBdt [nT/s]',        $
+                        title=title_plot
+                 oplot, t_dbdt_sim, dbdt_sim, color=250
+                 plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+                       /noerase, xstyle=-1, ystyle=-1, thick=4
+                 plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+                       /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
+                 xyouts, 0.75, 0.90, 'Observations'
+                 xyouts, 0.75, 0.82, 'Simulations', color=250
+                 close_device, /pdf
+              endif
               
               tmin = float(floor(t_db_obs(0)))
               tmax = float(ceil(t_db_obs(-1)))
@@ -1028,15 +1036,6 @@ pro predict, choice,                                                  $
      if saveplot then close_device, /pdf
 
   endfor                        ; iEvent for event_I
-
-  for iEvent = 0,n_elements(event_I)-1 do begin
-     for istation = 0, nstation-1 do begin
-        printf, lun_fft, strupcase(station_I[istation]),     $
-                integral_obs_III[iEvent, istation, 0], integral_sim_III[iEvent, istation, 0], $
-                integral_obs_III[iEvent, istation, 1], integral_sim_III[iEvent, istation, 1], $
-                format='(a3,4f11.4)'
-     endfor
-  endfor
 
   !p.multi(0) = 0
 
@@ -1442,29 +1441,51 @@ pro fft_all_events, models=models, events=events, mydir=mydir, InputDir=InputDir
      model   = models(imodel)
      event_I = set_eventlist(events,mydir,model)
 
+     set_stationlist, mydir=mydir, stationsFile='stations.csv',$
+                      model=model, stations_I, station_orig_I
+
      ;; Create full metrics for each event:
-     for iEvent = 0, n_elements(event_I)-1 do begin
-        event=event_I(iEvent)
+     for istation = 0, n_elements(station_orig_I)-1 do begin
+        stationIn_I = strsplit(stations_I(istation),/extract)
 
-        set_stationlist, mydir=mydir, stationsFile='stations.csv',$
-                         model=model, event=event,                $
-                         stations_I, station_orig_I
+        filename = string(station_orig_I(istation),  $
+                          format='("fft_stats_",a3,".txt")')
+        openw, lun_fft_all, filename, /get_lun
+        str_event_I = strtrim(string(event_I),2)
+        string_header = 'name ' + strjoin('mean_obs_'+str_event_I,' ')   $
+                        + ' ' + strjoin('mean_sim_'+str_event_I,  ' ')   $
+                        + ' ' + strjoin('max_obs_'+str_event_I,   ' ')   $
+                        + ' ' + strjoin('max_sim_'+str_event_I,   ' ')   $
+                        + ' mean_obs mean_sim max_obs max_sim'
+        printf,lun_fft_all, string_header
 
-        for istation = 0, n_elements(stations_I)-1 do begin
-           stationIn_I = strsplit(stations_I(istation),/extract)
+        filename = string(station_orig_I(istation),  $
+                          format='("fft_ave_",a3,".txt")')
+        openw, lun_fft_ave, filename, /get_lun
+        printf, lun_fft_ave, 'name mean_obs mean_sim max_obs max_sim'
 
-           filename = string(station_orig_I(istation), event, $
-                             format='("fft_stats_",a3,"_event",i2.2,".txt")')
+        integral_obs_III = fltarr(n_elements(event_I), n_elements(stationIn_I), 2)
+        integral_sim_III = fltarr(n_elements(event_I), n_elements(stationIn_I), 2)
+  
+        predict,'fft', model=model, station_I=stationIn_I, events=events,  $
+                mydir=mydir, integral_obs_III=integral_obs_III,            $
+                integral_sim_III=integral_sim_III
 
-           openw, lun_fft, filename, /get_lun
-           printf,lun_fft, 'Station      Mean_Obs        Mean_Sim       Max_Obs        Max_Sim'
+        for itmp=0, n_elements(stationIn_I)-1 do begin
+           printf, lun_fft_all, stationIn_I(itmp), integral_obs_III(*,itmp,0), integral_sim_III(*,itmp,0),       $
+                   integral_obs_III(*,itmp,1), integral_sim_III(*,itmp,1), format='(a,100f17.2)'
 
-           predict,'fft', model=model,                           $
-                   station_I=stationIn_I,                        $
-                   events=string(event,format='(i2.2)'),         $
-                   mydir=mydir, lun_fft=lun_fft
-           close, lun_fft & free_lun, lun_fft
+           tmp_obs_ave = integral_obs_III(*,itmp,0)
+           tmp_obs_max = integral_obs_III(*,itmp,1)
+           tmp_sim_ave = integral_sim_III(*,itmp,0)
+           tmp_sim_max = integral_sim_III(*,itmp,1)
+
+           printf, lun_fft_ave, stationIn_I(itmp), mean(tmp_obs_ave(where(tmp_obs_ave gt 0))),             $
+                   mean(tmp_obs_max(where(tmp_obs_max gt 0))), mean(tmp_sim_ave(where(tmp_sim_ave gt 0))), $
+                   mean(tmp_sim_max(where(tmp_sim_max gt 0))), format='(a,100f17.2)'
         endfor
+        close, lun_fft_all & free_lun, lun_fft_all
+        close, lun_fft_ave & free_lun, lun_fft_ave
      endfor
   endfor
 end
