@@ -1455,8 +1455,7 @@ pro fft_all_events, models=models, events=events, mydir=mydir, InputDir=InputDir
         string_header = 'name ' + strjoin('mean_obs_'+str_event_I,' ')   $
                         + ' ' + strjoin('mean_sim_'+str_event_I,  ' ')   $
                         + ' ' + strjoin('max_obs_'+str_event_I,   ' ')   $
-                        + ' ' + strjoin('max_sim_'+str_event_I,   ' ')   $
-                        + ' mean_obs mean_sim max_obs max_sim'
+                        + ' ' + strjoin('max_sim_'+str_event_I,   ' ')
         printf,lun_fft_all, string_header
 
         filename = string(station_orig_I(istation),  $
@@ -1481,7 +1480,7 @@ pro fft_all_events, models=models, events=events, mydir=mydir, InputDir=InputDir
            tmp_sim_max = integral_sim_III(*,itmp,1)
 
            printf, lun_fft_ave, stationIn_I(itmp), mean(tmp_obs_ave(where(tmp_obs_ave gt 0))),             $
-                   mean(tmp_obs_max(where(tmp_obs_max gt 0))), mean(tmp_sim_ave(where(tmp_sim_ave gt 0))), $
+                   mean(tmp_sim_ave(where(tmp_sim_ave gt 0))), mean(tmp_obs_max(where(tmp_obs_max gt 0))), $
                    mean(tmp_sim_max(where(tmp_sim_max gt 0))), format='(a,100f17.2)'
         endfor
         close, lun_fft_all & free_lun, lun_fft_all
