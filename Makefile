@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 
-# Include Makefile.def from the linked SWMF directory 
+# Include Makefile.def from the linked SWMF directory
 -include SWMF/Makefile.def
 -include ../Makefile.def
 
