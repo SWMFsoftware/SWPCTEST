@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 
-# Include Makefile.def from the linked SWMF directory
+# Include Makefile.def from the linked SWMF directory 
 -include SWMF/Makefile.def
 -include ../Makefile.def
 
@@ -70,17 +70,18 @@ help:
 	@echo "make check_tar      SIMDIR=New (tar up results and metrics in deltaB/New)"
 	@echo "make check_compare RES1DIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
-	@echo "test_order5                    (run with 5th order GM/BATSRUS model)"
-	@echo "test_rbe                       (run with RB/RBE model)"
-	@echo "test_multiion                  (run with multiion GM/BATSRUS model)"
-	@echo "test_multiion_v2               (run with multiion GM/BATSRUS v2 model)"
-	@echo "test_multispecies              (run with multispecies GM/BATSRUS model)"
-	@echo "test_multispecies_v2           (run with multispecies GM/BATSRUS v2 model)"
-	@echo "test_multispecies_Young_v2     (run with multispecies GM/BATSRUS v2 model with the Young BC)"
-	@echo "test_cimi                      (run with anisotropic MHD and IM/CIMI)"
-	@echo "test_cimi_v2                   (run with anisotropic MHD v2 and IM/CIMI)"
-	@echo "test_Young_v2                  (run with the Young boundary condition)"
-	@echo "test_pwom                      (run with PW/PWOM model)"
+	@echo "test_order5                    (run with 5th order GM/BATSRUS+IM/RCM2)"
+	@echo "test_rbe                       (run with GM/BATSRUS+IM/RCM2+RB/RBE)"
+	@echo "test_multiion                  (run with multiion GM/BATSRUS+IM/RCM2)"
+	@echo "test_multiion_v2               (run with multiion v2 GM/BATSRUS+IM/RCM2)"
+	@echo "test_multispecies              (run with multispecies GM/BATSRUS+IM/RCM2)"
+	@echo "test_multispecies_v2           (run with multispecies v2 GM/BATSRUS+IM/RCM2)"
+	@echo "test_multispecies_Young_v2     (run with multispecies v2 GM/BATSRUS+IM/RCM2 and Young BC)"
+	@echo "test_cimi                      (run with anisotropic GM/BATSRUS+IM/CIMI)"
+	@echo "test_cimi_v2                   (run with anisotropic v2 GM/BATSRUS+IM/CIMI)"
+	@echo "test_Young_v2                  (run with v2 GM/BATSRUS+IM/RCM2 and Young BC)"
+	@echo "test_pwom                      (run with single fluid GM/BATSRUS+IM/RCM2+PW/PWOM)"
+	@echo "test_cimi_pwom_species         (run with multispecies GM/BATSRUS+IM/CIMI+PW/PWOM)"
 	@echo "test_gpu                       (run the GPU version of SWPC V2)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2-6,95-98)"
@@ -201,7 +202,7 @@ test_rundir:
 	if([ -d ${QUEDIR}1 ]); then  		\
 		rm -rf ${QUEDIR}_backup;	\
 		mkdir -p ${QUEDIR}_backup;	\
-		mv run[1-9] ${QUEDIR}_backup/;	\
+		mv ${QUEDIR}[1-9] ${QUEDIR}_backup/;	\
 	fi;
 	for iRun in {1..${NRUN}}; do  for e in ${EVENTLIST}; do                             \
 		cd $(DIR);                                  				    \
@@ -394,7 +395,7 @@ test_cimi:
 
 test_cimi_compile:
 	-@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI2; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI; \
 	./Config.pl -o=GM:u=Default,e=MhdAnisoP,g=8,8,8,ng=2,IE:g=181,361,IM:EarthHO,GridExpanded; \
 	./Config.pl -noacc; \
 	make SWMF PIDL; \
@@ -458,6 +459,28 @@ test_pwom_rundir:
 	make test_rundir PARAMINIT=PARAM.in_pwom_init 
 
 test_pwom_run: test_run
+
+##############################################################################
+test_cimi_pwom_species:
+	@echo "Testing the Geospace model with PW/PWOM"
+	make test_cimi_pwom_species_compile
+	make test_cimi_pwom_species_rundir
+	make test_cimi_pwom_species_run
+	@echo "Test_cimi_pwom_species started.  make check when complete."
+
+test_cimi_pwom_species_compile:
+	-@(cd ${DIR}; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI,PW/PWOM; \
+	./Config.pl -o=GM:u=Default,e=MhdHpOp,g=8,8,8,ng=2,IE:g=181,361,PW:Earth; \
+	./Config.pl -o=IM:EarthHO,GridExpanded; \
+	./Config.pl -noacc; \
+	make SWMF PIDL; \
+	)
+
+test_cimi_pwom_species_rundir:
+	make test_rundir PARAMINIT=PARAM.in_cimi_pwom_species_init 
+
+test_cimi_pwom_species_run: test_run
 
 ##############################################################################
 
