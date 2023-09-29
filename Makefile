@@ -99,6 +99,9 @@ help:
 test_event:
 	@echo "EVENTS_EXPAND is ${EVENTS_EXPAND}"
 	@echo "EVENTLIST is ${EVENTLIST}"
+	@echo "FULLRESDIR is ${FULLRESDIR}"
+	@echo "FullRunDirList is ${FullRunDirList}"
+	@echo "FullResDirList is ${FullResDirList}"
 
 ##############################################################################
 
@@ -528,7 +531,7 @@ FULLRES1DIR = ${MYDIR}/deltaB/${RES1DIR}
 FULLRES2DIR = ${MYDIR}/deltaB/${RES2DIR}
 
 FullRunDirList  = $(sort $(dir $(wildcard ${QUEDIR}*/Event*/)))
-FullResDirList  = ${MYDIR}/deltaB/${RESDIR}/ $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run*/)))
+FullResDirList  = $(sort $(dir $(wildcard ${MYDIR}/deltaB/${RESDIR}/run*/)))
 
 RunDirList = $(subst ${FULLSIMDIR},,${FullRunDirList})
 
