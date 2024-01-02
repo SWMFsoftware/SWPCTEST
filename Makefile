@@ -114,10 +114,10 @@ propagate1d:
 	make propagate1d_run
 
 propagate1d_compile:
-	-@(cd ${GMDIR}; make test_L1toBC_compile;)
+	@(cd ${GMDIR}; make test_L1toBC_compile;)
 
 propagate1d_rundir:
-	-@(cd ${GMDIR}; make test_L1toBC_rundir TESTDIR=${PROPDIR})
+	@(cd ${GMDIR}; make test_L1toBC_rundir TESTDIR=${PROPDIR})
 
 propagate1d_run:
 	for e in ${EVENTLIST}; do 				\
@@ -186,7 +186,7 @@ check:
 	make check_tar
 
 test_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=181,361; \
 	./Config.pl -noacc; \
@@ -250,7 +250,7 @@ test_order5:
 	@echo "Test_order5 started.  make check when complete."
 
 test_order5_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=3,IE:g=181,361; \
 	./Config.pl -noacc; \
@@ -272,7 +272,7 @@ test_rbe:
 	@echo "Test_rbe started.  make check when complete."
 
 test_rbe_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=181,361; \
 	./Config.pl -noacc; \
@@ -294,7 +294,7 @@ test_multiion:
 	@echo "Test_multiion started.  make check when complete."
 
 test_multiion_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	./Config.pl -o=GM:u=Default,e=MultiIon,g=8,8,8,ng=2,IE:g=181,361; \
 	./Config.pl -noacc; \
@@ -341,7 +341,7 @@ test_multispecies:
 	@echo "Test_multispecies started.  make check when complete."
 
 test_multispecies_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	./Config.pl -o=GM:u=Default,e=MhdHpOp,g=8,8,8,ng=2,IE:g=181,361; \
 	./Config.pl -noacc; \
@@ -397,7 +397,7 @@ test_cimi:
 	@echo "Test_cimi started.  make check when complete."
 
 test_cimi_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI; \
 	./Config.pl -o=GM:u=Default,e=MhdAnisoP,g=8,8,8,ng=2,IE:g=181,361,IM:EarthHO,GridExpanded; \
 	./Config.pl -noacc; \
@@ -451,7 +451,7 @@ test_pwom:
 	@echo "Test_pwom started.  make check when complete."
 
 test_pwom_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,PW/PWOM; \
 	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=181,361,PW:Earth; \
 	./Config.pl -noacc; \
@@ -472,7 +472,7 @@ test_cimi_pwom_species:
 	@echo "Test_cimi_pwom_species started.  make check when complete."
 
 test_cimi_pwom_species_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/CIMI,PW/PWOM; \
 	./Config.pl -o=GM:u=Default,e=MhdHpOp,g=8,8,8,ng=2,IE:g=181,361,PW:Earth; \
 	./Config.pl -o=IM:EarthHO,GridExpanded; \
@@ -495,7 +495,7 @@ test_gpu:
 	@echo "Test_cimi_v2 started.  make check when complete."
 
 test_gpu_compile:
-	-@(cd ${DIR}; \
+	@(cd ${DIR}; \
 	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
 	./Config.pl -o=GM:u=Default,e=Mhd,ng=2,g=8,8,8,opt=none,IE:g=181,361; \
 	./Config.pl -acc; \
@@ -556,7 +556,7 @@ check_postproc: show_dir
 	     if([ -f SWMF.SUCCESS -o -f DONE ]); then			\
 		if([ ! -d RESULTS ]); then ${SCRIPTDIR}/PostProc.pl -cat RESULTS; fi;   \
 		mkdir -p ${FULLRESDIR}/$$RunDir;			\
-		cd RESULTS; cp PARAM.in runlog* GM/* IE/IE*.log 	\
+		cd RESULTS; cp -f PARAM.in runlog* GM/* IE/IE*.log 	\
 			${FULLRESDIR}/$$RunDir;				\
 		cd ${FULLRESDIR}/$$RunDir;				\
 		${MYSCRIPTDIR}/convert_mags.py; 			\
