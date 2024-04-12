@@ -72,6 +72,7 @@ help:
 	@echo ""
 	@echo "test_order5                    (run with 5th order GM/BATSRUS+IM/RCM2)"
 	@echo "test_rbe                       (run with GM/BATSRUS+IM/RCM2+RB/RBE)"
+	@echo "test_magnit                    (run with GM/BATSRUS+IM/RCM2+IE/RIM-MAGNIT)"
 	@echo "test_multiion                  (run with multiion GM/BATSRUS+IM/RCM2)"
 	@echo "test_multiion_v2               (run with multiion v2 GM/BATSRUS+IM/RCM2)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS+IM/RCM2)"
@@ -283,6 +284,28 @@ test_rbe_rundir:
 	make test_rundir PARAMINIT=PARAM.in_rbe_init
 
 test_rbe_run: test_run
+
+##############################################################################
+
+test_magnit:
+	@echo "Testing the Geospace model with MAGNIT ionosphere"
+	make test_magnit_compile
+	make test_magnit_rundir
+	make test_magnit_run
+	@echo "Test_magnit started.  make check when complete."
+
+test_magnit_compile:
+	@(cd ${DIR}; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
+	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=181,361; \
+	./Config.pl -noacc; \
+	make SWMF PIDL; \
+	)
+
+test_magnit_rundir:
+	make test_rundir PARAMINIT=PARAM.in_MAGNIT_init
+
+test_magnit_run: test_run
 
 ##############################################################################
 
