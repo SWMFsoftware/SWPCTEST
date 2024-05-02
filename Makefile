@@ -73,6 +73,7 @@ help:
 	@echo "test_order5                    (run with 5th order GM/BATSRUS+IM/RCM2)"
 	@echo "test_rbe                       (run with GM/BATSRUS+IM/RCM2+RB/RBE)"
 	@echo "test_magnit                    (run with GM/BATSRUS+IM/RCM2+IE/RIM-MAGNIT)"
+	@echo "test_pe                        (run with GM/BATSRUS+IM/RCM2 and Pe)"
 	@echo "test_multiion                  (run with multiion GM/BATSRUS+IM/RCM2)"
 	@echo "test_multiion_v2               (run with multiion v2 GM/BATSRUS+IM/RCM2)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS+IM/RCM2)"
@@ -306,6 +307,28 @@ test_magnit_rundir:
 	make test_rundir PARAMINIT=PARAM.in_MAGNIT_init
 
 test_magnit_run: test_run
+
+##############################################################################
+
+test_pe:
+	@echo "Testing the Geospcae model with electron pressure"
+	make test_pe_compile
+	make test_pe_rundir
+	make test_pe_run
+	@echo "Test_pe started.  make check when complete."
+
+test_pe_compile:
+	@(cd ${DIR}; \
+	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2; \
+	./Config.pl -o=GM:u=Default,e=MhdPe,g=8,8,8,ng=3,IE:g=181,361; \
+	./Config.pl -noacc; \
+	make SWMF PIDL; \
+	)
+
+test_pe_rundir:
+	make test_rundir PARAMINIT=PARAM.in_pe_init
+
+test_pe_run: test_run
 
 ##############################################################################
 
