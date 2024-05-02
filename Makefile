@@ -326,7 +326,7 @@ test_pe_compile:
 	)
 
 test_pe_rundir:
-	make test_rundir PARAMINIT=PARAM.in_pe_init
+	make test_rundir PARAMINIT=PARAM.in_SWPC_pe_init
 
 test_pe_run: test_run
 
