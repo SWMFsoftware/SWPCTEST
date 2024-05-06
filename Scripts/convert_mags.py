@@ -81,7 +81,12 @@ for i,s in enumerate(stats):
     for l in rawlines[i::len(stats)]:
         # Parse line and turn into floating-point values.
         parts = l.split()
-        parts = [float(p) for p in parts]
+        try:
+            parts = [float(p) for p in parts]
+        except Exception as error:
+            print("l =",l)
+            print("parts = ", parts)
+            raise TypeError(error, "Value cannot convert to float")
 
         # Write time:
         f.write('{1:4.0f}{2:5.0f}{3:5.0f}{4:5.0f}{5:5.0f}{6:5.0f}'.format(*parts))
