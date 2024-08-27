@@ -4,7 +4,7 @@
 #PBS -N ENSEMBLE
 
 #PBS -q long
-#PBS -l walltime=48:00:00
+#PBS -l walltime=72:00:00
 
 #! PBS -q devel
 #! PBS -l walltime=2:00:00
@@ -26,7 +26,7 @@
 #PBS -m abe
 
 # Specify group (uses default group if not specified):
-#PBS -W group_list=s6176
+#PBS -W group_list=s1720
 
 # Make sure other jobs submitted with qsub.*.pl get killed before doing much
 sleep 20
