@@ -97,10 +97,11 @@ if($Restart){
 
     # Use the start time as the previous assimilation time
     $olddatime = &shell("grep -A6 '#STARTTIME' $ParamFile");
-    die "No #STARTTME found in $ParamFile\n" unless $olddatime;
+    die "No #STARTTIME found in $ParamFile\n" unless $olddatime;
 }
 $olddatime =~ s/\#(START|END)TIME\n//;
 $olddatime =~ s/\s+[a-zA-Z]+[\s\n]+/ /g;
+$olddatime =~ s/\b(\d)\b/0$1/g; # Add 0 in front of 1-digit numbers
 $olddatime =~ 
     s/(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d).*/$1$2$3\-$4$5$6/;
 print "Old DA time=$olddatime\n";
@@ -221,7 +222,9 @@ if($ObsTime){
 
 # Final end time
 $endtime = &shell("grep -A6 '#ENDTIME' $ParamOrig");
-$endtime =~ s/\#ENDTIME\n//; $endtime =~ s/\s+[a-zA-Z]+\n/ /g;
+$endtime =~ s/\#ENDTIME\n//;
+$endtime =~ s/\s+[a-zA-Z]+\n/ /g;
+$endtime =~ s/\b(\d)\b/0$1/g; # Add 0 in front of 1-digit numbers
 $endtime =~ 
     s/(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d).*/$1$2$3\-$4$5$6/;
 
