@@ -43,7 +43,10 @@ setenv PBS_NODEFILE ./hosts
 
 # Run the ensemble until fully done
 while (! -f run/${EVENT}/LAST)
-    ../Scripts/AssimilateDst.pl -v -dF=0.1 -s=60 ${EVENT} >>& run/${EVENT}/runlog
+    # Driven simulation, a single run with periodically adjusted parameters:
+    #../Scripts/AssimilateDst.pl -v -dF=0.1 -s=60 ${EVENT} >>& run/${EVENT}/runlog
+    # Ensemble simulation with a range of parameters and restart from best member:
+    ../Scripts/AssimilateDst.pl -v -s=60 ${EVENT} >>& run/${EVENT}/runlog
     foreach rundir ( run?/${EVENT} )
        (cd ${rundir}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
     end
