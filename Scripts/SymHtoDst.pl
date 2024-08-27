@@ -50,23 +50,24 @@ while(<IMF>){
     # print "hoursim=$hoursim $propagate hourobs=$hourobs hourint=$hourint\n";
     
     # Convert to strings
-    $dayobs  = sprintf("%02d", $dayobs);
-    $hourobs = sprintf("%02d", $hourobs);
-
+    $month    = sprintf("%02d", $month);
+    $dayobs   = sprintf("%02d", $dayobs);
+    $hourobs  = sprintf("%02d", $hourobs);
+    
     # fix the simulation time if going through midnight
     $hoursim += 24 while $hoursim < $hoursimold;
     $hoursimold = $hoursim;
-    
+
     # store the information
-    $hoursim{"$year$month$dayobs$hourobs"} = sprintf("%8.2f", $hoursim)." $day $hour $min $sec";
- 
+    $hoursim{"$year$month$dayobs$hourobs"} =
+	sprintf("%8.2f %02d %02d %02d %02d", $hoursim, $day, $hour, $min, $sec);
 }
 close(IMF);
 
 ## Debug
-#foreach my $date (sort keys %hoursim){
-#    print "$date: ", $hoursim{$date}, "\n";
-#}
+# foreach my $date (sort keys %hoursim){
+#     print "$date: ", $hoursim{$date}, "\n";
+# }
 
 open(SYMH, $SymhFile) or die "Could not open input SYMH file $SymhFile\n";
 open(DST, ">$DstFile") or die "Could not open output Dst file $DstFile\n";
@@ -81,6 +82,12 @@ while(<SYMH>){
     if($min == 0){
 	# Calculate Dst for round hours 
 	$dst /= $nsymh;
+
+	# Format strings
+	$month = sprintf("%02d", $month);
+	$day   = sprintf("%02d", $day);
+	$hour  = sprintf("%02d", $hour);
+
 	print DST "$year $month $day $hour ",
 	    sprintf("%8.2f %s\n", $dst, $hoursim{"$year$month$day$hour"});
 	$nsymh = 0;
