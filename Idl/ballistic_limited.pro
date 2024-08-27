@@ -1,10 +1,11 @@
 common getlog_param
 common log_data
 
-; Get the extraction position from the IMF_mhd.dat file
+; Get the extraction position from the IMF_mhd.dat file (if exists)
 spawn,"perl -ne 'if(/:\s+(\S+)/){print $1;exit}' IMF_mhd.dat",xBC
 ; convert to scalar double precision real
 xBC=double(xBC(0))
+if xBC eq 0.0 then xBC = 32.0               ; MHD code boundary location
 help, xBC
 
 ; get the L1 position from the L1.dat file
@@ -33,7 +34,7 @@ save_log, 'L1_limited.dat', 'L1.dat limited rho,T:1.3, Ux:-50+30,-10,20', $
 ; distance from xL1 to xBC
 dist = 0*logtime + (xL1-xBC)*6378.0 
 
-; Propagate solar wind by xbc
+; Propagate solar wind to xBC
 correct_imf, wlog, dist, logfilename, 'IMF_ballistic_limited.dat'
 
 exit
