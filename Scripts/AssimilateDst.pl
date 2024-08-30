@@ -10,7 +10,6 @@ my $Reset      = ($r or $reset);
 my $Sleep      = ($s or $sleep);
 my $Predict    = ($p or $predict);
 my $Collect    = ($c or $collect);
-my $FractionH  = ($F or $Fraction);
 my $MinFracH   = ($Fmin or 0.65);
 my $MaxFracH   = ($Fmax or 0.95);
 my $dFracH     = ($dF or $dFraction);
@@ -23,10 +22,6 @@ use strict;
 my $FracH;       # Current value
 my $BestDst;     # Current simulation Dst
 
-$FractionH = 0.7 unless $FractionH or $dFracH or $CpcpFactor; # default value
-
-die "Invalid value for -F=$FractionH\n"
-    if $FractionH < 0 or $FractionH >= 1;
 die "Invalid value for -C=$CpcpFactor\n" 
     if $CpcpFactor < 0 or $CpcpFactor >= 1;
 
@@ -66,15 +61,17 @@ die "$LastFile is present\n" if -f $LastFile;
 # Create plot directory for the ensemble
 &shell("mkdir -p run/$PlotDir") unless -d "run/$PlotDir";
 
-# H-O composition: H fraction goes from $FractionH to (1-$FractionH)/$nDir
-my $dFraction = (1 - $FractionH)/$nDir;
+# H-O composition: H fraction goes from $MinFracH to $MaxFracH for ensemble
+my $dFraction = ($MaxFracH - $MinFracH)/($nDir - 1) if $nDir > 1;
 
 # CPCP parameter goes from $CpcpFactor to 1/$CpcpFactor with ratios $CpcpRatio
 my $CpcpRatio;
 $CpcpRatio = $CpcpFactor**(-2/($nDir-1)) if $CpcpFactor and $nDir > 1;
 
+# Initial value of H+ fraction for the first ensemble member
+my $FractionH = $MinFracH;
 print "FractionH=$FractionH, dFraction=$dFraction\n" 
-    if $FractionH and $Verbose;
+    if $MaxFracH > $MinFracH and $Verbose;
 print "CpcpFactor=$CpcpFactor, CpcpRatio=$CpcpRatio\n" 
     if $CpcpRatio and $Verbose;
 
@@ -279,7 +276,7 @@ while(<>){
 	}
 	# Set FractionO as 1 - FractionH
 	$_ = sprintf("%5.3f\t\t\tFractionO\n", 1-$FracH) if /FractionO/;
-    }elsif($FractionH){
+    }elsif($MaxFracH > $MinFracH){
 	# Set the FractionH and FractionO in the COMPOSITION command
 	$_ = sprintf("%5.3f\t\t\tFractionH\n", $FractionH) if /FractionH/;
 	if(/FractionO/){
@@ -431,7 +428,7 @@ the ensemble job script. In addition, it can collect
 the output from multiple runs into the assimilated results.
 
 Usage: 
-    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [-F=FractionH|-dF=dFracH]
+    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [-dF=dFracH]
          [-C=CpcpFactor] [EventNN]
 
 EventNN is the name of the event to be simulated. Here NN represents two
@@ -451,13 +448,12 @@ EventNN is the name of the event to be simulated. Here NN represents two
 -v       - provide more verbose output. 
 -verbose
 
--F=FRACTIONH  - Vary H+ fraction from FRACTIONH to 1-(1-FRACTIONH)/(N-1) where
--Fraction=...   N is the number of ensemble members. 
-                Valid range is 0 < FRACTIONH < 1. 
-                If neither -F= nor -C= are used, the default is F=0.7.
+-Fmin=FMIN      Limit/vary the H+ fraction in the range [FMIN,FMAX].
+-Fmax=FMAX      Default values are FMIN=0.65 and FMAX=0.95.
 
 -dF=DFRACTION   Modify H+ and O+ fractions by +/-DFRACION depending on the
--dFraction=...  observed vs simulated Dst.
+-dFraction=...  observed vs simulated Dst. There is no ensemble in this case.
+
 
 -dD=DDST        Set the tolerance in Dst. If |ObsDst-SimDst| < DDST, do not
 -dDst=...       modify the fraction. Default value is 10nT.
@@ -468,8 +464,13 @@ EventNN is the name of the event to be simulated. Here NN represents two
 
 Examples:
 
+      Assimilate Event20 with  H+ fraction varying from 0.65 to 0.99
+      among the ensemble members. Sleep 60s between restarting ensemble.
+
+../Scripts/AssimilateDst.pl -Fmax=0.99 -s=60 Event20
+
       Assimilate Event04 with H+ fraction varying from 0.7 to 0.9 in 0.1 steps      
-      and sleep 60s between (re)starting ensemble members. Use verbose output:
+      and sleep 60s between restarts. No ensemble. Use verbose output:
 
 ../Scripts/AssimilateDst.pl -v -Fmin=0.7 -Fmax=0.9 -dF=0.1 -s=60 Event04
 
