@@ -58,7 +58,7 @@ help:
 	@echo "make test_compile              (compile SWMF)"
 	@echo "make test_rundir EVENTS=2-5    (create run directories for events 2-5)"
 	@echo "make test_run                  (submit runs to queue)"
-	@echo "make ensemble_run              (submit ensemble runs to queue)"
+	@echo "make ensemble_run EVENTS=20    (submit ensemble runs to queue)"
 	@echo ""
 	@echo "make check                     (process results of events 1-6 in ./Runs into deltaB/Runs)"
 	@echo "make check EVENTS=  SIMDIR=New (process all results from ./New into deltaB/New)"
