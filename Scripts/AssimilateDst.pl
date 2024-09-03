@@ -171,6 +171,9 @@ if($ObsTime){
     my $BestLog;
     $BestDst = 1e6;
 
+    # Check if all the simulated values are above or bellow the observed
+    my $Above = 1;
+    my $Below = 1;
     # Read SYM-H from the log files of each ensemble member
     for my $Dir (@Dir){
 	my $RunPlotDir = "$Dir/$PlotDir";
@@ -185,7 +188,9 @@ if($ObsTime){
 	    $SimDst += $1;
 	}
 	my $Dst = $SimDst/$nSimDst;
-	print "$Dir: nSimDst=$nSimDst, Dst=$Dst\n";
+	$Above = 0 if $Dst < $ObsDst;
+	$Below = 0 if $Dst > $ObsDst;
+	print "$Dir: nSimDst=$nSimDst, Dst=$Dst, Above=$Above, Below=$Below\n";
 	if(abs($Dst - $ObsDst) < abs($BestDst - $ObsDst)){
 	    # Store this run as best
 	    $BestEventDir = "$Dir/$Event";
@@ -193,6 +198,10 @@ if($ObsTime){
 	}
     }
     die "Could not identify BestEventDir\n" if not $BestEventDir;
+
+    # select most or least aggressive member if Above or Below
+    $BestEventDir = $Dir[$nDir-1]."/$Event" if $Above;
+    $BestEventDir = $Dir[0]."/$Event"       if $Below;
 
     # Copy all output files from BestEventDir into the ensemble
     print "BestEventDir=$BestEventDir, BestDst=$BestDst, "
