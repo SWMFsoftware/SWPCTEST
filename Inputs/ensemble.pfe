@@ -26,7 +26,7 @@
 #PBS -m abe
 
 # Specify group (uses default group if not specified):
-#PBS -W group_list=s1720
+#PBS -W group_list=s3007
 
 # Make sure other jobs submitted with qsub.*.pl get killed before doing much
 sleep 20
