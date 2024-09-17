@@ -1,5 +1,4 @@
 Downloaded from SuperMag. SMR is renamed to Dst. All indexes are in nT.
-
 year	month	day	hour	min	sec	SME	SML	SMU	Dst
 2024	05	10	00	00	00	197	-48	149	25.1
 2024	05	10	00	01	00	201	-51	150	26.7
