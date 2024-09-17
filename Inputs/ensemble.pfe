@@ -17,7 +17,7 @@
 ### PBS -l select=45:ncpus=28:model=bro_ele
 ### PBS -l select=30:ncpus=40:model=sky_ele
 ### PBS -l select=30:ncpus=40:model=cas_ait
-### PBS -l select=10:ncpus=128:model=rom_ait
+### PBS -l select=9:ncpus=128:model=rom_ait
 
 # Combine STDOUT and STDERR
 #PBS -j oe
