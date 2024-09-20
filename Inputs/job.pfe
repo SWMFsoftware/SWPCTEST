@@ -29,6 +29,6 @@
 cd $PBS_O_WORKDIR
 
 # Run it.
-mpiexec SWMF.exe > runlog.`date +%y%m%d`
+mpiexec SWMF.exe > runlog_`date +%y%m%d`
 
 exit

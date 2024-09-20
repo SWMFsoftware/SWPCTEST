@@ -15,4 +15,4 @@
 
 # Launch MPI code... 
 # Use ibrun instead of mpirun or mpiexec
-ibrun ./SWMF.exe  > runlog.`date +%y%m%d`
+ibrun ./SWMF.exe  > runlog_`date +%y%m%d`

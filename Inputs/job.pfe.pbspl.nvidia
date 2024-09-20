@@ -32,7 +32,7 @@ echo `which mpiexec`
 cd $PBS_O_WORKDIR
 
 # Run it.
-mpiexec -n 2 ./SWMF.exe > runlog.`date +%y%m%d`
+mpiexec -n 2 ./SWMF.exe > runlog_`date +%y%m%d`
 
 # Use the #CPUTIMEMAX and #CHECKSTOP commands in PARAM.in
 # so the code stops before the wall clock time is exceeded.

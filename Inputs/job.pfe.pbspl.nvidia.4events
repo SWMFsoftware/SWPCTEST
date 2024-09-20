@@ -59,10 +59,10 @@ setenv OMPI_MCA_mpi_warn_on_fork 0
 # GPU0 and GPU1 should use the first half of cores, GPU2 and GPU3 the second half
 
 # Run 4 events
-(cd Event01; setenv ACC_DEVICE_NUM 0; mpiexec -n 2 dplace -s1 -c 1,2   -o dplace.log ./SWMF.exe > runlog.`date +%y%m%d`) &
-(cd Event02; setenv ACC_DEVICE_NUM 1; mpiexec -n 2 dplace -s1 -c 3,4   -o dplace.log ./SWMF.exe > runlog.`date +%y%m%d`) &
-(cd Event03; setenv ACC_DEVICE_NUM 2; mpiexec -n 2 dplace -s1 -c 25,26 -o dplace.log ./SWMF.exe > runlog.`date +%y%m%d`) &
-(cd Event04; setenv ACC_DEVICE_NUM 3; mpiexec -n 2 dplace -s1 -c 27,28 -o dplace.log ./SWMF.exe > runlog.`date +%y%m%d`) &
+(cd Event01; setenv ACC_DEVICE_NUM 0; mpiexec -n 2 dplace -s1 -c 1,2   -o dplace.log ./SWMF.exe > runlog_`date +%y%m%d`) &
+(cd Event02; setenv ACC_DEVICE_NUM 1; mpiexec -n 2 dplace -s1 -c 3,4   -o dplace.log ./SWMF.exe > runlog_`date +%y%m%d`) &
+(cd Event03; setenv ACC_DEVICE_NUM 2; mpiexec -n 2 dplace -s1 -c 25,26 -o dplace.log ./SWMF.exe > runlog_`date +%y%m%d`) &
+(cd Event04; setenv ACC_DEVICE_NUM 3; mpiexec -n 2 dplace -s1 -c 27,28 -o dplace.log ./SWMF.exe > runlog_`date +%y%m%d`) &
 wait
 
 # resubmission is not handled yet
