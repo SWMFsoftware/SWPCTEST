@@ -15,7 +15,7 @@
 ;  return, result
 ;end
 ;
-; ============================================================================
+;=============================================================================
 
 function max_curve2, time, array, width
 
@@ -37,7 +37,7 @@ function max_curve2, time, array, width
   return, result
 end
 
-; ============================================================================
+;==============================================================================
 
 function exceeds, time, array, tmin, tmax, dt, threshold, mincount
 
@@ -79,27 +79,25 @@ function exceeds, time, array, tmin, tmax, dt, threshold, mincount
   return, result(ii)
 
 end
-
-
-; ============================================================================
-
+;==============================================================================
 function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
                       tmin, tmax, dt_window, slope_impedance,      $
                       plotfile, date_plot, title_plot,             $
-                      integral_obs, integral_sim
+                      integral_obs, integral_sim, model
 
   ;; time_obs and array_obs form a time series of observations
   ;; time_sim and array_sim form a time series of simulations
-  ;; bin data from tmin to tmax with the size of dt_window, which
-  ;; is the window of the fft transform.
+  ;; bin data from tmin to tmax with the size of dt_window,
+  ;; which is the window of the fft transform in minutes
 
-  dt_window = dt_window/60
+  dt = dt_window/60 ; convert to hours
   
   if not keyword_set(plotfile) then plotfile =''
 
   if n_elements(array_obs) ne n_elements(time_obs) or            $
      n_elements(array_sim) ne n_elements(time_sim) then begin
-     print, 'ERROR in function fft_segment, number of elements differ in time and array'
+     print, 'ERROR in function fft_segment, ', $
+            'number of elements differ in time and array'
      help, time_obs, array_obs, time_sim, array_sim
      retall
   endif
@@ -123,11 +121,12 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      print, 'min(cadence_sim), max(cadence_sim) = ', $
             min(cadence_sim), max(cadence_sim)
      ;; plot,cadence
-     return, 0
+     
+     ;;return, 0
   endif
 
   ;; calculate the number of bins
-  nbin  = fix( (tmax - tmin)/dt_window ) ;;; + 1
+  nbin  = fix( (tmax - tmin)/dt ) ;;; + 1
 
   integral_obs = fltarr(nbin)
   integral_sim = fltarr(nbin)
@@ -136,8 +135,8 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
 
   ;; loop though bin
   for i = 0, nbin - 1 do begin
-     tmin_local = tmin + dt_window*i
-     tmax_local = min([tmin + dt_window*(i+1),tmax])
+     tmin_local = tmin + dt*i
+     tmax_local = min([tmin + dt*(i+1),tmax])
 
      ;; obtain the index
      index_obs_tmp = where(time_obs_local ge tmin_local-1e-4 and time_obs_local lt tmax_local+1e-4)
@@ -158,66 +157,71 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      integral_obs(i) = total(power_obs_tmp*w_obs_tmp^(slope_impedance*2))
      integral_sim(i) = total(power_sim_tmp*w_sim_tmp^(slope_impedance*2))
 
-     if 0 then begin
+     if 1 then begin
         ;; print, tmin_local
-        set_device, plotfile + '_h'+string(tmin_local,format='(f5.2)')+'.eps', /land
-        plot,  alog10(w_obs_tmp),alog10(power_obs_tmp), xtitle='log10(Frequency [Hz])', ytitle='log10(dB power spectrum)', $
-               xstyle=1, yrange = [min([alog10(power_obs_tmp), alog10(power_sim_tmp)])-1,      $
-                                   max([alog10(power_obs_tmp), alog10(power_sim_tmp)])+1],     $
-               ystyle=1, title='A ' + string(dt_window*60, format='(i2.2)') + '-min window from ' $
-               + string(tmin_local,format='(f4.1)') + ' hours at ' +  title_plot
+        set_device, plotfile + '_h' $
+                    + string(tmin_local,format='(f5.2)')+'.eps', /land
+        plot,  alog10(w_obs_tmp),alog10(power_obs_tmp), $
+               xtitle='log10(Frequency [Hz])', $
+               ytitle='log10(dB power spectrum)', xstyle=1, ystyle=1, $
+               yrange=[min([alog10(power_obs_tmp), alog10(power_sim_tmp)])-1, $
+                       max([alog10(power_obs_tmp), alog10(power_sim_tmp)])+1],$
+               title='A ' + string(dt*60, format='(i3)') + '-min window from '$
+               + string(tmin_local,format='(f4.1)') + ' hours at ' + title_plot
         oplot, alog10(w_sim_tmp),alog10(power_sim_tmp), color=250
 
-        plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+        plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1],$
               /noerase, xstyle=-1, ystyle=-1, thick=4
-        plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+        plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1],$
               /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
         xyouts, 0.75, 0.90, 'Observations'
-        xyouts, 0.75, 0.82, 'Simulations', color=250
+        xyouts, 0.75, 0.82, model, color=250
         close_device, /pdf
 
         tmp1 = power_obs_tmp*w_obs_tmp^(slope_impedance*2)
         tmp2 = power_sim_tmp*w_sim_tmp^(slope_impedance*2)
 
-        set_device, plotfile + '_cont_h'+string(tmin_local,format='(f5.2)')+'.eps', /land
-        plot,  w_obs_tmp(1:*),tmp1(1:*), xtitle='Frequency [Hz]', ytitle='E power spectrum', $
+        set_device, plotfile + '_cont_h' $
+                    + string(tmin_local,format='(f5.2)')+'.eps', /land
+        plot,  w_obs_tmp(1:*),tmp1(1:*), xtitle='Frequency [Hz]', $
+               ytitle='E power spectrum', $
                xstyle=1, yrange = [min([tmp1(1:*), tmp2(1:*)])*0.8,   $
                                    max([tmp1(1:*), tmp2(1:*)])*1.2],  $
-               ystyle=1, title='A ' + string(dt_window*60, format='(i2.2)') + '-min window from ' $
-               + string(tmin_local,format='(f4.1)') + ' hours at ' +  title_plot
+               ystyle=1, $
+               title='A ' + string(dt*60, format='(i3)') + '-min window from '$
+               + string(tmin_local,format='(f4.1)') + ' hours at ' + title_plot
         oplot, w_sim_tmp(1:*),tmp2(1:*), color=250
 
-        plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
+        plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1],$
               /noerase, xstyle=-1, ystyle=-1, thick=4
-        plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
+        plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1],$
               /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
         xyouts, 0.75, 0.90, 'Observations'
-        xyouts, 0.75, 0.82, 'Simulations', color=250
+        xyouts, 0.75, 0.82, model, color=250
         close_device, /pdf
      endif
   endfor
 
   if plotfile then begin
      set_device, plotfile+'_integral.eps',/land
-     plot,  findgen(nbin)+tmin, integral_obs, xtitle = 'Hours from ' + date_plot, $
-            ytitle = 'E!u2!n Hourly Integral',                                    $
-            yrange = [min([integral_obs, integral_sim])*0.8,                      $
-                      max([integral_obs, integral_sim])*1.2],                     $
-            title=title_plot
-     oplot, findgen(nbin)+tmin, integral_sim,color=250
-
+     t = dt*findgen(nbin) + tmin
+     plot, t, integral_obs, xtitle = 'Hours from ' + date_plot, $
+            ytitle = 'E!u2!n Hourly Integral', title=title_plot $
+            yrange = [min([integral_obs, integral_sim])*0.8,  $
+                      max([integral_obs, integral_sim])*1.2]
+     oplot, t, integral_sim,color=250
      plot, [0.67, 0.72], [0.92, 0.92], /normal, xrange=[0,1], yrange=[0,1], $
            /noerase, xstyle=-1, ystyle=-1, thick=4
      plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
            /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
      xyouts, 0.75, 0.90, 'Observations'
-     xyouts, 0.75, 0.82, 'Simulations', color=250
+     xyouts, 0.75, 0.82, model, color=250
      close_device, /pdf
 
      openw, lun_tmp, plotfile+'_integral.txt', /get_lun
-     printf,lun_tmp, 'Time Integral_obs Integral_obs'
-     for itmp=0,nbin-1 do begin
-        printf, lun_tmp, itmp+tmin, integral_obs(itmp), integral_sim(itmp)
+     printf,lun_tmp, 'Time Integral_obs Integral_sim'
+     for itmp = 0,nbin-1 do begin
+        printf, lun_tmp, dt*itmp + tmin, integral_obs(itmp), integral_sim(itmp)
      endfor
      close, lun_tmp & free_lun, lun_tmp
 
@@ -239,8 +243,7 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
 
   return, 1
 end
-
-; ============================================================================
+;==============================================================================
 function scale_exp, x, a
 
  ; Used by lmfit. Applies the non-linear function f to x with parameters a
@@ -253,9 +256,7 @@ function scale_exp, x, a
   return, [f, -exponent/scale * f, alog(x/scale) * f]
 
 end
-
-; ============================================================================
-
+;==============================================================================
 pro get_skill_scores,h,f,m,n,pod,pof,hss
 
   pod = h/(h+m)
@@ -266,9 +267,7 @@ pro get_skill_scores,h,f,m,n,pod,pof,hss
   if (~finite(pof)) then pof = -777.
   if (~finite(hss)) then hss = -777.
 end
-
-; ============================================================================
-
+;==============================================================================
 pro read_station, file, t, data, date, tderiv, dataderiv, dn, IsNbor=IsNbor
 
   common start_date
@@ -330,9 +329,7 @@ pro read_station, file, t, data, date, tderiv, dataderiv, dn, IsNbor=IsNbor
   endelse
 
 end
-
-; ============================================================================
-
+;==============================================================================
 function set_eventlist, events, mydir, model
 
   ; the format of events could be something like events='1,2-5,7'
@@ -363,9 +360,7 @@ function set_eventlist, events, mydir, model
 
   return, event_I
 end
-
-; ============================================================================
-
+;==============================================================================
 pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
                     event=event,IsFromSim=IsFromSimIn,                 $
                     stations_I, station_orig_I
@@ -513,9 +508,7 @@ pro set_stationlist,mydir=mydir,stationsFile=stationsFile,model=model, $
 
   stations_I = strupcase(stations_I)
 end
-
-; ============================================================================
-
+;==============================================================================
 function set_date_string, yyyy, mm, dd
 
   case fix(mm) of
@@ -538,9 +531,7 @@ function set_date_string, yyyy, mm, dd
 
   return, date_string
 end
-
-; ============================================================================
-
+;==============================================================================
 pro predict, choice,                                                  $
              model=model, namemodel=namemodel,                        $
              station_I=station_I, events=events,                      $
@@ -580,8 +571,13 @@ pro predict, choice,                                                  $
   ;; showplot: plot results (default=saveplot)
   ;; saveplot: save plots into files (default=false)
 
-  if n_elements(deltat) lt 1 then deltat = 20.0
-  dt = deltat/60.0
+  if choice eq 'fft' then begin
+     if n_elements(exponent) lt 1 then exponent = 0.5
+     if n_elements(deltat) lt 1 then deltat = 60.0 ; minutes
+  endif else begin
+     if n_elements(deltat) lt 1 then deltat = 20.0 ; seconds
+     dt = deltat/60.0
+  endelse
 
   if n_elements(mincount) lt 1 then mincount=0
 
@@ -660,7 +656,7 @@ pro predict, choice,                                                  $
   ;; replace / with _
   namemodel = strjoin(strsplit(namemodel,'/',/extract),'_')
 
-  if verbose then print,' model, namemodel=', model, namemodel
+  if verbose then print,' model, namemodel=', model, ', ',namemodel
 
   ;; first index: hit, false, miss, nopred
   dbdt_score = fltarr(4,nstation)
@@ -730,20 +726,30 @@ pro predict, choice,                                                  $
            endelse
         endelse
 
-        file_sim_db  = mydir+'deltaB/'+model+'/'+event_string_sim+'/'+station+'.txt'
-
-        if not file_test(file_sim_db) then begin
+        file_sim_db  = mydir + 'deltaB/' + model + '/' + event_string_sim + '/' + station
+        help,file_sim_db
+        print,file_sim_db + '.txt', file_test(file_sim_db + '.txt')
+        if file_test(file_sim_db + '.txt') then begin
+           file_sim_db = file_sim_db + '.txt'
+           help,file_sim_db
+        endif else if file_test(file_sim_db + '.csv') then begin
+           file_sim_db = file_sim_db + '.csv'
+           help,file_sim_db
+        endif else begin
            if station ne 'PBQ' then begin
               print,'For event=',event,' there is no result from model=',model,' for station=',station
               continue
            endif else begin
-              file_sim_db  = mydir+'deltaB/'+model+'/'+event_string_sim+'/SNK.txt'
+              file_sim_db  = mydir + 'deltaB/' + model + '/' + event_string_sim + '/SNK.txt'
               if not file_test(file_sim_db) then begin
                  print,'For event=',event,' there is no result from model=',model,' for station=PBQ/SNK.'
                  continue
               endif
            endelse
-        endif
+        endelse
+
+        print,'finally:'
+        help,file_sim_db
 
         if verbose then print,'reading observation and simulation data'
 
@@ -778,15 +784,21 @@ pro predict, choice,                                                  $
               ;; artificial scaling
               db_sim = coeff*db_sim^power
 
-              tmin = float(floor(t_db_obs(0)))
-              tmax = float(ceil(t_db_obs(-1)))
+              tmin = t_db_obs(0)
+              tmax = t_db_obs(-1)
 
-              exc_obs  = $
-                 exceeds(t_db_obs, db_obs, tmin, tmax, dt, threshold, mincount)
+              if deltat le 1 then begin
+                 ;; No need to call exceeds function for 1-minute prediction
+                 exc_obs = db_obs ge threshold
+                 exc_sim = db_sim ge threshold
+              endif else begin
+                 exc_obs  = exceeds(t_db_obs, db_obs, tmin, tmax, dt, $
+                                    threshold, mincount)
 
-              exc_sim = $
-                 exceeds(t_db_sim, db_sim, tmin, tmax, dt, threshold, mincount)
-
+                 exc_sim = exceeds(t_db_sim, db_sim, tmin, tmax, dt, $
+                                   threshold, mincount)
+              endelse
+              
               all      = n_elements(exc_obs)
               if all ne n_elements(exc_sim) then begin
                  print,'ERROR: for station ',station
@@ -822,9 +834,9 @@ pro predict, choice,                                                  $
                          format='(a3,1x,f8.4, 5i6, 3f12.4)'
 
               if showplot then begin
-                 title = strupcase(station) + ': H,F,M,N=' + $
-                         string(hit_db, false_db, miss_db, no_db, $
-                                format='(4i4)')
+                 title = strupcase(station) + ': H,F,M,N,HSS=' + $
+                         string(hit_db, false_db, miss_db, no_db, db_hss_local, $
+                                format='(4i7,f7.3)')
 
                  if verbose then print,'plotting into p.multi=',!p.multi
 
@@ -968,9 +980,9 @@ pro predict, choice,                                                  $
               title_plot= station
               
               plotfile  = choice + '_event' + string(event, format='(i2.2)') + $
-                          '_station_'+station
+                          '_' + model + '_' + station
 
-              if 0 then begin
+              if showplot then begin
                  set_device, plotfile + '.eps', /land
                  plot,  t_db_obs, db_obs, yrange=[0,max([db_obs,db_sim])*1.2], $
                         xtitle='Hours from ' + date_plot, ytitle='dB [nT]',    $
@@ -981,7 +993,7 @@ pro predict, choice,                                                  $
                  plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
                        /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
                  xyouts, 0.75, 0.90, 'Observations'
-                 xyouts, 0.75, 0.82, 'Simulations', color=250
+                 xyouts, 0.75, 0.82, model, color=250
                  close_device, /pdf
                  
                  set_device, plotfile + '_dbdt.eps', /land
@@ -994,22 +1006,28 @@ pro predict, choice,                                                  $
                  plot, [0.67, 0.72], [0.84, 0.84], /normal, xrange=[0,1], yrange=[0,1], $
                        /noerase, xstyle=-1, ystyle=-1, thick=4, color=250
                  xyouts, 0.75, 0.90, 'Observations'
-                 xyouts, 0.75, 0.82, 'Simulations', color=250
+                 xyouts, 0.75, 0.82, model, color=250
                  close_device, /pdf
               endif
               
               tmin = float(floor(t_db_obs(0)))
               tmax = float(ceil(t_db_obs(-1)))
 
+              help,deltat, exponent
               status = fft_segment(t_db_obs, db_obs, t_db_sim, db_sim, $
-                                   tmin, tmax, 60.0, 0.5, plotfile, date_plot, title_plot, $
-                                   integral_obs, integral_sim)
+                                   tmin, tmax, deltat, exponent, plotfile, $
+                                   date_plot, title_plot, $
+                                   integral_obs, integral_sim, model)
 
               if status then begin
-                 integral_obs_III[iEvent, istation, 0] = mean(integral_obs)
-                 integral_obs_III[iEvent, istation, 1] = max(integral_obs)
-                 integral_sim_III[iEvent, istation, 0] = mean(integral_sim)
-                 integral_sim_III[iEvent, istation, 1] = max(integral_sim)
+                 if n_elements(integral_obs_III) gt 0 then begin
+                    integral_obs_III[iEvent, istation, 0] = mean(integral_obs)
+                    integral_obs_III[iEvent, istation, 1] = max(integral_obs)
+                 endif
+                 if n_elements(integral_sim_III) gt 0 then begin
+                    integral_sim_III[iEvent, istation, 0] = mean(integral_sim)
+                    integral_sim_III[iEvent, istation, 1] = max(integral_sim)
+                 endif
               endif
            end
         endcase
@@ -1138,9 +1156,7 @@ pro predict, choice,                                                  $
   endif
 
 end
-
 ;==============================================================================
-
 function func, arg
 
   common func_param, thresholds, stations, imodel, events, opt
@@ -1185,9 +1201,7 @@ function func, arg
   return, -averagehss
 
 end
-
 ;==============================================================================
-
 pro optimize, thresholds=thresholds1, stations=stations1, imodel=imodel1, $
               events=events1, opt=opt1, $
               scale=scale, exponent=exponent
@@ -1247,9 +1261,7 @@ pro optimize, thresholds=thresholds1, stations=stations1, imodel=imodel1, $
             format='(a,3f10.3)'
 
 end
-
 ;==============================================================================
-
 pro calc_hss_dt_table, stations, imodel, directs, indirects
   ; INPUTS:
   ; Stations is an array of station names
@@ -1316,7 +1328,6 @@ pro show_hss_dt_table, stations, directs, indirects
   endfor
 
 end
-
 ;==============================================================================
 pro calc_all_events, choice=choice, models=models, events=events, $
                      mydir=mydir, InputDir=InputDir
@@ -1430,10 +1441,10 @@ pro calc_all_events, choice=choice, models=models, events=events, $
   endfor
 end
 ;==============================================================================
+pro fft_all_events, models=models, events=events, mydir=mydir, $
+                    InputDir=InputDir
 
-pro fft_all_events, models=models, events=events, mydir=mydir, InputDir=InputDir
-
-;; to be continue
+;; to be continued
 
   if n_elements(models) lt 1 then models=['Results', 'SWMF_CCMC']
 
@@ -1488,14 +1499,12 @@ pro fft_all_events, models=models, events=events, mydir=mydir, InputDir=InputDir
      endfor
   endfor
 end
-
 ;==============================================================================
-
 pro get_scores_from_file, choice, filenameInLocal, strStations, $
-                          filename, filenameStation, event,thresholds
+                          filename, filenameStation, event, thresholds
 
   get_log, filenameInLocal, wlog,  wlognames, logtime, 'h', $
-           wlogrownames,headlines=headlinesLocal
+           wlogrownames, headlines=headlinesLocal
 
   stationLocal_I = strsplit(strStations,/extract)
 
@@ -1583,9 +1592,7 @@ pro get_scores_from_file, choice, filenameInLocal, strStations, $
 
   close, lunOut & free_lun, lunOut
 end
-
 ;==============================================================================
-
 pro save_comp_dbdt_table, $
    stationlat, model1, model2, events=events, mydir=mydir, InputDir=InputDir
 
@@ -1703,7 +1710,6 @@ pro save_comp_dbdt_table, $
   
   free_lun, lun
 end
-
 ;==============================================================================
 pro save_comp_dbdt_tables, $
    model1, model2, events=events, mydir=mydir, InputDir=InputDir
@@ -1728,10 +1734,8 @@ pro save_comp_dbdt_tables, $
   endfor
 end
 ;==============================================================================
-
 pro save_comp_db_table, $
-   stationlat, model1, model2, events=events, $
-   mydir=mydir, InputDir=InputDir
+   stationlat, model1, model2, events=events, mydir=mydir, InputDir=InputDir
 
 ;; Compare deltaB/model1 and deltaB/model2 outputs 
 ;; for the stationlat station group:
@@ -1844,9 +1848,7 @@ pro save_comp_db_table, $
   free_lun, lun
   
 end
-
 ;==============================================================================
-
 pro save_comp_db_tables, $
    model1, model2, events=events, mydir=mydir, InputDir=InputDir
   
@@ -1868,9 +1870,7 @@ pro save_comp_db_tables, $
                          mydir=mydir, InputDir=InputDir
   endfor
 end
-
 ;==============================================================================
-
 pro save_tables, model=model, events=events, mydir=mydir
 
   ;; Create tables containing db/dt and db skill scores.
@@ -1889,9 +1889,7 @@ pro save_tables, model=model, events=events, mydir=mydir
                  events=events, mydir=mydir
   endfor
 end
-
 ;==============================================================================
-
 pro save_table, stationlat, model, events=events, mydir=mydir
 
   ;; Create tables containing db/dt and db skill scores from
@@ -2004,9 +2002,7 @@ pro save_table, stationlat, model, events=events, mydir=mydir
      free_lun, lunlocal
   endif
 end
-
 ;==============================================================================
-
 pro save_tables_station, model=model, events=events, mydir=mydir
 
   ;; Create tables containing db/dt and db skill scores.
@@ -2027,9 +2023,7 @@ pro save_tables_station, model=model, events=events, mydir=mydir
                          events=events, mydir=mydir
   endfor
 end
-
 ;==============================================================================
-
 pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
 
   if n_elements(stationlat) lt 1 then stationlat='all'
@@ -2174,12 +2168,10 @@ pro save_table_station, stationlat, model, choice, events=events, mydir=mydir
 
   free_lun, lunlocal
 end
-
 ;==============================================================================
-
 pro make_2d_map, choice, model=models, mydir=mydir
 
-  get_log, mydir+'/SWMF/Param/supermag.dat',wlogMag,  wlognamesMag, logtimeMag,     $
+  get_log, mydir+'/SWMF/Param/supermag.dat',wlogMag, wlognamesMag, logtimeMag,$
            'h', wlogrownamesMag
   
   if choice eq 'dbdt' then begin
@@ -2250,8 +2242,7 @@ pro make_2d_map, choice, model=models, mydir=mydir
             gencoord=1
 end
 ;==============================================================================
-pro calc_kp_error, mydir=mydir, resdir=resdir, $
-                   events=events, $
+pro calc_kp_error, mydir=mydir, resdir=resdir, events=events, $
                    const=const, slope=slope
 
   ;; Calculate Kp error for multiple runs and events.
@@ -2335,9 +2326,9 @@ pro calc_kp_error, mydir=mydir, resdir=resdir, $
   colors=[255,100,250,150,200,50,25,220,125] ; reset colors 
 
 end
-
 ;==============================================================================
-pro calc_dst_error, models=models, events=events, mydir=mydir, InputDir=InputDir
+pro calc_dst_error, models=models, events=events, mydir=mydir, $
+                    InputDir=InputDir
 
 ;; Calculate Dst (symH) error in nT
 ;; for the models listed in the 'models' string array
@@ -2437,7 +2428,6 @@ pro calc_dst_error, models=models, events=events, mydir=mydir, InputDir=InputDir
   close,unit
 
 end
-
 ;==============================================================================
 pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, events=events, InputDir=InputDir
 
@@ -2575,7 +2565,6 @@ pro dst_stat_nRun, mydir=mydir, ResDir=ResDir, events=events, InputDir=InputDir
 
   colors=[255,100,250,150,200,50,25,220,125] ; reset colors
 end
-
 ;==============================================================================
 pro score_stat_nRun, mydir=mydir, ResDir=ResDir
 
@@ -2655,10 +2644,9 @@ pro score_stat_nRun, mydir=mydir, ResDir=ResDir
      free_lun, lunOut
   endfor
 end
-
 ;==============================================================================
-
-pro check_calc_all, models=models, events=events, mydir=mydir, InputDir=InputDir
+pro check_calc_all, models=models, events=events, mydir=mydir, $
+                    InputDir=InputDir
 
   if (not file_test('Event*',/DIRECTORY)) then begin
      print, "Error: no simulation results in dir:" + models
@@ -2704,10 +2692,9 @@ pro check_calc_all, models=models, events=events, mydir=mydir, InputDir=InputDir
   print,'----------------------------------------------------'
 
 end
-
 ;==============================================================================
-
-pro check_calc_fft, models=models, events=events, mydir=mydir, InputDir=InputDir
+pro check_calc_fft, models=models, events=events, mydir=mydir, $
+                    InputDir=InputDir
 
   if (not file_test('Event*',/DIRECTORY)) then begin
      print, "Error: no simulation results in dir:" + models
@@ -2721,18 +2708,14 @@ pro check_calc_fft, models=models, events=events, mydir=mydir, InputDir=InputDir
   print,'fft done.'
   print,'----------------------------------------------------'
 end
-
 ;==============================================================================
-
 pro stat_nRun, events=events, mydir=mydir, ResDir=ResDir, InputDir=InputDir
 
   dst_stat_nRun,   events=events, mydir=mydir, ResDir=ResDir, InputDir=InputDir
   score_stat_nRun, mydir=mydir, ResDir=ResDir
 
 end
-
 ;==============================================================================
-
 pro check_compare_all, models, events=events, mydir=mydir
 
   save_comp_dbdt_tables, models, events=events, mydir=mydir, InputDir=InputDir
