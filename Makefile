@@ -71,20 +71,17 @@ help:
 	@echo "make check_compare RES1DIR=New RES2DIR=Old (compare 2 runs into COMPARE_New_vs_Old/)"
 	@echo ""
 	@echo "test_order5                    (run with 5th order GM/BATSRUS+IM/RCM2)"
-	@echo "test_rbe                       (run with GM/BATSRUS+IM/RCM2+RB/RBE)"
 	@echo "test_magnit                    (run with GM/BATSRUS+IM/RCM2+IE/RIM-MAGNIT)"
-	@echo "test_pe                        (run with GM/BATSRUS+IM/RCM2 and Pe)"
+	@echo "test_pe                        (run with electron presure GM/BATSRUS+IM/RCM2)"
 	@echo "test_multiion                  (run with multiion GM/BATSRUS+IM/RCM2)"
-	@echo "test_multiion_v2               (run with multiion v2 GM/BATSRUS+IM/RCM2)"
+	@echo "test_multiion                  (run with multiion GM/BATSRUS+IM/RCM2)"
 	@echo "test_multispecies              (run with multispecies GM/BATSRUS+IM/RCM2)"
-	@echo "test_multispecies_v2           (run with multispecies v2 GM/BATSRUS+IM/RCM2)"
-	@echo "test_multispecies_Young_v2     (run with multispecies v2 GM/BATSRUS+IM/RCM2 and Young BC)"
+	@echo "test_multispecies_Young        (run with multispecies GM/BATSRUS+IM/RCM2 and Young BC)"
 	@echo "test_cimi                      (run with anisotropic GM/BATSRUS+IM/CIMI)"
-	@echo "test_cimi_v2                   (run with anisotropic v2 GM/BATSRUS+IM/CIMI)"
-	@echo "test_Young_v2                  (run with v2 GM/BATSRUS+IM/RCM2 and Young BC)"
+	@echo "test_Young                     (run with GM/BATSRUS+IM/RCM2 and Young BC)"
 	@echo "test_pwom                      (run with single fluid GM/BATSRUS+IM/RCM2+PW/PWOM)"
 	@echo "test_cimi_pwom_species         (run with multispecies GM/BATSRUS+IM/CIMI+PW/PWOM)"
-	@echo "test_gpu                       (run the GPU version of SWPC V2)"
+	@echo "test_gpu                       (run the GPU version of SWPC v2)"
 	@echo ""
 	@echo "make ballistic                 (ballistic propagation for events 2-6,95-98)"
 	@echo "make ballistic_mix             (ballistic propagation of IMF_fix for events 10-15)"
@@ -249,7 +246,7 @@ test_order5:
 	make test_order5_compile
 	make test_order5_rundir
 	make test_order5_run
-	@echo "Test_order5 started.  make check when complete."
+	@echo "test_order5 started.  make check when complete."
 
 test_order5_compile:
 	@(cd ${DIR}; \
@@ -263,28 +260,6 @@ test_order5_rundir:
 	make test_rundir PARAMINIT=PARAM.in_order5_init
 
 test_order5_run: test_run
-
-##############################################################################
-
-test_rbe:
-	@echo "Testing the Geospace model with RBE component"
-	make test_rbe_compile
-	make test_rbe_rundir
-	make test_rbe_run
-	@echo "Test_rbe started.  make check when complete."
-
-test_rbe_compile:
-	@(cd ${DIR}; \
-	./Config.pl -v=Empty,GM/BATSRUS,IE/Ridley_serial,IM/RCM2,RB/RBE; \
-	./Config.pl -o=GM:u=Default,e=Mhd,g=8,8,8,ng=2,IE:g=181,361; \
-	./Config.pl -noacc; \
-	make SWMF PIDL; \
-	)
-
-test_rbe_rundir:
-	make test_rundir PARAMINIT=PARAM.in_rbe_init
-
-test_rbe_run: test_run
 
 ##############################################################################
 
@@ -326,7 +301,7 @@ test_pe_compile:
 	)
 
 test_pe_rundir:
-	make test_rundir PARAMINIT=PARAM.in_SWPC_pe_init
+	make test_rundir PARAMINIT=PARAM.in_pe_init
 
 test_pe_run: test_run
 
@@ -337,7 +312,7 @@ test_multiion:
 	make test_multiion_compile
 	make test_multiion_rundir
 	make test_multiion_run
-	@echo "Test_multiion started.  make check when complete."
+	@echo "test_multiion started.  make check when complete."
 
 test_multiion_compile:
 	@(cd ${DIR}; \
@@ -349,28 +324,11 @@ test_multiion_compile:
 
 test_multiion_rundir:
 	make test_rundir PARAMINIT=PARAM.in_multiion_init
-
-test_multiion_run: test_run
-
-##############################################################################
-
-test_multiion_v2:
-	@echo "Testing the Geospace model with multiion v2 BATSRUS"
-	make test_multiion_v2_compile
-	make test_multiion_v2_rundir
-	make test_multiion_v2_run
-	@echo "Test_multiion v2 started.  make check when complete."
-
-test_multiion_v2_compile:
-	make test_multiion_compile
-
-test_multiion_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multiion_v2_init
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do		\
 		cp Inputs/job_more.long ${QUEDIR}$${iRun}/Event$$e;	\
 	done; done
 
-test_multiion_v2_run:
+test_multiion_run:
 	@echo "Submitting jobs"
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
 		cd ${QUEDIR}$${iRun}/Event$$e;		\
@@ -401,37 +359,20 @@ test_multispecies_run: test_run
 
 ##############################################################################
 
-test_multispecies_v2:
-	@echo "Testing the Geospace model with multispecies v2 BATSRUS"
-	make test_multispecies_v2_compile
-	make test_multispecies_v2_rundir
-	make test_multispecies_v2_run
-	@echo "Test_multispecies v2 started.  make check when complete."
+test_multispecies_Young:
+	@echo "Testing the Geospace model with multispecies Young BATSRUS"
+	make test_multispecies_Young_compile
+	make test_multispecies_Young_rundir
+	make test_multispecies_Young_run
+	@echo "Test_multispecies Young started.  make check when complete."
 
-test_multispecies_v2_compile:
+test_multispecies_Young_compile:
 	make test_multispecies_compile
 
-test_multispecies_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multispecies_v2_init
+test_multispecies_Young_rundir:
+	make test_rundir PARAMINIT=PARAM.in_multispecies_Young_init
 
-test_multispecies_v2_run: test_run
-
-##############################################################################
-
-test_multispecies_Young_v2:
-	@echo "Testing the Geospace model with multispecies Young v2 BATSRUS"
-	make test_multispecies_Young_v2_compile
-	make test_multispecies_Young_v2_rundir
-	make test_multispecies_Young_v2_run
-	@echo "Test_multispecies Young v2 started.  make check when complete."
-
-test_multispecies_Young_v2_compile:
-	make test_multispecies_compile
-
-test_multispecies_Young_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_multispecies_Young_v2_init
-
-test_multispecies_Young_v2_run: test_run
+test_multispecies_Young_run: test_run
 
 ##############################################################################
 
@@ -440,7 +381,7 @@ test_cimi:
 	make test_cimi_compile
 	make test_cimi_rundir
 	make test_cimi_run
-	@echo "Test_cimi started.  make check when complete."
+	@echo "test_cimi started.  make check when complete."
 
 test_cimi_compile:
 	@(cd ${DIR}; \
@@ -457,35 +398,19 @@ test_cimi_run: test_run
 
 ##############################################################################
 
-test_cimi_v2:
-	@echo "Testing the Geospace model with anisotropic BATSRUS v2 + IM/CIMI"
-	make test_cimi_v2_compile
-	make test_cimi_v2_rundir
-	make test_cimi_v2_run
-	@echo "Test_cimi_v2 started.  make check when complete."
+test_Young:
+	@echo "Testing the SWPC with the Young BC."
+	make test_Young_compile
+	make test_Young_rundir
+	make test_Young_run
+	@echo "test_Young started.  make check when complete."
 
-test_cimi_v2_compile: test_cimi_compile
+test_Young_compile: test_compile
 
-test_cimi_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_cimi_v2_init
+test_Young_rundir:
+	make test_rundir PARAMINIT=PARAM.in_Young_init
 
-test_cimi_v2_run: test_run
-
-##############################################################################
-
-test_Young_v2:
-	@echo "Testing the SWPC v2 with the Young BC."
-	make test_Young_v2_compile
-	make test_Young_v2_rundir
-	make test_Young_v2_run
-	@echo "Test_cimi_v2 started.  make check when complete."
-
-test_Young_v2_compile: test_compile
-
-test_Young_v2_rundir:
-	make test_rundir PARAMINIT=PARAM.in_SWPC_v2_Young_init
-
-test_Young_v2_run: test_run
+test_Young_run: test_run
 
 ##############################################################################
 
@@ -538,7 +463,7 @@ test_gpu:
 	make test_gpu_compile
 	make test_gpu_rundir
 	make test_gpu_run
-	@echo "Test_cimi_v2 started.  make check when complete."
+	@echo "test_gpu started.  make check when complete."
 
 test_gpu_compile:
 	@(cd ${DIR}; \
