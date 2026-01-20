@@ -29,7 +29,7 @@ iux = min(where(wlognames eq 'Ux'))
 wlog(*,iux) = limit_change(wlog(*,iux), [-50,30], wlog(*,irho), [-10,20])
 
 save_log, 'L1_limited.dat', 'L1.dat limited rho,T:1.3, Ux:-50+30,-10,20', $
-          wlognames, wlog
+          wlognames, wlog, format='(i4,5i3,i4,8e13.5)'
 
 ; distance from xL1 to xBC
 dist = 0*logtime + (xL1-xBC)*6378.0 
