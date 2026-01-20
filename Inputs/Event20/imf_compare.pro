@@ -1,4 +1,4 @@
-logfilename='IMF.dat IMF_ballistic_DSCOVR_bad.dat IMF_ballistic_WIND_good.dat'
+logfilename='IMF_ballistic_ACE.dat IMF_ballistic_DSCOVR_bad.dat IMF_ballistic_WIND_bad.dat'
 timeunit='date'
 dummy = LABEL_DATE(DATE_FORMAT=['%H:%I!c%M %D'])
 read_log_data
