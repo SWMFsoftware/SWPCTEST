@@ -1,15 +1,20 @@
-ACE data obtained from NOAA SWPC (Anthony Rasca)
+ACE data obtained from NOAA SWPC (Anthony Rasca) Despiked
 Units: nT, km/s, amu/cc, K
 
+Orbit:
+XYZ GSE GSM: 2024 05 10 12 0 223.80   2.70  22.30 223.80   0.38  22.46
+XYZ GSE GSM: 2024 05 11 12 0 223.69   4.25  22.58 223.69   2.02  22.89
+XYZ GSE GSM: 2024 05 12 12 0 223.66   5.80  22.86 223.66   3.67  23.29
+
 #SATELLITEXYZ
-223.6
-0.0
-0.0
+223.80
+0.38
+22.46
 
 #COORDINATES
 GSM
 
-year  mo  dy  hr  mn  sc msc Bx By Bz Ux Uy Uz rho T
+year mo dy hr mn sc msc Bx By Bz Ux Uy Uz rho T
 #START
 2024 05 10 03 00 00 000 -1.54	-3.87	-5.11 -419.3 0.0 0.0 4.89 53621
 2024 05 10 03 01 00 000 -1.60	-3.88	-5.10 -438.8 0.0 0.0 11.49 45919
