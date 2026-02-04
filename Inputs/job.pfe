@@ -4,11 +4,7 @@
 #PBS -q long
 
 # To run on different type and number of CPU cores
-### PBS -l select=20:ncpus=16:model=san
-### PBS -l select=16:ncpus=20:model=ivy
-### PBS -l select=14:ncpus=24:model=has
-#PBS -l select=12:ncpus=28:model=bro
-### PBS -l select=12:ncpus=28:model=bro_ele
+#PBS -l select=12:ncpus=28:model=bro_ele
 ### PBS -l select=9:ncpus=40:model=sky_ele
 ### PBS -l select=9:ncpus=40:model=cas_ait
 ### PBS -l select=4:ncpus=128:model=rom_ait
