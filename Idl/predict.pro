@@ -206,7 +206,7 @@ function fft_segment, time_obs, array_obs, time_sim, array_sim,    $
      set_device, plotfile+'_integral.eps',/land
      t = dt*findgen(nbin) + tmin
      plot, t, integral_obs, xtitle = 'Hours from ' + date_plot, $
-            ytitle = 'E!u2!n Hourly Integral', title=title_plot $
+            ytitle = 'E!u2!n Hourly Integral', title=title_plot, $
             yrange = [min([integral_obs, integral_sim])*0.8,  $
                       max([integral_obs, integral_sim])*1.2]
      oplot, t, integral_sim,color=250
