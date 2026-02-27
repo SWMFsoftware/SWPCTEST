@@ -9,11 +9,13 @@
 #! PBS -q devel
 #! PBS -l walltime=2:00:00
 
-# To run on different type of CPU cores. 1200 cores together
+# To run on different type of CPU cores.
+# Has to be a multiple ensemble size (=3)
+# Around 1200 cores
 #PBS -l select=45:ncpus=28:model=bro_ele
 ### PBS -l select=30:ncpus=40:model=sky_ele
 ### PBS -l select=30:ncpus=40:model=cas_ait
-### PBS -l select=9:ncpus=128:model=rom_ait # fails often
+### PBS -l select=9:ncpus=128:model=rom_ait
 
 # Combine STDOUT and STDERR
 #PBS -j oe
