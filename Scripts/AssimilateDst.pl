@@ -490,7 +490,8 @@ Examples:
 
       Collect post-processed results from ensembles to the assimilated run:
 
-../Scripts/AssimilateDst.pl -c Event01
+cd deltaB/Example
+../../Scripts/AssimilateDst.pl -c Event01
 
       Reset Event01 for a new run:
 
