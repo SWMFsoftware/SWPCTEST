@@ -63,6 +63,7 @@ help:
 	@echo "make check                     (process results of events 1-6 in ./Runs into deltaB/Runs)"
 	@echo "make check EVENTS=  SIMDIR=New (process all results from ./New into deltaB/New)"
 	@echo "make check_postproc SIMDIR=New (collect results of events 1-6 from ./New into deltaB/New)"
+	@echo "make check_ensemble SIMDIR=New (assimilate results to deltaB/New/run/)"
 	@echo "make check_calc     SIMDIR=New (calculate all metrics from results in deltaB/New/)"
 	@echo "make check_stat     SIMDIR=New (calculate statistics from runs in deltaB/New/)"
 	@echo "make check_dst      SIMDIR=New (calculate Dst error only from results in deltaB/New/)"
@@ -181,6 +182,7 @@ test:
 
 check:
 	make check_postproc
+	make check_ensemble
 	make check_calc
 	make check_tar
 
@@ -526,6 +528,15 @@ check_postproc: show_dir
 	  done;								\
 	else								\
 	  echo "${RESDIR} already exists; skip post processing.";	\
+	fi
+
+check_ensemble:
+	@if([ -d ${FULLRESDIR}/run ]); then				\
+		echo "Assimilate results into ${FULLRESDIR}/run";	\
+		cd ${FULLRESDIR};					\
+		for e in ${EVENTLIST}; do                           	\
+			${MYSCRIPTDIR}/AssimilateDst.pl -c Event$$e;	\
+		done;							\
 	fi
 
 check_calc:
