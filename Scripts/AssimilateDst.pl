@@ -10,6 +10,8 @@ my $Reset      = ($r or $reset);
 my $Sleep      = ($s or $sleep);
 my $Predict    = ($p or $predict);
 my $Collect    = ($c or $collect);
+my $MinDecay   = ($Dmin or 10);
+my $MaxDecay   = ($Dmax or 10);
 my $MinFracH   = ($Fmin or 0.65);
 my $MaxFracH   = ($Fmax or 0.95);
 my $dFracH     = ($dF or $dFraction);
@@ -64,6 +66,9 @@ die "$LastFile is present\n" if -f $LastFile;
 # H-O composition: H fraction goes from $MinFracH to $MaxFracH for ensemble
 my $dFraction = ($MaxFracH - $MinFracH)/($nDir - 1) if $nDir > 1;
 
+# Decay rate goes from $MaxDecay to $MinDecay for ensemble
+my $dDecay = ($MaxDecay - $MinDecay)/($nDir - 1) if $nDir > 1;
+
 # CPCP parameter goes from $CpcpFactor to 1/$CpcpFactor with ratios $CpcpRatio
 my $CpcpRatio;
 $CpcpRatio = $CpcpFactor**(-2/($nDir-1)) if $CpcpFactor and $nDir > 1;
@@ -72,6 +77,11 @@ $CpcpRatio = $CpcpFactor**(-2/($nDir-1)) if $CpcpFactor and $nDir > 1;
 my $FractionH = $MinFracH;
 print "FractionH=$FractionH, dFraction=$dFraction\n" 
     if $MaxFracH > $MinFracH and $Verbose;
+# Initial value of decay rate for the first ensemble member
+my $Decay = $MaxDecay;
+print "Decay=$Decay, dDecay=$dDecay\n"
+    if $MaxDecay > $MinDecay and $Verbose;
+
 print "CpcpFactor=$CpcpFactor, CpcpRatio=$CpcpRatio\n" 
     if $CpcpRatio and $Verbose;
 
@@ -294,6 +304,13 @@ while(<>){
 	}
     }
 
+    # Match "10 hour      DecayTimescale" line
+    if($MaxDecay > $MinDecay and /^\s*\d+\s+hour\s+DecayTimescale/){
+	# Set the DecayTimescale parameter in the DECAY command
+	s/^\s*\d+/$Decay/; # set the decay value
+	$Decay -= $dDecay; # reduce decay rate for next member
+    }
+
     # Match "28.0   Rho0Cpcp" and "0.1   RhoPerCpcp" lines
     if($CpcpFactor and /^[\d\.\s]+(Rho0Cpcp|RhoPerCpcp)/){
 	# Multiply CPCPBOUNDARY parameters
@@ -437,8 +454,9 @@ the ensemble job script. In addition, it can collect
 the output from multiple runs into the assimilated results.
 
 Usage: 
-    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v] [-dF=dFracH]
-         [-C=CpcpFactor] [EventNN]
+    AssimilateDst.pl [-h] [-c|-r|-s N] [-p] [-v]
+         [-Fmin=MinFrac] [-Fmax=MaxFrac] [-Dmin=MinDecay] [-Dmax=MaxDecay]
+    	 [-dD=dDst] [-dF=dFracH] [-C=CpcpFactor] [EventNN]
 
 EventNN is the name of the event to be simulated. Here NN represents two
     digits from 01 to 99. The default is Event01.
@@ -459,10 +477,11 @@ EventNN is the name of the event to be simulated. Here NN represents two
 
 -Fmin=FMIN      Limit/vary the H+ fraction in the range [FMIN,FMAX].
 -Fmax=FMAX      Default values are FMIN=0.65 and FMAX=0.95.
+-Dmin=DMIN      Minimum decay rate for IM in hours. Default is 10.
+-Dmax=DMAX      Maximum decay rate for IM in hours. Default is 10.
 
 -dF=DFRACTION   Modify H+ and O+ fractions by +/-DFRACION depending on the
 -dFraction=...  observed vs simulated Dst. There is no ensemble in this case.
-
 
 -dD=DDST        Set the tolerance in Dst. If |ObsDst-SimDst| < DDST, do not
 -dDst=...       modify the fraction. Default value is 10nT.
@@ -473,10 +492,11 @@ EventNN is the name of the event to be simulated. Here NN represents two
 
 Examples:
 
-      Assimilate Event20 with  H+ fraction varying from 0.65 to 0.99
-      among the ensemble members. Sleep 60s between restarting ensemble.
+      Assimilate Event20 with H+ fraction varying from 0.65 to 0.99 and
+      decay rate from 6 to 14 hours among the ensemble members.
+      Sleep 60 seconds between restarting ensemble.
 
-../Scripts/AssimilateDst.pl -Fmax=0.99 -s=60 Event20
+../Scripts/AssimilateDst.pl -Fmax=0.99 -Dmin=6 -Dmax=14 -s=60 Event20
 
       Assimilate Event04 with H+ fraction varying from 0.7 to 0.9 in 0.1 steps      
       and sleep 60s between restarts. No ensemble. Use verbose output:
