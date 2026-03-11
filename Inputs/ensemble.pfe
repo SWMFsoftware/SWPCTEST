@@ -16,6 +16,7 @@
 ### PBS -l select=30:ncpus=40:model=sky_ele
 ### PBS -l select=30:ncpus=40:model=cas_ait
 ### PBS -l select=9:ncpus=128:model=rom_ait
+### PBS -l select=9:ncpus=128:model=mil_ait
 
 # Combine STDOUT and STDERR
 #PBS -j oe
@@ -47,6 +48,7 @@ while (! -f run/${EVENT}/LAST)
     ../Scripts/AssimilateDst.pl -v -s=60 ${EVENT} >>& run/${EVENT}/runlog
     foreach rundir ( run?/${EVENT} )
        (cd ${rundir}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
+       sleep 20
     end
     wait
 end
