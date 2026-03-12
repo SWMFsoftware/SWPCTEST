@@ -66,7 +66,7 @@ die "$LastFile is present\n" if -f $LastFile;
 # H-O composition: H fraction goes from $MinFracH to $MaxFracH for ensemble
 my $dFraction = ($MaxFracH - $MinFracH)/($nDir - 1) if $nDir > 1;
 
-# Decay rate goes from $MaxDecay to $MinDecay for ensemble
+# Decay time goes from $MinDecay to $MaxDecay for ensemble
 my $dDecay = ($MaxDecay - $MinDecay)/($nDir - 1) if $nDir > 1;
 
 # CPCP parameter goes from $CpcpFactor to 1/$CpcpFactor with ratios $CpcpRatio
@@ -77,8 +77,9 @@ $CpcpRatio = $CpcpFactor**(-2/($nDir-1)) if $CpcpFactor and $nDir > 1;
 my $FractionH = $MinFracH;
 print "FractionH=$FractionH, dFraction=$dFraction\n" 
     if $MaxFracH > $MinFracH and $Verbose;
-# Initial value of decay rate for the first ensemble member
-my $Decay = $MaxDecay;
+
+# Initial value of decay time for the first ensemble member
+my $Decay = $MinDecay;
 print "Decay=$Decay, dDecay=$dDecay\n"
     if $MaxDecay > $MinDecay and $Verbose;
 
@@ -308,7 +309,7 @@ while(<>){
     if($MaxDecay > $MinDecay and /^\s*\d+\s+hour\s+DecayTimescale/){
 	# Set the DecayTimescale parameter in the DECAY command
 	s/^\s*\d+/$Decay/; # set the decay value
-	$Decay -= $dDecay; # reduce decay rate for next member
+	$Decay += $dDecay; # increase decay time for next member
     }
 
     # Match "28.0   Rho0Cpcp" and "0.1   RhoPerCpcp" lines
