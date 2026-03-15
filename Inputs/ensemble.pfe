@@ -10,7 +10,7 @@
 #! PBS -l walltime=2:00:00
 
 # To run on different type of CPU cores.
-# Has to be a multiple ensemble size (=3)
+# Has to be a multiple of the ensemble size (=3)
 # Around 1200 cores
 #PBS -l select=45:ncpus=28:model=bro_ele
 ### PBS -l select=30:ncpus=40:model=sky_ele
@@ -43,9 +43,9 @@ setenv PBS_NODEFILE ./hosts
 # Run the ensemble until fully done
 while (! -f run/${EVENT}/LAST)
     # Driven simulation, a single run with periodically adjusted parameters:
-    #../Scripts/AssimilateDst.pl -v -dF=0.1 -s=60 ${EVENT} >>& run/${EVENT}/runlog
+    #../Scripts/AssimilateDst.pl -v -dF=0.1 ${EVENT} >>& run/${EVENT}/runlog
     # Ensemble simulation with a range of parameters and restart from best member:
-    ../Scripts/AssimilateDst.pl -v -s=60 ${EVENT} >>& run/${EVENT}/runlog
+    ../Scripts/AssimilateDst.pl -v -Dmin=10 -Dmax=20 ${EVENT} >>& run/${EVENT}/runlog
     foreach rundir ( run?/${EVENT} )
        (cd ${rundir}; mpiexec SWMF.exe >& runlog.`date +%y%m%d_%H%M%S`) &
        sleep 20
