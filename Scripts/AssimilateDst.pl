@@ -381,7 +381,8 @@ sub collect_data{
 	    open(IN, $SimResult);
 	    my @Result = <IN>;
 	    close(IN);
-	    print "Elements of Results=",scalar @Result," in $Run\n" if $Verbose;
+	    print "Elements of Results=",scalar @Result," in $Run\n"
+		if $Verbose;
 	    $Result{$Run} = [@Result];
 	    $Index{$Run} = 0;
 	}
@@ -420,7 +421,8 @@ sub collect_data{
 		       /(\d\d\d\d) (\d\d) (\d\d) (\d\d) (\d\d) (\d\d)/){
 			my $time = "$1$2$3-$4$5$6";
 			if($time ge $EndTime){
-			    print "$Run: last time=$time, Index=$Index{$Run}, EndTime=$EndTime\n"
+			    print "$Run: last time=$time, Index=$Index{$Run},".
+				" EndTime=$EndTime\n"
 				if $Verbose;
 			    last LINE;
 			}
