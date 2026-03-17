@@ -37,7 +37,10 @@ cd $PBS_O_WORKDIR
 
 # Split the node file among the ensemble members
 mkdir -p run/${EVENT}
-../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/${EVENT} >& run/${EVENT}/runlog
+# Start new runlog or add to existing one (restart)
+touch run/${EVENT}/runlog
+# Split nodes among ensemble members and create "hosts" files in each run directory
+../Scripts/SplitNodeFile.pl $PBS_NODEFILE run?/${EVENT} >>& run/${EVENT}/runlog
 setenv PBS_NODEFILE ./hosts
 
 # Run the ensemble until fully done
