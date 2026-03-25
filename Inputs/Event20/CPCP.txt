@@ -1,3 +1,4 @@
+CPCP north and south [kV] derived from PCN and PCS indexes [mV/m]
 year mo dy hr mn    pcn pcs cpcpn cpcps
 2024 05 08 00 00   -0.30    0.11        30.7        29.8
 2024 05 08 00 01   -0.29   -0.03        30.7        27.9
