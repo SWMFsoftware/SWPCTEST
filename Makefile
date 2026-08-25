@@ -193,9 +193,9 @@ test_compile:
 	make SWMF PIDL; \
 	)
 
-# Default PARAM.in file for the tests
-PARAMINIT = PARAM.in_SWPC_v2_init
-PARAMRESTART = PARAM.in_SWPC_v2_restart
+# Default PARAM.in files for the tests
+PARAMINIT = PARAM.in_SWPC_simple_init
+PARAMRESTART = PARAM.in_SWPC_simple_restart
 
 # Default number of circles for PWOM initial field lines
 NCIRCLE = 6
