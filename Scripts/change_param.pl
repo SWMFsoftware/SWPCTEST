@@ -23,8 +23,8 @@ $_ = `grep -A1 START $IMF | tail -1`;
 
 $_ = `head -3 $IMF | tail -1` if not $_;
 
-# Create a proper date from first 6 elements. Zero out the seconds!
-s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
+# Create a proper date from first 5 elements. Zero out the seconds!
+s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
 $1\t\t\tiYear\n$2\t\t\tiMonth\n$3\t\t\tiDay\n$4\t\t\t\iHour\n$5\t\t\tiMinute\n0\t\t\tiSecond/;
 
 my $start = $_;
@@ -43,8 +43,9 @@ print "F10.7 = $f107\n";
 # Read last line
 $_ = `tail -1 $IMF`;
 
-s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
-$1\t\t\tiYear\n$2\t\t\tiMonth\n$3\t\t\tiDay\n$4\t\t\t\iHour\n$5\t\t\tiMinute\n$6\t\t\tiSecond/;
+# Create a proper date from first 5 elements. Zero out the seconds!
+s/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*/
+$1\t\t\tiYear\n$2\t\t\tiMonth\n$3\t\t\tiDay\n$4\t\t\t\iHour\n$5\t\t\tiMinute\n0\t\t\tiSecond/;
 
 my $end = $_;
 print "end=$end";
