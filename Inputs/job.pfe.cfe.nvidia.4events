@@ -1,12 +1,12 @@
 #!/bin/csh
 #PBS -S /bin/csh
 #PBS -N SWPCsky
-#PBS -q v100@pbspl4
+#PBS -q v100
 
 # This script should be started from the directory
 # above the Event01 ... directories.
 # Runs up to 4 events on 4 GPUs on cas_gpu or sky_gpu.
-# Can be used with qsub.pfe.pbspl.pl if desired.
+# Can be used with qsub.pfe.cfe.pl if desired.
 
 # Monitoring performance:
 # qstat -n -u $USER
@@ -85,4 +85,4 @@ if(! -f PARAM.in.start) cp PARAM.in PARAM.in.start
 if(-f PARAM.in.restart) cp PARAM.in.restart PARAM.in
 
 # Resubmit job
-qsub job.pfe.pbspl.nvidia
+qsub job.pfe.cfe.nvidia.4events

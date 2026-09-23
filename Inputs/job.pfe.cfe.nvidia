@@ -1,7 +1,7 @@
 #!/bin/csh
 #PBS -S /bin/csh
 #PBS -N SWPCsky
-#PBS -q v100@pbspl4
+#PBS -q v100
 
 # To run on v100 GPU (up to 4)
 #PBS -lselect=1:ncpus=2:ngpus=1:model=sky_gpu
