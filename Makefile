@@ -11,7 +11,7 @@ MYSCRIPTDIR = ${MYDIR}/Scripts
 MYIDLDIR    = ${MYDIR}/Idl
 IDLPATH     = ${COMMONDIR}/IDL/General:<IDL_DEFAULT>
 GMDIR       = ${DIR}/GM/BATSRUS
-QSUBSCRIPT  = ${COMMONDIR}/JobScripts/qsub.pfe.pbspl.pl
+QSUBSCRIPT  = ${COMMONDIR}/JobScripts/qsub.pfe.cfe.pl
 SIMDIR      = Runs
 RESDIR	    = ${SIMDIR}
 RES1DIR	    = ${RESDIR}
@@ -229,7 +229,7 @@ test_run:
 		   sbatch job.frontera;                        		\
 		fi;                                                     \
 		if [[ "${MACHINE}" == "pfe" ]]; then                    \
-		   ./qsub.pfe.pbspl.pl job.pfe ev$$e.$${iRun};		\
+		   ${QSUBSCRIPT} job.pfe ev$$e.$${iRun};		\
 		fi;                                                     \
 	done; done
 
@@ -328,8 +328,8 @@ test_multiion_rundir:
 test_multiion_run:
 	@echo "Submitting jobs"
 	for iRun in {1..${NRUN}}; do for e in ${EVENTLIST}; do	\
-		cd ${QUEDIR}$${iRun}/Event$$e;		\
-		./qsub.pfe.pbspl.pl job_more.long ev$$e;	    	\
+		cd ${QUEDIR}$${iRun}/Event$$e;			\
+		${QSUBSCRIPT} job_more.long ev$$e;	    	\
 	done; done
 
 ##############################################################################
@@ -480,10 +480,10 @@ test_gpu_run:
 	      sbatch job.longhorn;			\
 	   fi;						\
 	   if [[ "${MACHINE}" == "pfe" ]]; then		\
-	      ssh pbspl4 "cd ${QUEDIR}1/Event$$e; ./qsub.pfe.pbspl.pl job.pfe.pbspl.nvidia ev$$e"; \
+	      ssh cfe "cd ${QUEDIR}1/Event$$e; ${QSUBSCRIPT} job.pfe.cfe.nvidia ev$$e"; \
 	   fi;						\
-	   if [[ "${MACHINE}" == "pbspl" ]]; then       \
-	      cd ${QUEDIR}1/Event$$e; ./qsub.pfe.pbspl.pl job.pfe.pbspl.nvidia ev$$e; \
+	   if [[ "${MACHINE}" == "cfe" ]]; then         \
+	      cd ${QUEDIR}1/Event$$e; ${QSUBSCRIPT} job.pfe.cfe.nvidia ev$$e; \
 	   fi;                                          \
 	done
 
